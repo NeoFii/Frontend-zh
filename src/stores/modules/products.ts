@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { fetchProductList, fetchProductDetail } from '@/api/products'
+import { mockFetchProductDetail, mockProduct } from '@/api/mock'
 import type { ProductItem } from '@/types'
 
 export const useProductsStore = defineStore('products', () => {
@@ -28,9 +29,17 @@ export const useProductsStore = defineStore('products', () => {
   async function loadProductDetail(id: number) {
     loading.value = true
     try {
-      const res = await fetchProductDetail(id)
-      currentProduct.value = res.data
-      return res
+      // 先尝试调用真实 API，失败则使用 mock 数据
+      try {
+        const res = await fetchProductDetail(id)
+        currentProduct.value = res.data
+        return res
+      } catch {
+        // API 失败时使用 mock 数据
+        const mockRes = await mockFetchProductDetail(id)
+        currentProduct.value = mockRes.data
+        return mockRes
+      }
     } finally {
       loading.value = false
     }

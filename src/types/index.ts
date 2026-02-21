@@ -21,10 +21,10 @@ export interface NewsItem {
   cover_image?: string
   author?: string
   category?: string
-  is_published: boolean
+  is_published?: boolean
   created_at: string
   updated_at?: string
-  view_count: number
+  view_count?: number
 }
 
 export interface NewsListParams {
@@ -89,3 +89,4 @@ export interface NavItem {
   path: string
   children?: NavItem[]
 }
+

@@ -15,12 +15,6 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '关于我们' },
   },
   {
-    path: '/products',
-    name: 'Products',
-    component: () => import('@/views/Products.vue'),
-    meta: { title: '产品服务' },
-  },
-  {
     path: '/products/:id',
     name: 'ProductDetail',
     component: () => import('@/views/ProductDetail.vue'),
@@ -41,10 +35,16 @@ const routes: RouteRecordRaw[] = [
     props: true,
   },
   {
-    path: '/contact',
-    name: 'Contact',
-    component: () => import('@/views/Contact.vue'),
-    meta: { title: '联系我们' },
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Login.vue'),
+    meta: { title: '登录' },
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/Register.vue'),
+    meta: { title: '注册' },
   },
   {
     path: '/:pathMatch(.*)*',
@@ -64,7 +64,7 @@ const router = createRouter({
 
 // 动态修改页面标题
 router.beforeEach((to) => {
-  const companyName = import.meta.env.VITE_COMPANY_NAME || '示例科技有限公司'
+  const companyName = import.meta.env.VITE_COMPANY_NAME || 'Eucal AI'
   document.title = to.meta.title
     ? `${to.meta.title} - ${companyName}`
     : companyName

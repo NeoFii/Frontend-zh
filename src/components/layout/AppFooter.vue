@@ -1,17 +1,17 @@
 <template>
-  <footer class="bg-gray-900 text-white">
-    <div class="container-custom py-12">
+  <footer class="bg-gray-900">
+    <div class="container-custom py-16">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
         <!-- Company Info -->
         <div class="col-span-1 md:col-span-2">
-          <div class="flex items-center space-x-2 mb-4">
-            <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span class="text-white font-bold text-lg">E</span>
+          <div class="flex items-center space-x-3 mb-4">
+            <div class="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20">
+              <span class="text-white font-bold text-xl">E</span>
             </div>
-            <span class="text-xl font-bold">{{ companyName }}</span>
+            <span class="text-xl font-bold text-white">{{ companyName }}</span>
           </div>
           <p class="text-gray-400 mb-4 max-w-sm">
-            我们致力于为客户提供高质量的技术解决方案，推动数字化转型，创造持久价值。
+            致力于为企业提供高性能 AI 推理优化方案，推动智能化转型。
           </p>
           <div class="flex space-x-4">
             <!-- Social Media Icons -->
@@ -30,7 +30,7 @@
 
         <!-- Quick Links -->
         <div>
-          <h3 class="text-lg font-semibold mb-4">快速链接</h3>
+          <h3 class="text-lg font-semibold text-white mb-4">快速链接</h3>
           <ul class="space-y-2">
             <li v-for="item in quickLinks" :key="item.path">
               <RouterLink :to="item.path" class="text-gray-400 hover:text-white transition-colors">
@@ -42,7 +42,7 @@
 
         <!-- Contact Info -->
         <div>
-          <h3 class="text-lg font-semibold mb-4">联系方式</h3>
+          <h3 class="text-lg font-semibold text-white mb-4">联系方式</h3>
           <ul class="space-y-2 text-gray-400">
             <li class="flex items-start space-x-2">
               <svg class="w-5 h-5 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,7 +68,7 @@
       </div>
 
       <!-- Bottom Bar -->
-      <div class="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+      <div class="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
         <p class="text-gray-400 text-sm">
           © {{ currentYear }} {{ companyName }}. All rights reserved.
         </p>
@@ -92,6 +92,6 @@ const quickLinks: NavItem[] = [
   { name: '关于我们', path: '/about' },
   { name: '产品服务', path: '/products' },
   { name: '新闻动态', path: '/news' },
-  { name: '联系我们', path: '/contact' },
+  { name: '登录', path: '/login' },
 ]
 </script>
