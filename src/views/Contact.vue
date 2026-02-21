@@ -1,10 +1,17 @@
 <template>
   <div class="animate-fade-in">
-    <!-- Page Header -->
-    <div class="bg-gray-900 text-white py-20">
-      <div class="container-custom">
-        <h1 class="text-4xl md:text-5xl font-bold mb-4">联系我们</h1>
-        <p class="text-xl text-gray-300">期待与您的合作，欢迎随时联系我们</p>
+    <!-- Page Header - 科技感设计 -->
+    <div class="relative bg-gradient-to-br from-slate-900 via-primary-900 to-slate-900 text-white py-24 overflow-hidden">
+      <!-- 背景装饰 -->
+      <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]"></div>
+      <div class="absolute top-1/4 right-1/4 w-64 h-64 bg-primary-500/20 rounded-full blur-3xl"></div>
+
+      <div class="relative container-custom">
+        <div class="max-w-3xl mx-auto text-center">
+          <span class="inline-block px-4 py-1 bg-white/10 rounded-full text-sm mb-4">联系我们</span>
+          <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">开启 AI 合作之旅</h1>
+          <p class="text-xl text-gray-300">无论您有任何问题或合作意向，我们的专家团队随时准备为您服务</p>
+        </div>
       </div>
     </div>
 
