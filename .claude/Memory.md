@@ -170,6 +170,7 @@ VITE_COMPANY_NAME=Eucal AI
 | `/products/:id` | ProductDetail.vue | 产品详情页 |
 | `/news` | News.vue | 新闻动态列表 |
 | `/news/:id` | NewsDetail.vue | 新闻详情页 |
+| `/platform` | Platform.vue | 开放平台 |
 | `/login` | Login.vue | 用户登录 |
 | `/*` | NotFound.vue | 404 页面 |
 

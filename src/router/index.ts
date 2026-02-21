@@ -22,6 +22,12 @@ const routes: RouteRecordRaw[] = [
     props: true,
   },
   {
+    path: '/platform',
+    name: 'Platform',
+    component: () => import('@/views/Platform.vue'),
+    meta: { title: '开放平台' },
+  },
+  {
     path: '/news',
     name: 'News',
     component: () => import('@/views/News.vue'),
