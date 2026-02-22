@@ -23,34 +23,52 @@ const navItems: NavItem[] = [
 export default function AppHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
 
+  // 滚动处理
   useEffect(() => {
     let lastScrollY = 0
+    let ticking = false
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY
 
-      // 在页面顶部时显示导航栏
-      if (currentScrollY < 10) {
-        setIsHidden(false)
-      } else if (currentScrollY > lastScrollY) {
-        // 向下滚动 - 隐藏导航栏
-        setIsHidden(true)
-      } else {
-        // 向上滚动 - 显示导航栏
-        setIsHidden(false)
+          // 滚动状态
+          setIsScrolled(currentScrollY > 20)
+
+          // 隐藏/显示逻辑
+          if (currentScrollY < 10) {
+            setIsHidden(false)
+          } else if (currentScrollY > lastScrollY) {
+            // 向下滚动 - 隐藏
+            if (currentScrollY > 100) {
+              setIsHidden(true)
+            }
+          } else {
+            // 向上滚动 - 显示
+            setIsHidden(false)
+          }
+
+          lastScrollY = currentScrollY
+          ticking = false
+        })
+        ticking = true
       }
-
-      lastScrollY = currentScrollY
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // 关闭移动端菜单
+  useEffect(() => {
+    setIsMenuOpen(false)
+  }, [pathname])
+
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
-  const closeMenu = () => setIsMenuOpen(false)
 
   const isActive = (path: string) => pathname === path
   const isChildActive = (children?: NavItem[]) =>
@@ -58,62 +76,63 @@ export default function AppHeader() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-transform duration-300 ${
-        isHidden ? '-translate-y-full' : ''
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isHidden ? '-translate-y-full' : 'translate-y-0'
+      } ${
+        isScrolled
+          ? 'bg-white/95 backdrop-blur-xl shadow-lg shadow-gray-200/50'
+          : 'bg-white/80 backdrop-blur-md'
+      } border-b ${
+        isScrolled ? 'border-gray-100/80' : 'border-transparent'
       }`}
     >
       <div className="container-custom">
         <nav className="flex items-center h-20">
-          {/* Logo + Navigation 左侧组 */}
+          {/* Logo + Navigation */}
           <div className="flex items-center">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20">
+            <Link href="/" className="flex items-center space-x-3 group">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:scale-105 group-hover:shadow-primary-500/40 transition-all duration-300">
                 <span className="text-white font-bold text-xl">E</span>
               </div>
-              <span className="text-xl font-bold text-gray-900 tracking-tight font-sans">
+              <span className="text-xl font-bold text-gray-900 tracking-tight font-sans group-hover:text-primary-600 transition-colors duration-300">
                 {companyName}
               </span>
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-1 ml-10">
+            <div className="hidden md:flex items-center ml-12">
               {navItems.map((item) =>
                 item.children && item.children.length > 0 ? (
                   <div key={item.name} className="relative group">
                     <button
-                      className={`flex items-center px-3 py-2 text-[15.5px] font-medium tracking-wide transition-colors duration-200 rounded-lg hover:bg-gray-50/50 ${
+                      className={`flex items-center px-4 py-2 text-[15px] font-medium tracking-wide transition-all duration-200 rounded-lg hover:bg-gray-50/80 ${
                         isChildActive(item.children)
-                          ? 'text-gray-900'
-                          : 'text-gray-700 hover:text-gray-900'
+                          ? 'text-gray-900 bg-gray-50'
+                          : 'text-gray-600 hover:text-gray-900'
                       }`}
                     >
                       {item.name}
                       <svg
-                        className="w-4 h-4 ml-1 transition-transform duration-200 group-hover:rotate-180"
+                        className="w-4 h-4 ml-1.5 transition-transform duration-200 group-hover:rotate-180"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
                     {/* 下拉菜单 */}
-                    <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top -translate-y-2 group-hover:translate-y-0">
-                      <div className="bg-white rounded-lg shadow-lg border border-gray-100 py-1 min-w-[100px]">
+                    <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-250 transform origin-top -translate-y-2 group-hover:translate-y-0">
+                      <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-100/50 py-2 min-w-[140px]">
                         {item.children.map((child) => (
                           <Link
                             key={child.path}
                             href={child.path}
-                            className={`block px-3 py-1.5 text-center text-[14px] font-medium transition-colors duration-150 ${
+                            className={`block px-4 py-2.5 text-[14px] font-medium transition-all duration-150 ${
                               isActive(child.path)
-                                ? 'text-primary-600 bg-primary-50'
-                                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                                ? 'text-primary-600 bg-primary-50/80'
+                                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50/80'
                             }`}
                           >
                             {child.name}
@@ -126,10 +145,10 @@ export default function AppHeader() {
                   <Link
                     key={item.path}
                     href={item.path}
-                    className={`px-3 py-2 text-[15.5px] font-medium tracking-wide transition-colors duration-200 rounded-lg hover:bg-gray-50/50 ${
+                    className={`px-4 py-2 text-[15px] font-medium tracking-wide transition-all duration-200 rounded-lg hover:bg-gray-50/80 ${
                       isActive(item.path)
-                        ? 'text-gray-900'
-                        : 'text-gray-700 hover:text-gray-900'
+                        ? 'text-gray-900 bg-gray-50'
+                        : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
                     {item.name}
@@ -139,14 +158,14 @@ export default function AppHeader() {
             </div>
           </div>
 
-          {/* Spacer 占据剩余空间 */}
+          {/* Spacer */}
           <div className="flex-1"></div>
 
-          {/* CTA Button 右侧 */}
-          <div className="hidden md:flex items-center">
+          {/* CTA Button */}
+          <div className="hidden md:flex items-center gap-4">
             <Link
               href="/login"
-              className="px-5 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 transition-colors duration-200"
+              className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 hover:shadow-lg hover:shadow-gray-900/20 hover:scale-105 transition-all duration-300"
             >
               登录
             </Link>
@@ -155,94 +174,74 @@ export default function AppHeader() {
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMenu}
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            className="md:hidden p-2.5 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
+            aria-label={isMenuOpen ? '关闭菜单' : '打开菜单'}
           >
             {!isMenuOpen ? (
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             ) : (
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             )}
           </button>
         </nav>
 
         {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100 animate-fade-in">
-            <div className="flex flex-col space-y-1">
-              {navItems.map((item) =>
-                item.children && item.children.length > 0 ? (
-                  <div key={item.name}>
-                    <div className="px-4 py-3 text-gray-700 text-[15px] font-medium tracking-wide">
-                      {item.name}
-                    </div>
-                    <div className="ml-4 space-y-1">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.path}
-                          href={child.path}
-                          onClick={closeMenu}
-                          className={`block px-4 py-2.5 text-[14px] font-medium hover:bg-gray-50 rounded-lg transition-colors duration-200 ${
-                            isActive(child.path)
-                              ? 'text-primary-600 bg-primary-50'
-                              : 'text-gray-600 hover:text-gray-900'
-                          }`}
-                        >
-                          {child.name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    onClick={closeMenu}
-                    className={`px-4 py-3 text-[15px] font-medium tracking-wide hover:bg-gray-50 rounded-lg transition-colors duration-200 ${
-                      isActive(item.path)
-                        ? 'text-gray-900 bg-gray-50'
-                        : 'text-gray-700 hover:text-gray-900'
-                    }`}
-                  >
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+            isMenuOpen ? 'max-h-96 opacity-100 pb-4' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="flex flex-col space-y-1 pt-2 border-t border-gray-100/50">
+            {navItems.map((item) =>
+              item.children && item.children.length > 0 ? (
+                <div key={item.name}>
+                  <div className="px-4 py-3 text-gray-700 text-[15px] font-medium tracking-wide">
                     {item.name}
-                  </Link>
-                )
-              )}
-              <div className="pt-2 mt-2 border-t border-gray-100">
+                  </div>
+                  <div className="ml-4 space-y-1">
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.path}
+                        href={child.path}
+                        className={`block px-4 py-2.5 text-[14px] font-medium hover:bg-gray-50 rounded-lg transition-colors duration-200 ${
+                          isActive(child.path)
+                            ? 'text-primary-600 bg-primary-50/80'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
                 <Link
-                  href="/login"
-                  onClick={closeMenu}
-                  className="block w-full text-center px-4 py-3 bg-gray-900 text-white rounded-lg text-[15px] font-semibold"
+                  key={item.path}
+                  href={item.path}
+                  className={`px-4 py-3 text-[15px] font-medium tracking-wide hover:bg-gray-50 rounded-lg transition-colors duration-200 ${
+                    isActive(item.path)
+                      ? 'text-gray-900 bg-gray-50'
+                      : 'text-gray-700 hover:text-gray-900'
+                  }`}
                 >
-                  登录
+                  {item.name}
                 </Link>
-              </div>
+              )
+            )}
+            <div className="pt-3 mt-2 border-t border-gray-100/50">
+              <Link
+                href="/login"
+                className="block w-full text-center px-4 py-3 bg-gray-900 text-white rounded-xl text-[15px] font-semibold hover:bg-gray-800 transition-colors duration-200"
+              >
+                登录
+              </Link>
             </div>
           </div>
-        )}
+        </div>
       </div>
     </header>
   )
