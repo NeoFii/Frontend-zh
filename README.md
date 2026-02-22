@@ -1,85 +1,36 @@
-# Eucal AI 官网前端
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-基于 Vue 3 + Vite + TypeScript 构建的现代化前端应用。
+## Getting Started
 
-## 技术栈
-
-- **Vue 3**: 渐进式 JavaScript 框架（Composition API）
-- **Vue Router 4**: 客户端路由
-- **Pinia**: 状态管理
-- **Vite**: 下一代前端构建工具
-- **TypeScript**: 类型安全
-- **Tailwind CSS**: 原子化 CSS 框架
-- **Axios**: HTTP 客户端
-
-## 快速开始
-
-### 1. 安装 PNPM（如果尚未安装）
+First, run the development server:
 
 ```bash
-npm install -g pnpm
-```
-
-### 2. 安装依赖
-
-```bash
-cd frontend
-pnpm install
-```
-
-### 3. 运行开发服务器
-
-```bash
+npm run dev
+# or
+yarn dev
+# or
 pnpm dev
+# or
+bun dev
 ```
 
-访问 http://localhost:5173
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### 4. 构建生产版本
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-```bash
-pnpm build
-```
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-构建产物位于 `dist/` 目录
+## Learn More
 
-## 项目结构
+To learn more about Next.js, take a look at the following resources:
 
-```
-frontend/
-├── src/
-│   ├── main.ts           # 应用入口
-│   ├── App.vue           # 根组件
-│   ├── router/           # 路由配置
-│   ├── stores/           # Pinia 状态管理
-│   ├── components/       # 组件
-│   │   ├── common/       # 通用组件
-│   │   ├── layout/       # 布局组件
-│   │   └── sections/     # 页面区块
-│   ├── views/            # 页面视图
-│   ├── composables/      # 组合式函数
-│   ├── api/              # API 请求封装
-│   ├── assets/           # 静态资源
-│   └── types/            # TypeScript 类型
-├── public/               # 公共资源
-└── vite.config.ts        # Vite 配置
-```
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## 开发规范
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-```bash
-# 代码格式化
-pnpm format
+## Deploy on Vercel
 
-# ESLint 检查
-pnpm lint
-```
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## 环境变量
-
-创建 `.env.local` 文件：
-
-```
-# API 基础地址
-VITE_API_BASE_URL=http://localhost:8000/api/v1
-```
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

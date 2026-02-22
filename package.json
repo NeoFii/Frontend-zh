@@ -1,43 +1,35 @@
 {
-  "name": "eucal-ai-frontend",
+  "name": "next",
   "version": "0.1.0",
-  "description": "Eucal AI 官网前端 - Vue3 + Vite + TypeScript",
-  "type": "module",
+  "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext .vue,.ts,.tsx --fix",
-    "format": "prettier --write \"src/**/*.{ts,vue,css,json}\""
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
-    "@types/marked": "^6.0.0",
-    "@vueuse/core": "^10.7.2",
-    "axios": "^1.6.7",
-    "marked": "^17.0.3",
-    "pinia": "^2.1.7",
-    "vue": "^3.4.15",
-    "vue-router": "^4.2.5"
+    "@heroicons/react": "^2.2.0",
+    "axios": "^1.13.5",
+    "gray-matter": "^4.0.3",
+    "next": "14.2.35",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-markdown": "^10.1.0",
+    "rehype-raw": "^7.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
-    "@types/node": "^20.11.5",
-    "@typescript-eslint/eslint-plugin": "^6.19.1",
-    "@typescript-eslint/parser": "^6.19.1",
-    "@vitejs/plugin-vue": "^5.0.3",
-    "@vue/tsconfig": "^0.5.1",
-    "autoprefixer": "^10.4.17",
-    "eslint": "^8.56.0",
-    "eslint-plugin-vue": "^9.20.1",
-    "postcss": "^8.4.33",
-    "prettier": "^3.2.4",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.24",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
+    "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "~5.3.3",
-    "vite": "^5.0.12",
-    "vue-tsc": "^1.8.27"
-  },
-  "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
-  },
-  "packageManager": "pnpm@8.14.0"
+    "typescript": "^5"
+  }
 }

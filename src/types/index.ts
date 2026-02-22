@@ -1,4 +1,6 @@
-// 通用响应类型
+// 统一类型导出
+
+// 通用类型
 export interface ApiResponse<T = unknown> {
   code: string
   message: string
@@ -12,45 +14,12 @@ export interface ListResponse<T> extends ApiResponse<T[]> {
   page_size?: number
 }
 
-// 新闻相关类型
-export interface NewsItem {
-  id: number
-  title: string
-  summary?: string
-  content?: string
-  cover_image?: string
-  author?: string
-  category?: string
-  is_published?: boolean
-  created_at: string
-  updated_at?: string
-  view_count?: number
-}
-
+// 新闻列表参数
 export interface NewsListParams {
   page?: number
   page_size?: number
   category?: string
 }
-
-export interface NewsListResponse extends ListResponse<NewsItem> {}
-
-// 产品相关类型
-export interface ProductItem {
-  id: number
-  name: string
-  short_description?: string
-  full_description?: string
-  image?: string
-  icon?: string
-  features?: string[]
-  category?: string
-  is_active: boolean
-  sort_order: number
-  created_at: string
-}
-
-export interface ProductListResponse extends ApiResponse<ProductItem[]> {}
 
 // 联系表单类型
 export interface ContactForm {
@@ -70,6 +39,7 @@ export interface ContactFormResponse extends ApiResponse<Record<string, unknown>
   }
 }
 
+// 联系信息类型
 export interface ContactInfo {
   company_name: string
   address?: string
@@ -90,3 +60,34 @@ export interface NavItem {
   children?: NavItem[]
 }
 
+// 从 CMS 类型重新导出
+export type {
+  NewsItem,
+  ProductItem,
+  NewsFrontmatter,
+  ProductFrontmatter,
+  CMSQueryParams,
+  CMSQueryResult,
+  Testimonial,
+  FAQItem,
+  ProductHighlight,
+  UseCase,
+  ProductStat,
+  PricingPlan,
+  ProductPricing,
+} from './cms'
+
+// 从 API 模块导出认证相关类型
+export type {
+  LoginParams,
+  RegisterParams,
+  User,
+  AuthResponse,
+} from '@/lib/api/auth'
+
+// 从 API 模块导出平台相关类型
+export type {
+  ApiKey,
+  UsageStats,
+  PlatformData,
+} from '@/lib/api/platform'
