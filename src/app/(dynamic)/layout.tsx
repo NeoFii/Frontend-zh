@@ -1,9 +1,16 @@
-import MainLayout from "@/components/layout/MainLayout";
+import AppHeader from "@/components/layout/AppHeader";
+import AppFooter from "@/components/layout/AppFooter";
 
 export default function DynamicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <MainLayout>{children}</MainLayout>;
+  return (
+    <>
+      <AppHeader />
+      <main className="flex-1 pt-20">{children}</main>
+      <AppFooter />
+    </>
+  );
 }

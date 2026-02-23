@@ -163,12 +163,14 @@ export default function AppHeader() {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-4">
-            <Link
+            <a
               href="/login"
+              target="_blank"
+              rel="noopener noreferrer"
               className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 hover:shadow-lg hover:shadow-gray-900/20 hover:scale-105 transition-all duration-300"
             >
               登录
-            </Link>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -233,12 +235,14 @@ export default function AppHeader() {
               )
             )}
             <div className="pt-3 mt-2 border-t border-gray-100/50">
-              <Link
+              <a
                 href="/login"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="block w-full text-center px-4 py-3 bg-gray-900 text-white rounded-xl text-[15px] font-semibold hover:bg-gray-800 transition-colors duration-200"
               >
                 登录
-              </Link>
+              </a>
             </div>
           </div>
         </div>

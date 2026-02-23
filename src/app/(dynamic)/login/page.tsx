@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 export default function Login() {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [loginType, setLoginType] = useState<'password' | 'code'>('password')
   const [codeCountdown, setCodeCountdown] = useState(0)
@@ -14,7 +12,6 @@ export default function Login() {
     email: '',
     password: '',
     code: '',
-    agreement: false,
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,15 +44,18 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.agreement) {
-      alert('请阅读并同意用户协议和隐私政策')
-      return
-    }
 
     setLoading(true)
     try {
       await new Promise(resolve => setTimeout(resolve, 1000))
-      router.push('/')
+      // 通知原窗口跳转到 console
+      if (window.opener) {
+        window.opener.location.href = '/console'
+        window.close()
+      } else {
+        // 如果没有原窗口，直接跳转
+        window.location.href = '/console'
+      }
     } catch (error) {
       console.error('登录失败:', error)
     } finally {
@@ -160,24 +160,6 @@ export default function Login() {
                 </div>
               </div>
             )}
-
-            <div className="flex items-start">
-              <input
-                id="agreement"
-                name="agreement"
-                type="checkbox"
-                required
-                checked={form.agreement}
-                onChange={handleChange}
-                className="h-4 w-4 mt-1 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
-              />
-              <label htmlFor="agreement" className="ml-2 text-sm text-gray-600">
-                我已阅读并同意
-                <a href="#" className="text-gray-900 underline hover:text-gray-700">用户协议</a>
-                和
-                <a href="#" className="text-gray-900 underline hover:text-gray-700">隐私政策</a>
-              </label>
-            </div>
 
             <button
               type="submit"
