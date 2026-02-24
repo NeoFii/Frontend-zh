@@ -7,10 +7,10 @@ export default function DynamicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <>
+    <div style={{ fontFamily: 'MiSans, sans-serif' }}>
       <AppHeader />
       <main className="flex-1 pt-20">{children}</main>
       <AppFooter />
-    </>
+    </div>
   );
 }

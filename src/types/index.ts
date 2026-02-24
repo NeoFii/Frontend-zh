@@ -82,7 +82,12 @@ export type {
   LoginParams,
   RegisterParams,
   User,
-  AuthResponse,
+  UserInfo,
+  LoginResponse,
+  RegisterResponse,
+  SendCodeResponse,
+  LogoutResponse,
+  UserInfoResponse,
 } from '@/lib/api/auth'
 
 // 从 API 模块导出平台相关类型

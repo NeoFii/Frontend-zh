@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <div className="text-center px-4">
         <div className="text-9xl font-bold text-gray-900 mb-4">404</div>
         <h1 className="text-4xl font-bold text-gray-900 mb-4">页面不存在</h1>

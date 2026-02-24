@@ -1,11 +1,45 @@
+'use client'
+
 import Link from 'next/link'
-import { getAllProducts } from '@/lib/cms'
+import { useAuthStore } from '@/stores/auth'
 import Reveal from '@/components/Reveal'
 import CountUp from '@/components/CountUp'
 
+// 客户端硬编码产品数据（避免使用 fs 模块）
+const featuredProduct = {
+  name: 'TierFlow',
+  slug: 'tierflow',
+  tagline: '智能分层推理引擎',
+  shortDescription: '面向大模型应用的高性能推理优化平台',
+  stats: [
+    { label: '成本降低', value: '70', suffix: '%' },
+    { label: '平均响应', value: '50', suffix: 'ms' },
+    { label: '服务可用性', value: '99.9', suffix: '%' },
+  ],
+  highlights: [
+    {
+      id: '1',
+      title: '智能分层缓存',
+      description: '基于语义相似度的多级缓存系统，自动识别重复查询，缓存命中率达 85%，显著降低 API 调用成本',
+    },
+    {
+      id: '2',
+      title: '动态模型路由',
+      description: '实时评估任务复杂度，智能选择最优模型组合，简单任务使用轻量模型，复杂任务自动升级至大模型',
+    },
+    {
+      id: '3',
+      title: '高可用架构',
+      description: '多节点冗余部署，自动故障转移，支持 10万+ QPS 并发，企业级 SLA 保障，确保业务连续性',
+    },
+  ],
+}
+
 export default function Home() {
-  const products = getAllProducts()
-  const featuredProduct = products[0]
+  const { isAuthenticated, hydrated } = useAuthStore()
+
+  // 判断是否已登录（认证状态由后端通过 Cookie 管理）
+  const isLoggedIn = hydrated && isAuthenticated
 
   return (
     <main>
@@ -44,23 +78,35 @@ export default function Home() {
             {/* CTA 按钮 - 横向排列 */}
             <Reveal delay={300}>
               <div className="flex flex-wrap gap-4 justify-center mb-16">
-                <Link
-                  href="/login"
-                  className="group inline-flex items-center px-8 py-4 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-gray-900/20 btn-ripple"
-                >
-                  即刻接入API
-                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Link>
-                {featuredProduct && (
-                  <Link
-                    href={`/products/${featuredProduct.slug}`}
-                    className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-900 rounded-full font-medium hover:bg-gray-200 transition-all duration-300 hover:scale-105"
+                {isLoggedIn ? (
+                  <a
+                    href="/console/account/basic-information"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center px-8 py-4 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-gray-900/20 btn-ripple"
                   >
-                    了解产品功能
+                    进入控制台
+                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                  </a>
+                ) : (
+                  <Link
+                    href="/login"
+                    className="group inline-flex items-center px-8 py-4 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-gray-900/20 btn-ripple"
+                  >
+                    即刻接入API
+                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
                   </Link>
                 )}
+                <Link
+                  href={`/products/${featuredProduct.slug}`}
+                  className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-900 rounded-full font-medium hover:bg-gray-200 transition-all duration-300 hover:scale-105"
+                >
+                  了解产品功能
+                </Link>
                 <a
                   href="https://neofii.github.io/TierFlow-Doc/"
                   target="_blank"
@@ -78,35 +124,14 @@ export default function Home() {
             {/* 核心数据指标 */}
             <Reveal delay={400}>
               <div className="grid grid-cols-3 gap-8 md:gap-16 max-w-3xl mx-auto">
-                {featuredProduct?.stats?.slice(0, 3).map((stat) => (
+                {featuredProduct.stats.slice(0, 3).map((stat) => (
                   <div key={stat.label} className="text-center">
                     <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                      <CountUp end={parseInt(stat.value)} suffix={stat.suffix} />
+                      <CountUp end={parseFloat(stat.value)} suffix={stat.suffix} />
                     </div>
                     <div className="text-gray-500 text-sm md:text-base">{stat.label}</div>
                   </div>
-                )) || (
-                  <>
-                    <div className="text-center">
-                      <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                        <CountUp end={70} suffix="%" />
-                      </div>
-                      <div className="text-gray-500 text-sm md:text-base">成本降低</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                        <CountUp end={50} suffix="ms" />
-                      </div>
-                      <div className="text-gray-500 text-sm md:text-base">平均响应</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                        <CountUp end={99.9} suffix="%" />
-                      </div>
-                      <div className="text-gray-500 text-sm md:text-base">服务可用性</div>
-                    </div>
-                  </>
-                )}
+                ))}
               </div>
             </Reveal>
           </div>
@@ -135,7 +160,7 @@ export default function Home() {
           </Reveal>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {featuredProduct?.highlights?.slice(0, 3).map((highlight, index) => {
+            {featuredProduct.highlights.slice(0, 3).map((highlight, index) => {
               const gradients = [
                 'from-primary-500 to-orange-600',
                 'from-violet-500 to-purple-600',
@@ -171,49 +196,7 @@ export default function Home() {
                   </div>
                 </Reveal>
               )
-            }) || (
-              <>
-                <Reveal delay={0}>
-                  <div className="group bg-white p-8 rounded-3xl card-hover border border-gray-100/50">
-                    <div className="w-14 h-14 mb-6 bg-gradient-to-br from-primary-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:scale-110 group-hover:shadow-xl transition-all duration-500">
-                      <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors duration-300">智能分层缓存</h3>
-                    <p className="text-gray-600 leading-relaxed">
-                      基于语义相似度的多级缓存系统，自动识别重复查询，缓存命中率达 85%，显著降低 API 调用成本
-                    </p>
-                  </div>
-                </Reveal>
-                <Reveal delay={100}>
-                  <div className="group bg-white p-8 rounded-3xl card-hover border border-gray-100/50">
-                    <div className="w-14 h-14 mb-6 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-500/25 group-hover:scale-110 group-hover:shadow-xl transition-all duration-500">
-                      <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors duration-300">动态模型路由</h3>
-                    <p className="text-gray-600 leading-relaxed">
-                      实时评估任务复杂度，智能选择最优模型组合，简单任务使用轻量模型，复杂任务自动升级至大模型
-                    </p>
-                  </div>
-                </Reveal>
-                <Reveal delay={200}>
-                  <div className="group bg-white p-8 rounded-3xl card-hover border border-gray-100/50">
-                    <div className="w-14 h-14 mb-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 group-hover:scale-110 group-hover:shadow-xl transition-all duration-500">
-                      <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors duration-300">高可用架构</h3>
-                    <p className="text-gray-600 leading-relaxed">
-                      多节点冗余部署，自动故障转移，支持 10万+ QPS 并发，企业级 SLA 保障，确保业务连续性
-                    </p>
-                  </div>
-                </Reveal>
-              </>
-            )}
+            })}
           </div>
         </div>
       </section>

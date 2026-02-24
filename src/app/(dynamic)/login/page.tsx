@@ -1,66 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useAuthStore } from '@/stores/auth'
+import { LoginForm } from '@/components/login'
 
-export default function Login() {
-  const [loading, setLoading] = useState(false)
-  const [loginType, setLoginType] = useState<'password' | 'code'>('password')
-  const [codeCountdown, setCodeCountdown] = useState(0)
+function LoginContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { isAuthenticated, hydrated } = useAuthStore()
 
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-    code: '',
-  })
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
-  }
-
-  // 验证码倒计时
+  // 解析 URL 参数
   useEffect(() => {
-    if (codeCountdown <= 0) return
+    searchParams.get('registered')
+    searchParams.get('reset')
+  }, [searchParams])
 
-    const timer = setInterval(() => {
-      setCodeCountdown(prev => prev - 1)
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [codeCountdown])
-
-  const sendCode = async () => {
-    if (!form.email) {
-      alert('请先输入邮箱')
-      return
+  // 检查是否已登录（仅在 hydration 完成后）
+  useEffect(() => {
+    if (hydrated && isAuthenticated) {
+      router.replace('/console/account/basic-information')
     }
+  }, [hydrated, isAuthenticated, router])
 
-    setCodeCountdown(60)
-  }
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    setLoading(true)
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      // 通知原窗口跳转到 console
-      if (window.opener) {
-        window.opener.location.href = '/console'
-        window.close()
-      } else {
-        // 如果没有原窗口，直接跳转
-        window.location.href = '/console'
-      }
-    } catch (error) {
-      console.error('登录失败:', error)
-    } finally {
-      setLoading(false)
-    }
+  const handleLoginSuccess = () => {
+    // 登录成功，跳转到控制台账户信息页
+    router.push('/console/account/basic-information')
   }
 
   return (
@@ -86,98 +51,33 @@ export default function Login() {
             <h2 className="text-2xl font-bold text-gray-900">Eucal AI | 登录</h2>
           </div>
 
-          {/* 登录方式切换 */}
-          <div className="flex border-b border-gray-200 mb-6">
-            <button
-              onClick={() => setLoginType('password')}
-              className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${
-                loginType === 'password' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              密码登录
-              {loginType === 'password' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>}
-            </button>
-            <button
-              onClick={() => setLoginType('code')}
-              className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${
-                loginType === 'code' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              邮箱验证码登录
-              {loginType === 'code' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>}
-            </button>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">邮箱</label>
-              <input
-                name="email"
-                type="email"
-                required
-                value={form.email}
-                onChange={handleChange}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                placeholder="请输入邮箱"
-              />
-            </div>
-
-            {loginType === 'password' ? (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">密码</label>
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  value={form.password}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                  placeholder="请输入密码"
-                />
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">验证码</label>
-                <div className="flex space-x-3">
-                  <input
-                    name="code"
-                    type="text"
-                    required
-                    maxLength={6}
-                    value={form.code}
-                    onChange={handleChange}
-                    className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                    placeholder="请输入验证码"
-                  />
-                  <button
-                    type="button"
-                    onClick={sendCode}
-                    disabled={codeCountdown > 0}
-                    className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                  >
-                    {codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? '登录中...' : '立即登录'}
-            </button>
-          </form>
-
-          <div className="mt-6 flex items-center justify-between text-sm">
-            <a href="#" className="text-gray-500 hover:text-gray-700">忘记密码？</a>
-            <Link href="/register" className="text-gray-900 font-medium hover:text-gray-700">
-              还没有账号？立即注册
-            </Link>
-          </div>
+          <LoginForm onSuccess={handleLoginSuccess} />
         </div>
       </div>
     </div>
+  )
+}
+
+// 使用 Suspense 包裹以支持 useSearchParams
+export default function Login() {
+  const { hydrated } = useAuthStore()
+
+  // hydration 未完成时显示加载状态
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-500">加载中...</div>
+      </div>
+    )
+  }
+
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-gray-500">加载中...</div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

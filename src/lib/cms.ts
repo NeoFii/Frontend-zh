@@ -44,8 +44,8 @@ function readMarkdownFile<T>(filePath: string): { data: T; content: string } | n
     const fileContents = fs.readFileSync(filePath, 'utf8')
     const { data, content } = matter(fileContents)
     return { data: data as T, content }
-  } catch (error) {
-    console.error(`Error reading markdown file ${filePath}:`, error)
+  } catch {
+    // 文件读取失败，返回 null
     return null
   }
 }

@@ -44,40 +44,39 @@ export default function NewsDetailPage({ params }: { params: { slug: string } })
   }
 
   return (
-    <div className="animate-fade-in bg-white min-h-screen">
-      <div className="container-custom">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          {/* Header */}
-          <header className="pt-16 pb-8">
-            {/* Title */}
-            <h1 className="text-3xl md:text-4xl lg:text-[54px] font-medium text-gray-900 leading-tight lg:leading-[86.4px] text-center pb-8">
-              {news.title}
-            </h1>
+    <main className="flex flex-col items-center w-full overflow-y-auto flex-1 pb-[120px] min-h-screen bg-white">
+      {/* 标题区域 */}
+      <div className="w-full px-[20px] lg:px-0 lg:w-[768px] pt-[80px]">
+        {/* 主标题 */}
+        <h1 className="text-[#181E25] text-[40px] md:text-[48px] font-[500] leading-[1.6] text-center mb-[16px]">
+          {news.title}
+        </h1>
 
-            {/* Meta */}
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <span>{news.date}</span>
-            </div>
-          </header>
-
-          {/* Cover Image */}
-          {news.coverImage && (
-            <div className="mb-10 relative aspect-video">
-              <Image
-                src={news.coverImage}
-                alt={news.title}
-                fill
-                className="object-cover rounded-lg"
-                priority
-              />
-            </div>
-          )}
-
-          {/* Markdown Content */}
-          <MarkdownRenderer content={news.content} />
-
+        {/* 日期 */}
+        <div className="text-[#666666] text-[14px] font-[400] leading-[21px] text-center mb-[48px]">
+          {news.date}
         </div>
       </div>
-    </div>
+
+      {/* 封面图 */}
+      {news.coverImage && (
+        <div className="w-full px-[20px] lg:px-0 lg:w-[768px] mb-[48px]">
+          <div className="relative aspect-video w-full">
+            <Image
+              src={news.coverImage}
+              alt={news.title}
+              fill
+              className="object-cover rounded-[12px]"
+              priority
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 正文内容 */}
+      <div className="w-full px-[20px] lg:px-0 lg:w-[768px]">
+        <MarkdownRenderer content={news.content} />
+      </div>
+    </main>
   )
 }

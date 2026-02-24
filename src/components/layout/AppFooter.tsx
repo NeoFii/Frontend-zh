@@ -13,7 +13,7 @@ const quickLinks: NavItem[] = [
 
 export default function AppFooter() {
   return (
-    <footer className="bg-gray-900">
+    <footer className="bg-gray-900" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <div className="container-custom py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}

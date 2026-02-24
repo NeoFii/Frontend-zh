@@ -5,6 +5,7 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 const apiClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1',
   timeout: 10000,
+  withCredentials: true, // 允许发送 cookies（用于认证）
   headers: {
     'Content-Type': 'application/json',
   },
@@ -13,20 +14,8 @@ const apiClient: AxiosInstance = axios.create({
 // 请求拦截器
 apiClient.interceptors.request.use(
   (config) => {
-    // 从 localStorage 获取 token（仅在客户端）
-    if (typeof window !== 'undefined') {
-      const authStorage = localStorage.getItem('auth-storage')
-      if (authStorage) {
-        try {
-          const { state } = JSON.parse(authStorage)
-          if (state.token) {
-            config.headers.Authorization = `Bearer ${state.token}`
-          }
-        } catch {
-          // 解析失败，忽略
-        }
-      }
-    }
+    // 后端使用 HttpOnly Cookie 进行认证，浏览器会自动发送 Cookie
+    // 无需手动设置 Authorization header
     return config
   },
   (error) => {
@@ -46,6 +35,12 @@ apiClient.interceptors.response.use(
       console.error(`API Error ${status}:`, data)
 
       switch (status) {
+        case 401:
+          // 未登录或登录过期，跳转到登录页
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login'
+          }
+          break
         case 404:
           console.error('请求的资源不存在')
           break

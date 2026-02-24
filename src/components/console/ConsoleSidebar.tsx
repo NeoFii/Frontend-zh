@@ -32,12 +32,6 @@ const FinanceIcon = () => (
   </svg>
 )
 
-const PlanIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-  </svg>
-)
-
 export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSidebarProps) {
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['account'])
 
@@ -47,29 +41,21 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
       name: '账户管理',
       icon: <AccountIcon />,
       items: [
-        { id: 'account-info', name: '账户信息' },
-        { id: 'api-keys', name: '接口密钥' },
-        { id: 'rate-limit', name: '请求限制' },
-        { id: 'sub-accounts', name: '子账号' },
+        { id: 'basic-information', name: '账户信息' },
+        { id: 'interface-key', name: '接口密钥' },
+        { id: 'request-limits', name: '请求限制' },
+        { id: 'child-account', name: '子账号' },
       ],
     },
     {
-      id: 'finance',
+      id: 'payment',
       name: '财务管理',
       icon: <FinanceIcon />,
       items: [
         { id: 'balance', name: '余额' },
         { id: 'recharge', name: '充值记录' },
         { id: 'voucher', name: '代金券记录' },
-        { id: 'bill', name: '账单记录' },
-      ],
-    },
-    {
-      id: 'plan',
-      name: '套餐管理',
-      icon: <PlanIcon />,
-      items: [
-        { id: 'current-plan', name: 'Coding Plan' },
+        { id: 'billing-history', name: '账单记录' },
       ],
     },
   ]
@@ -83,7 +69,9 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
   }
 
   return (
-    <aside className="fixed left-0 top-16 w-64 h-[calc(100vh-64px)] bg-white border-r border-gray-200 overflow-y-auto"
+    <aside
+      className="fixed left-0 top-16 w-64 h-[calc(100vh-64px)] bg-white border-r border-gray-200 overflow-y-auto"
+      style={{ fontFamily: 'MiSans, sans-serif' }}
     >
       <div className="py-2">
         {menuGroups.map((group) => {
@@ -92,23 +80,29 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
 
           return (
             <div key={group.id} className="mb-1">
-              {/* 菜单组标题 */}
+              {/* 菜单组标题 - 一级导航 */}
               <button
                 onClick={() => toggleGroup(group.id)}
-                className={`w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium transition-colors ${
-                  hasActiveItem
-                    ? 'text-primary-600'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className="w-full flex items-center justify-between px-4 py-2.5 transition-colors duration-200"
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 400,
+                  lineHeight: '19px',
+                  color: hasActiveItem ? '#181E25' : '#5F5F5F',
+                }}
               >
                 <div className="flex items-center space-x-3">
-                  <span className={hasActiveItem ? 'text-primary-600' : 'text-gray-500'}>
+                  <span
+                    className="transition-colors duration-200"
+                    style={{ color: hasActiveItem ? '#181E25' : '#5F5F5F' }}
+                  >
                     {group.icon}
                   </span>
                   <span>{group.name}</span>
                 </div>
                 <svg
-                  className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                  className="w-4 h-4 transition-all duration-200"
+                  style={{ color: '#5F5F5F', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -117,7 +111,7 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
                 </svg>
               </button>
 
-              {/* 展开的子菜单 */}
+              {/* 展开的子菜单 - 二级导航 */}
               {isExpanded && (
                 <div className="py-1">
                   {group.items.map((item) => {
@@ -126,11 +120,24 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
                       <button
                         key={item.id}
                         onClick={() => onMenuChange(item.id)}
-                        className={`relative w-full text-left pl-12 pr-4 py-2 text-sm transition-all duration-150 ${
-                          isActive
-                            ? 'text-primary-600 bg-primary-50/60 font-medium'
-                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                        }`}
+                        className="relative w-full text-left pl-12 pr-4 py-2 transition-all duration-200"
+                        style={{
+                          fontSize: '14px',
+                          fontWeight: 400,
+                          lineHeight: '19px',
+                          color: isActive ? '#f97316' : '#5F5F5F',
+                          backgroundColor: isActive ? 'rgba(249, 115, 22, 0.06)' : 'transparent',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isActive) {
+                            e.currentTarget.style.color = '#181E25'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isActive) {
+                            e.currentTarget.style.color = '#5F5F5F'
+                          }
+                        }}
                       >
                         <div className="flex items-center">
                           {/* 选中指示器 - 小圆点 */}
@@ -151,7 +158,7 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
 
       {/* 底部版权信息 */}
       <div className="absolute bottom-0 left-0 right-0 px-4 py-4 border-t border-gray-100">
-        <p className="text-xs text-gray-400">2026 © Eucal AI</p>
+        <p style={{ fontSize: '12px', color: '#9CA3AF' }}>2026 © Eucal AI</p>
       </div>
     </aside>
   )

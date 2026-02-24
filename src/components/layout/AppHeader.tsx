@@ -85,6 +85,7 @@ export default function AppHeader() {
       } border-b ${
         isScrolled ? 'border-gray-100/80' : 'border-transparent'
       }`}
+      style={{ fontFamily: 'MiSans, sans-serif' }}
     >
       <div className="container-custom">
         <nav className="flex items-center h-20">
