@@ -4,6 +4,7 @@ import Link from 'next/link'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { useState } from 'react'
 import type { ProductItem } from '@/types/cms'
+import { useAuthStore } from '@/stores/auth'
 
 interface ProductDetailClientProps {
   product: ProductItem
@@ -11,6 +12,17 @@ interface ProductDetailClientProps {
 
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
   const [expandedFaqs, setExpandedFaqs] = useState<string[]>([])
+  const { isAuthenticated, hydrated } = useAuthStore()
+
+  // 判断是否已登录
+  const isLoggedIn = hydrated && isAuthenticated
+
+  // 处理立即体验按钮点击
+  const handleExperienceClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const targetUrl = isLoggedIn ? '/console/account/basic-information' : '/login'
+    window.open(targetUrl, '_blank')
+  }
 
   const toggleFaq = (faqId: string) => {
     setExpandedFaqs(prev =>
@@ -36,16 +48,21 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
         {/* CTA 按钮 */}
         <div className="flex items-center justify-center py-[16px]">
-          <Link
-            href="/login"
-            className="no-underline p-[8px_24px] rounded-full flex items-center gap-2 bg-[#181E25] text-white mr-[16px] hover:opacity-90 transition-all duration-300"
-          >
-            <p className="p-0 m-0 text-[16px] font-[400] leading-[19px]">立即体验</p>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
-              <path d="M3.33337 8H12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-              <path d="M8 3.33334L12.6667 8.00001L8 12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-            </svg>
-          </Link>
+          {!hydrated ? (
+            // hydration 未完成时显示占位按钮
+            <div className="w-[140px] h-[48px] bg-gray-100 rounded-full animate-pulse mr-[16px]"></div>
+          ) : (
+            <button
+              onClick={handleExperienceClick}
+              className="no-underline p-[8px_24px] rounded-full flex items-center gap-2 bg-[#181E25] text-white mr-[16px] hover:opacity-90 transition-all duration-300"
+            >
+              <p className="p-0 m-0 text-[16px] font-[400] leading-[19px]">立即体验</p>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
+                <path d="M3.33337 8H12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+                <path d="M8 3.33334L12.6667 8.00001L8 12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+              </svg>
+            </button>
+          )}
           <Link
             href={`/products/${product.slug || 'tierflow'}`}
             className="no-underline p-[8px_24px] rounded-full flex items-center gap-2 border border-solid border-[#181E25]/80 text-[#181E25] hover:bg-[#F7F8FA] transition-all duration-300"

@@ -29,29 +29,44 @@ apiClient.interceptors.response.use(
     return response.data
   },
   (error) => {
+    // 详细错误日志
+    console.error('API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    })
+
     // 统一错误处理
     if (error.response) {
       const { status, data } = error.response
       console.error(`API Error ${status}:`, data)
 
-      switch (status) {
-        case 401:
-          // 未登录或登录过期，跳转到登录页
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login'
-          }
-          break
-        case 404:
-          console.error('请求的资源不存在')
-          break
-        case 500:
-          console.error('服务器内部错误')
-          break
-        default:
-          console.error(data.message || '请求失败')
+      // 对于登录相关接口，不自动跳转，让调用者处理错误
+      const isAuthEndpoint = error.config?.url?.includes('/auth/')
+
+      if (!isAuthEndpoint) {
+        switch (status) {
+          case 401:
+            // 未登录或登录过期，跳转到登录页
+            if (typeof window !== 'undefined') {
+              window.location.href = '/login'
+            }
+            break
+          case 404:
+            console.error('请求的资源不存在')
+            break
+          case 500:
+            console.error('服务器内部错误')
+            break
+          default:
+            console.error(data.message || '请求失败')
+        }
       }
     } else if (error.request) {
-      console.error('网络请求失败，请检查网络连接')
+      // 网络错误
+      console.error('网络请求失败，请检查网络连接或后端服务')
     } else {
       console.error('请求配置错误:', error.message)
     }

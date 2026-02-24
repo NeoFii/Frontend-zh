@@ -41,7 +41,8 @@ export default function ForgotPassword() {
     return () => clearInterval(timer)
   }, [codeCountdown])
 
-  const sendCode = async () => {
+  const sendCode = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!form.email) {
       setError('请先输入邮箱')
       return
@@ -142,7 +143,7 @@ export default function ForgotPassword() {
             </p>
           </div>
 
-          <form onSubmit={step === 1 ? sendCode : handleResetPassword} className="space-y-5">
+          <form onSubmit={(e) => step === 1 ? sendCode(e) : handleResetPassword(e)} className="space-y-5">
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
                 {error}

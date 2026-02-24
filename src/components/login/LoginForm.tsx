@@ -110,11 +110,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         saveUser(res.data.user)
         onSuccess()
       } else {
+        // 业务逻辑错误，直接使用后端返回的 message
         setError(res.message || '登录失败')
       }
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || '登录失败，请稍后重试')
+      // HTTP 错误，直接使用后端返回的 message
+      const axiosError = err as { response?: { data?: { message?: string } } }
+      const message = axiosError.response?.data?.message
+      setError(message || '登录失败，请稍后重试')
     } finally {
       setLoading(false)
     }

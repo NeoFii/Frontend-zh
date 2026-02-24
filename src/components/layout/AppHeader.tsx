@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { NavItem } from '@/types'
+import { useAuthStore } from '@/stores/auth'
 
 const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'Eucal AI'
 
@@ -25,6 +26,17 @@ export default function AppHeader() {
   const [isHidden, setIsHidden] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
+  const { isAuthenticated, hydrated } = useAuthStore()
+
+  // 判断是否已登录
+  const isLoggedIn = hydrated && isAuthenticated
+
+  // 处理登录/控制台按钮点击
+  const handleAuthClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const targetUrl = isLoggedIn ? '/console/account/basic-information' : '/login'
+    window.open(targetUrl, '_blank')
+  }
 
   // 滚动处理
   useEffect(() => {
@@ -164,14 +176,12 @@ export default function AppHeader() {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-4">
-            <a
-              href="/login"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={handleAuthClick}
               className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 hover:shadow-lg hover:shadow-gray-900/20 hover:scale-105 transition-all duration-300"
             >
               登录
-            </a>
+            </button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -236,14 +246,12 @@ export default function AppHeader() {
               )
             )}
             <div className="pt-3 mt-2 border-t border-gray-100/50">
-              <a
-                href="/login"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={handleAuthClick}
                 className="block w-full text-center px-4 py-3 bg-gray-900 text-white rounded-xl text-[15px] font-semibold hover:bg-gray-800 transition-colors duration-200"
               >
                 登录
-              </a>
+              </button>
             </div>
           </div>
         </div>

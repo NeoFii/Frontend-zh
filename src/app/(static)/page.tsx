@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuthStore } from '@/stores/auth'
 import Reveal from '@/components/Reveal'
 import CountUp from '@/components/CountUp'
+import { useAuthStore } from '@/stores/auth'
 
 // 客户端硬编码产品数据（避免使用 fs 模块）
 const featuredProduct = {
@@ -37,9 +37,14 @@ const featuredProduct = {
 
 export default function Home() {
   const { isAuthenticated, hydrated } = useAuthStore()
-
-  // 判断是否已登录（认证状态由后端通过 Cookie 管理）
   const isLoggedIn = hydrated && isAuthenticated
+
+  // 处理 CTA 按钮点击
+  const handleCtaClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const targetUrl = isLoggedIn ? '/console/account/basic-information' : '/login'
+    window.open(targetUrl, '_blank')
+  }
 
   return (
     <main>
@@ -78,29 +83,15 @@ export default function Home() {
             {/* CTA 按钮 - 横向排列 */}
             <Reveal delay={300}>
               <div className="flex flex-wrap gap-4 justify-center mb-16">
-                {isLoggedIn ? (
-                  <a
-                    href="/console/account/basic-information"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center px-8 py-4 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-gray-900/20 btn-ripple"
-                  >
-                    进入控制台
-                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </a>
-                ) : (
-                  <Link
-                    href="/login"
-                    className="group inline-flex items-center px-8 py-4 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-gray-900/20 btn-ripple"
-                  >
-                    即刻接入API
-                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                  </Link>
-                )}
+                <button
+                  onClick={handleCtaClick}
+                  className="group inline-flex items-center px-8 py-4 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-gray-900/20 btn-ripple"
+                >
+                  即刻接入API
+                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </button>
                 <Link
                   href={`/products/${featuredProduct.slug}`}
                   className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-900 rounded-full font-medium hover:bg-gray-200 transition-all duration-300 hover:scale-105"

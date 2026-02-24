@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { useAuthStore } from '@/stores/auth'
 
@@ -9,6 +8,13 @@ export default function Platform() {
 
   // 判断是否已登录（认证状态由后端通过 Cookie 管理）
   const isLoggedIn = hydrated && isAuthenticated
+
+  // 处理获取 API Key 按钮点击
+  const handleApiKeyClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const targetUrl = isLoggedIn ? '/console/account/basic-information' : '/login'
+    window.open(targetUrl, '_blank')
+  }
 
   return (
     <main className="flex flex-col items-center w-full overflow-y-auto flex-1 pb-[160px] min-h-screen">
@@ -43,22 +49,12 @@ export default function Platform() {
               <path d="M8 3.33334L12.6667 8.00001L8 12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
             </svg>
           </a>
-          {isLoggedIn ? (
-            <a
-              href="/console/account/basic-information"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="no-underline p-[8px_24px] rounded-full flex items-center gap-2 border border-solid border-[#181E25]/80 text-[#181E25] hover:bg-[#F7F8FA] transition-all duration-300"
-            >
-              <p className="p-0 m-0 text-[16px] font-[400] leading-[19px]">获取 API Key</p>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
-                <path d="M3.33337 8H12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-                <path d="M8 3.33334L12.6667 8.00001L8 12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-              </svg>
-            </a>
+          {!hydrated ? (
+            // hydration 未完成时显示占位按钮
+            <div className="w-[140px] h-[48px] bg-gray-100 rounded-full animate-pulse"></div>
           ) : (
-            <Link
-              href="/login"
+            <button
+              onClick={handleApiKeyClick}
               className="no-underline p-[8px_24px] rounded-full flex items-center gap-2 border border-solid border-[#181E25]/80 text-[#181E25] hover:bg-[#F7F8FA] transition-all duration-300"
             >
               <p className="p-0 m-0 text-[16px] font-[400] leading-[19px]">获取 API Key</p>
@@ -66,7 +62,7 @@ export default function Platform() {
                 <path d="M3.33337 8H12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
                 <path d="M8 3.33334L12.6667 8.00001L8 12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
               </svg>
-            </Link>
+            </button>
           )}
         </div>
       </div>
