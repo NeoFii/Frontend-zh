@@ -3,8 +3,9 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# 使用 pnpm 安装依赖
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# 使用 npm（避免 corepack 网络问题）
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
@@ -13,7 +14,8 @@ RUN pnpm install --frozen-lockfile
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -21,6 +23,7 @@ COPY . .
 # 设置环境变量
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com
 
 # 构建应用
 RUN pnpm build
