@@ -1,0 +1,49 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# 测试和文档
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+coverage
+README.md
+docs
+
+# 开发工具
+.env
+.env.local
+.env.development
+.env.test
+
+# Node
+node_modules
+npm-debug.log*
+pnpm-debug.log*
+
+# Next.js
+.next
+out
+dist
+
+# 临时文件
+.DS_Store
+Thumbs.db
+*.log
+tmp
+temp
+
+# 其他
+.eslintrc.json
+.jest.config.js
+tailwind.config.ts
+postcss.config.mjs
+tsconfig.json

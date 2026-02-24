@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 支持 Docker 多阶段构建
+  output: 'standalone',
+
   // 生产环境优化
   productionBrowserSourceMaps: false,
 
@@ -15,12 +18,14 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
 
-  // API 代理配置
+  // API 代理配置 - Docker 环境中使用服务名
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://127.0.0.1:8000/api/:path*',
+        destination: process.env.NODE_ENV === 'production'
+          ? 'http://backend:8000/api/:path*'
+          : 'http://127.0.0.1:8000/api/:path*',
       },
     ];
   },
