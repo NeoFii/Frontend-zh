@@ -40,10 +40,3 @@ Thumbs.db
 *.log
 tmp
 temp
-
-# 其他
-.eslintrc.json
-.jest.config.js
-tailwind.config.ts
-postcss.config.mjs
-tsconfig.json

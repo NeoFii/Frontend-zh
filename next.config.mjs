@@ -1,7 +1,25 @@
+import path from 'path'
+import { fileURLToPath } from 'url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 /** @type {import('next').NextConfig} */
+// 通过环境变量控制 standalone 模式（用于 Docker 构建）
+// 本地开发时不需要 standalone，直接运行 pnpm build 即可
+// Docker 构建时设置 NEXT_STANDALONE=true pnpm build
+const useStandalone = process.env.NEXT_STANDALONE === 'true'
 const nextConfig = {
   // 支持 Docker 多阶段构建
-  output: 'standalone',
+  output: useStandalone ? 'standalone' : undefined,
+
+  // 显式配置路径别名解析（解决 Docker 构建时 @/ 别名无法识别的问题）
+  webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@/': path.resolve(__dirname, 'src') + '/',
+    }
+    return config
+  },
 
   // 生产环境优化
   productionBrowserSourceMaps: false,
@@ -18,14 +36,15 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
 
-  // API 代理配置 - Docker 环境中使用服务名
+  // API 代理配置 - 通过环境变量控制代理目标
+  // 本地开发: API_URL=http://127.0.0.1:8000 pnpm start
+  // Docker: 自动使用 http://backend:8000
   async rewrites() {
+    const apiUrl = process.env.API_URL || 'http://127.0.0.1:8000';
     return [
       {
         source: '/api/:path*',
-        destination: process.env.NODE_ENV === 'production'
-          ? 'http://backend:8000/api/:path*'
-          : 'http://127.0.0.1:8000/api/:path*',
+        destination: `${apiUrl}/api/:path*`,
       },
     ];
   },
