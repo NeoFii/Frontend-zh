@@ -214,7 +214,7 @@ export default function PricePage() {
           <div className="bg-[#F7F8FA] rounded-[16px] p-6">
             <h3 className="text-[16px] font-[500] text-[#181E25] mb-2">如何查看我的使用量？</h3>
             <p className="text-[14px] text-[#666] leading-[24px]">
-              登录控制台后，您可以在"账户管理"页面查看详细的 API 调用统计和使用量报表。
+              登录控制台后，您可以在「账户管理」页面查看详细的 API 调用统计和使用量报表。
             </p>
           </div>
 

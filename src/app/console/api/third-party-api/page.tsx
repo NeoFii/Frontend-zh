@@ -162,7 +162,6 @@ export default function ThirdPartyApiPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {SUPPORTED_PROVIDERS.map((provider) => {
               const configured = isProviderConfigured(provider.id)
-              const config = configs[provider.id]
 
               return (
                 <div

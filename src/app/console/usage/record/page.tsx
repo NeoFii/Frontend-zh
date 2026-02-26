@@ -3,6 +3,14 @@
 import { useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 
+// ECharts tooltip 参数类型
+interface EChartsTooltipParams {
+  name: string
+  value: number
+  dataIndex: number
+  seriesIndex: number
+}
+
 // 动态导入 ECharts，添加加载状态
 const ReactECharts = dynamic(() => import('echarts-for-react'), {
   ssr: false,
@@ -228,7 +236,7 @@ export default function UsageRecordPage() {
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
-      formatter: (params: any) => {
+      formatter: (params: EChartsTooltipParams[]) => {
         const data = params[0]
         return `${data.name}<br/>调用次数: ${data.value.toLocaleString()}`
       },
@@ -277,7 +285,7 @@ export default function UsageRecordPage() {
         label: {
           show: true,
           position: 'right',
-          formatter: (params: any) => params.value.toLocaleString(),
+          formatter: (params: EChartsTooltipParams) => params.value.toLocaleString(),
           color: '#9CA3AF',
           fontSize: 12,
         },
