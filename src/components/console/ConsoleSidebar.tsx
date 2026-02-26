@@ -12,6 +12,7 @@ interface MenuGroup {
   name: string
   icon: ReactNode
   items: MenuItem[]
+  isDirect?: boolean // 是否直接跳转（无二级菜单）
 }
 
 interface ConsoleSidebarProps {
@@ -32,19 +33,38 @@ const FinanceIcon = () => (
   </svg>
 )
 
+const ApiIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  </svg>
+)
+
+const UsageIcon = () => (
+  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+)
+
 export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSidebarProps) {
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['account'])
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['account', 'api'])
 
   const menuGroups: MenuGroup[] = [
     {
-      id: 'account',
-      name: '账户管理',
-      icon: <AccountIcon />,
+      id: 'usage',
+      name: '用量记录',
+      icon: <UsageIcon />,
+      isDirect: true,
       items: [
-        { id: 'basic-information', name: '账户信息' },
-        { id: 'interface-key', name: '接口密钥' },
-        { id: 'request-limits', name: '请求限制' },
-        { id: 'child-account', name: '子账号' },
+        { id: 'usage-record', name: '用量记录' },
+      ],
+    },
+    {
+      id: 'api',
+      name: 'API管理',
+      icon: <ApiIcon />,
+      items: [
+        { id: 'get-api', name: '获取API' },
+        { id: 'third-party-api', name: '第三方API管理' },
       ],
     },
     {
@@ -56,6 +76,17 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
         { id: 'recharge', name: '充值记录' },
         { id: 'voucher', name: '代金券记录' },
         { id: 'billing-history', name: '账单记录' },
+      ],
+    },
+    {
+      id: 'account',
+      name: '账户管理',
+      icon: <AccountIcon />,
+      items: [
+        { id: 'basic-information', name: '账户信息' },
+        { id: 'interface-key', name: '接口密钥' },
+        { id: 'request-limits', name: '请求限制' },
+        { id: 'child-account', name: '子账号' },
       ],
     },
   ]
@@ -77,12 +108,23 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
         {menuGroups.map((group) => {
           const isExpanded = expandedGroups.includes(group.id)
           const hasActiveItem = group.items.some(item => item.id === activeMenu)
+          const isDirect = group.isDirect
+
+          // 直接跳转的菜单处理
+          const handleClick = () => {
+            if (isDirect) {
+              // 直接跳转到第一个菜单项
+              onMenuChange(group.items[0].id)
+            } else {
+              toggleGroup(group.id)
+            }
+          }
 
           return (
             <div key={group.id} className="mb-1">
               {/* 菜单组标题 - 一级导航 */}
               <button
-                onClick={() => toggleGroup(group.id)}
+                onClick={handleClick}
                 className="w-full flex items-center justify-between px-4 py-2.5 transition-colors duration-200"
                 style={{
                   fontSize: '14px',
@@ -100,19 +142,22 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
                   </span>
                   <span>{group.name}</span>
                 </div>
-                <svg
-                  className="w-4 h-4 transition-all duration-200"
-                  style={{ color: '#5F5F5F', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                {/* 直接跳转的菜单不显示箭头 */}
+                {!isDirect && (
+                  <svg
+                    className="w-4 h-4 transition-all duration-200"
+                    style={{ color: '#5F5F5F', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                )}
               </button>
 
               {/* 展开的子菜单 - 二级导航 */}
-              {isExpanded && (
+              {isExpanded && !isDirect && (
                 <div className="py-1">
                   {group.items.map((item) => {
                     const isActive = activeMenu === item.id
