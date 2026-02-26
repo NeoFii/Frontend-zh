@@ -1,38 +1,25 @@
 'use client'
 
 import MarkdownRenderer from '@/components/MarkdownRenderer'
-import { useAuthStore } from '@/stores/auth'
 
-export default function Platform() {
-  const { isAuthenticated, hydrated } = useAuthStore()
-
-  // 判断是否已登录（认证状态由后端通过 Cookie 管理）
-  const isLoggedIn = hydrated && isAuthenticated
-
-  // 处理获取 API Key 按钮点击
-  const handleApiKeyClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    const targetUrl = isLoggedIn ? '/console/account/basic-information' : '/login'
-    window.open(targetUrl, '_blank')
-  }
-
+export default function ModelPage() {
   return (
     <main className="flex flex-col items-center w-full overflow-y-auto flex-1 pb-[160px] min-h-screen">
       {/* 1. 标题区域 */}
       <div className="px-[20px] lg:px-0 lg:w-[1000px] flex flex-col items-center mt-[80px]">
         {/* 主标题 */}
         <h1 className="m-0 p-0 text-center text-[#181E25] text-[54px] font-[500] leading-[86.4px] pb-[12px] max-w-[900px]">
-          Eucal AI 开放平台
+          TierFlow 模型
         </h1>
 
         {/* 副标题 */}
         <p className="text-[#181E25] text-[18px] font-[300] leading-[32px] text-center mb-[32px] max-w-[700px]">
-          通过简洁的 API 接口，快速接入 TierFlow 的智能推理优化能力
+          先进的智能推理优化模型，为您提供高效、准确的 AI 能力
         </p>
 
         {/* 描述 */}
         <p className="text-[#666] text-[16px] font-[300] leading-[28px] text-center mb-[32px] max-w-[700px]">
-          我们提供与 OpenAI 兼容的 API 格式，支持多种编程语言的 SDK，让您在几分钟内完成接入，即刻享受 70% 的成本降低和毫秒级响应速度。
+          我们的模型经过深度优化，在保持高质量输出的同时大幅降低计算成本，适用于各种应用场景。
         </p>
 
         {/* CTA 按钮 */}
@@ -49,21 +36,6 @@ export default function Platform() {
               <path d="M8 3.33334L12.6667 8.00001L8 12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
             </svg>
           </a>
-          {!hydrated ? (
-            // hydration 未完成时显示占位按钮
-            <div className="w-[140px] h-[48px] bg-gray-100 rounded-full animate-pulse"></div>
-          ) : (
-            <button
-              onClick={handleApiKeyClick}
-              className="no-underline p-[8px_24px] rounded-full flex items-center gap-2 border border-solid border-[#181E25]/80 text-[#181E25] hover:bg-[#F7F8FA] transition-all duration-300"
-            >
-              <p className="p-0 m-0 text-[16px] font-[400] leading-[19px]">获取 API Key</p>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
-                <path d="M3.33337 8H12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-                <path d="M8 3.33334L12.6667 8.00001L8 12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-              </svg>
-            </button>
-          )}
         </div>
       </div>
 
@@ -84,22 +56,22 @@ export default function Platform() {
           </div>
           <div className="text-center p-8 bg-[#F7F8FA] rounded-[12px]">
             <div className="text-[36px] font-[500] text-[#181E25] mb-2">
+              128<span style={{ fontSize: '24px' }}>K</span>
+            </div>
+            <div className="text-[14px] text-[#666]">上下文长度</div>
+          </div>
+          <div className="text-center p-8 bg-[#F7F8FA] rounded-[12px]">
+            <div className="text-[36px] font-[500] text-[#181E25] mb-2">
               99.9<span style={{ fontSize: '24px' }}>%</span>
             </div>
             <div className="text-[14px] text-[#666]">服务可用性</div>
           </div>
-          <div className="text-center p-8 bg-[#F7F8FA] rounded-[12px]">
-            <div className="text-[36px] font-[500] text-[#181E25] mb-2">
-              10<span style={{ fontSize: '24px' }}>万+</span>
-            </div>
-            <div className="text-[14px] text-[#666]">QPS 并发</div>
-          </div>
         </div>
       </div>
 
-      {/* 3. 平台优势 */}
+      {/* 3. 模型系列 */}
       <div className="w-full px-[20px] lg:px-0 lg:w-[1000px] py-[32px]">
-        <h2 className="text-[32px] font-[500] text-[#181E25] text-center mb-[48px]">为什么选择我们</h2>
+        <h2 className="text-[32px] font-[500] text-[#181E25] text-center mb-[48px]">模型系列</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="p-8 bg-[#F7F8FA] rounded-[16px] hover:shadow-lg transition-shadow duration-300">
@@ -110,9 +82,9 @@ export default function Platform() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">OpenAI 兼容</h3>
+                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">TierFlow Pro</h3>
                 <p className="text-[14px] text-[#666] leading-[24px]">
-                  完全兼容 OpenAI API 格式，只需修改 base_url 和 api_key，现有代码无需任何改动即可接入
+                  旗舰级模型，适用于复杂的推理任务和高要求的应用场景，提供最准确的回答和最佳的性能。
                 </p>
               </div>
             </div>
@@ -126,9 +98,9 @@ export default function Platform() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">多语言 SDK</h3>
+                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">TierFlow Turbo</h3>
                 <p className="text-[14px] text-[#666] leading-[24px]">
-                  提供 Python、Node.js、Go、Java 等多种语言的官方 SDK，集成更简单，开发更高效
+                  高速响应模型，针对低延迟场景优化，适合实时对话和大规模调用场景。
                 </p>
               </div>
             </div>
@@ -142,9 +114,9 @@ export default function Platform() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">企业级安全</h3>
+                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">TierFlow Lite</h3>
                 <p className="text-[14px] text-[#666] leading-[24px]">
-                  通过 ISO 27001 安全认证，提供完善的数据加密和访问控制，确保企业数据安全
+                  轻量级模型，适合简单任务和成本敏感的应用，提供高性价比的 AI 能力。
                 </p>
               </div>
             </div>
@@ -158,9 +130,9 @@ export default function Platform() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">7×24 技术支持</h3>
+                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">定制模型</h3>
                 <p className="text-[14px] text-[#666] leading-[24px]">
-                  专业技术支持团队全天候在线，及时响应您的任何问题，确保业务稳定运行
+                  根据企业需求定制的专属模型，针对特定领域进行深度优化，提供最佳效果。
                 </p>
               </div>
             </div>
@@ -168,26 +140,28 @@ export default function Platform() {
         </div>
       </div>
 
-      {/* 4. 快速开始 */}
+      {/* 4. 模型能力 */}
       <div className="w-full px-[20px] lg:px-0 lg:w-[768px] py-[48px]">
-        <h2 className="text-[32px] font-[500] text-[#181E25] text-center mb-[48px]">快速开始</h2>
+        <h2 className="text-[32px] font-[500] text-[#181E25] text-center mb-[48px]">模型能力</h2>
 
         <div className="bg-[#F7F8FA] rounded-[16px] p-8">
-          <h3 className="text-[18px] font-[500] text-[#181E25] mb-4">安装 Python</h3>
-          <MarkdownRenderer content={`\`\`\`bash
-pip install eucal-ai
+          <h3 className="text-[18px] font-[500] text-[#181E25] mb-4">支持的功能</h3>
+          <MarkdownRenderer content={`\`\`\`
+- 文本补全 (Completions)
+- 聊天完成 (Chat Completions)
+- 函数调用 (Function Calling)
+- 流式输出 (Streaming)
+- 嵌入向量 (Embeddings)
+- JSON 模式 (JSON Mode)
 \`\`\``} />
 
-          <h3 className="text-[18px] font-[500] text-[#181E25] mb-4 mt-8">快速调用</h3>
-          <MarkdownRenderer content={`\`\`\`python
-from eucal import EucalAI
-
-client = EucalAI(api_key="your-api-key")
-response = client.chat.completions.create(
-    model="tierflow-pro",
-    messages=[{"role": "user", "content": "你好"}]
-)
-print(response.choices[0].message.content)
+          <h3 className="text-[18px] font-[500] text-[#181E25] mb-4 mt-8">支持的语言</h3>
+          <MarkdownRenderer content={`\`\`\`
+- 中文 (简体中文、繁体中文)
+- English (英语)
+- 日本語 (日语)
+- 한국어 (韩语)
+- 以及其他 100+ 种语言
 \`\`\``} />
         </div>
       </div>

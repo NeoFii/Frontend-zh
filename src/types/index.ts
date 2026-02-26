@@ -58,6 +58,7 @@ export interface NavItem {
   name: string
   path: string
   children?: NavItem[]
+  external?: boolean
 }
 
 // 从 CMS 类型重新导出

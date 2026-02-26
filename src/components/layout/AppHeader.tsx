@@ -16,8 +16,14 @@ const navItems: NavItem[] = [
       { name: 'TierFlow', path: '/products/tierflow' },
     ],
   },
-  { name: '开放平台', path: '/platform' },
-  { name: '新闻动态', path: '/news' },
+  { name: '模型', path: '/model' },
+  { name: '价格', path: '/price' },
+  {
+    name: '文档中心',
+    path: 'https://neofii.github.io/TierFlow-Doc/',
+    external: true,
+  },
+  { name: '生态合作', path: '/ecosystem' },
   { name: '关于我们', path: '/about' },
 ]
 
@@ -154,6 +160,16 @@ export default function AppHeader() {
                       </div>
                     </div>
                   </div>
+                ) : item.external ? (
+                  <a
+                    key={item.path}
+                    href={item.path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 text-[15px] font-medium tracking-wide transition-all duration-200 rounded-lg hover:bg-gray-50/80 text-gray-600 hover:text-gray-900"
+                  >
+                    {item.name}
+                  </a>
                 ) : (
                   <Link
                     key={item.path}
@@ -231,6 +247,16 @@ export default function AppHeader() {
                     ))}
                   </div>
                 </div>
+              ) : item.external ? (
+                <a
+                  key={item.path}
+                  href={item.path}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-3 text-[15px] font-medium tracking-wide hover:bg-gray-50 rounded-lg transition-colors duration-200 text-gray-700 hover:text-gray-900"
+                >
+                  {item.name}
+                </a>
               ) : (
                 <Link
                   key={item.path}
