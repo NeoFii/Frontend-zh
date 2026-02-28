@@ -6,7 +6,7 @@
  */
 
 import React from 'react'
-import { modelVendors, ModelVendor } from '@/data/models'
+import { modelVendors } from '@/data/models'
 import Image from 'next/image'
 
 interface VendorFilterProps {

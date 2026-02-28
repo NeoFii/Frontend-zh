@@ -12,13 +12,6 @@ import ModelSort, { SortOrder } from '@/components/model/ModelSort'
 import ModelCard from '@/components/model/ModelCard'
 import VendorFilter from '@/components/model/VendorFilter'
 
-// 获取模型对应的供应商
-function getVendorByModelId(modelId: string): ModelVendor | undefined {
-  return modelVendors.find((vendor) =>
-    vendor.models.some((model) => model.id === modelId)
-  )
-}
-
 export default function ModelPage() {
   // 状态管理
   const [searchQuery, setSearchQuery] = useState('')

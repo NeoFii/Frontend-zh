@@ -1,16 +1,11 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { getAllNews, getNewsBySlug } from '@/lib/cms'
+import { getNewsBySlug } from '@/lib/cms'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import type { Metadata } from 'next'
 
-// 生成所有静态路径
-export async function generateStaticParams() {
-  const news = getAllNews()
-  return news.map((item) => ({
-    slug: item.slug,
-  }))
-}
+// 强制动态渲染
+export const dynamic = 'force-dynamic'
 
 // 生成页面元数据
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {

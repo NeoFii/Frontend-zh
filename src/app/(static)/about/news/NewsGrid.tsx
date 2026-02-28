@@ -31,7 +31,7 @@ export default function NewsGrid({ newsList }: NewsGridProps) {
             key={news.slug}
             className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl hover:shadow-gray-200/50 transition-all duration-300 cursor-pointer group"
           >
-            <Link href={`/news/${news.slug}`} target="_blank" rel="noopener noreferrer">
+            <Link href={`/about/news/${news.slug}`} target="_blank" rel="noopener noreferrer">
               <div className="aspect-video bg-gray-100 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10"></div>
                 {news.coverImage ? (
