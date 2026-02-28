@@ -48,7 +48,7 @@ const FallbackIcon: React.FC<{ name: string; providerId: string; size: number }>
 
   return (
     <div
-      className="rounded-xl flex items-center justify-center font-bold text-white flex-shrink-0"
+      className="rounded-md flex items-center justify-center font-bold text-white flex-shrink-0"
       style={{
         width: size,
         height: size,
@@ -80,7 +80,8 @@ export const ProviderIcon: React.FC<ProviderIconProps> = ({
       alt={name}
       width={size}
       height={size}
-      className={`rounded-xl object-cover flex-shrink-0 ${className}`}
+      unoptimized
+      className={`rounded-md object-cover flex-shrink-0 ${className}`}
       onError={() => setUseFallback(true)}
     />
   )

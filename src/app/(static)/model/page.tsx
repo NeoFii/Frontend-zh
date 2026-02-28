@@ -1,216 +1,196 @@
 'use client'
 
-import MarkdownRenderer from '@/components/MarkdownRenderer'
+/**
+ * 模型页面
+ * 展示所有支持的 AI 模型，以网格卡片形式呈现
+ */
+
+import React, { useState, useMemo } from 'react'
+import { modelVendors, ModelVendor, Model } from '@/data/models'
+import ModelSearch from '@/components/model/ModelSearch'
+import ModelSort, { SortOrder } from '@/components/model/ModelSort'
+import ModelCard from '@/components/model/ModelCard'
+import VendorFilter from '@/components/model/VendorFilter'
+
+// 获取模型对应的供应商
+function getVendorByModelId(modelId: string): ModelVendor | undefined {
+  return modelVendors.find((vendor) =>
+    vendor.models.some((model) => model.id === modelId)
+  )
+}
 
 export default function ModelPage() {
+  // 状态管理
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('default')
+  const [selectedVendors, setSelectedVendors] = useState<string[]>([])
+
+  // 获取所有模型并关联供应商
+  const allModels = useMemo(() => {
+    const models: { model: Model; vendor: ModelVendor }[] = []
+    modelVendors.forEach((vendor) => {
+      vendor.models.forEach((model) => {
+        models.push({ model, vendor })
+      })
+    })
+    return models
+  }, [])
+
+  // 过滤和排序模型
+  const filteredModels = useMemo(() => {
+    let result = [...allModels]
+
+    // 厂商筛选
+    if (selectedVendors.length > 0) {
+      result = result.filter(({ vendor }) =>
+        selectedVendors.includes(vendor.id)
+      )
+    }
+
+    // 搜索过滤
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      result = result.filter(
+        ({ model, vendor }) =>
+          model.name.toLowerCase().includes(query) ||
+          model.description?.toLowerCase().includes(query) ||
+          vendor.name.toLowerCase().includes(query)
+      )
+    }
+
+    // 排序
+    if (sortOrder === 'desc') {
+      result.sort((a, b) => {
+        const dateA = a.model.publishedAt ? new Date(a.model.publishedAt).getTime() : 0
+        const dateB = b.model.publishedAt ? new Date(b.model.publishedAt).getTime() : 0
+        return dateB - dateA
+      })
+    } else if (sortOrder === 'asc') {
+      result.sort((a, b) => {
+        const dateA = a.model.publishedAt ? new Date(a.model.publishedAt).getTime() : 0
+        const dateB = b.model.publishedAt ? new Date(b.model.publishedAt).getTime() : 0
+        return dateA - dateB
+      })
+    }
+
+    return result
+  }, [allModels, searchQuery, sortOrder, selectedVendors])
+
+  // 清除所有筛选
+  const clearAllFilters = () => {
+    setSearchQuery('')
+    setSelectedVendors([])
+  }
+
+  // 是否有活跃筛选
+  const hasActiveFilters = searchQuery || selectedVendors.length > 0
+
   return (
-    <main className="flex flex-col items-center w-full overflow-y-auto flex-1 pb-[160px] min-h-screen">
-      {/* 1. 标题区域 */}
-      <div className="px-[20px] lg:px-0 lg:w-[1000px] flex flex-col items-center mt-[80px]">
-        {/* 主标题 */}
-        <h1 className="m-0 p-0 text-center text-[#181E25] text-[54px] font-[500] leading-[86.4px] pb-[12px] max-w-[900px]">
-          TierFlow 模型
-        </h1>
+    <main className="min-h-screen bg-white">
+      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8 lg:py-12">
+        {/* 标题区域 */}
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
+          <div>
+            <h1 className="text-[24px] lg:text-[28px] font-semibold text-[#181E25] mb-2">
+              发现并使用最适合你的 AI 模型
+            </h1>
+            <p className="text-[14px] text-[#666666]">
+              汇聚业界顶尖 AI 模型，为您的应用提供强大能力
+            </p>
+          </div>
 
-        {/* 副标题 */}
-        <p className="text-[#181E25] text-[18px] font-[300] leading-[32px] text-center mb-[32px] max-w-[700px]">
-          先进的智能推理优化模型，为您提供高效、准确的 AI 能力
-        </p>
+          {/* 排序控件 */}
+          <ModelSort value={sortOrder} onChange={setSortOrder} />
+        </div>
 
-        {/* 描述 */}
-        <p className="text-[#666] text-[16px] font-[300] leading-[28px] text-center mb-[32px] max-w-[700px]">
-          我们的模型经过深度优化，在保持高质量输出的同时大幅降低计算成本，适用于各种应用场景。
-        </p>
+        {/* 厂商筛选 */}
+        <VendorFilter
+          selectedVendors={selectedVendors}
+          onChange={setSelectedVendors}
+        />
 
-        {/* CTA 按钮 */}
-        <div className="flex items-center justify-center py-[16px]">
-          <a
-            href="https://neofii.github.io/TierFlow-Doc/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="no-underline p-[8px_24px] rounded-full flex items-center gap-2 bg-[#181E25] text-white mr-[16px] hover:opacity-90 transition-all duration-300"
-          >
-            <p className="p-0 m-0 text-[16px] font-[400] leading-[19px]">查看文档</p>
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
-              <path d="M3.33337 8H12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
-              <path d="M8 3.33334L12.6667 8.00001L8 12.6667" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"></path>
+        {/* 搜索栏 */}
+        <div className="mb-6">
+          <div className="max-w-md">
+            <ModelSearch value={searchQuery} onChange={setSearchQuery} />
+          </div>
+        </div>
+
+        {/* 结果统计 */}
+        <div className="mb-6 flex items-center justify-between">
+          <span className="text-[14px] text-[#666666]">
+            共 <span className="text-[#181E25] font-medium">{filteredModels.length}</span> 个模型
+          </span>
+          {hasActiveFilters && (
+            <button
+              onClick={clearAllFilters}
+              className="text-[13px] text-[#666666] hover:text-[#181E25] transition-colors flex items-center gap-1"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+              >
+                <path
+                  d="M11 3.5L3 11.5M3 3.5L11 11.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              清除所有筛选
+            </button>
+          )}
+        </div>
+
+        {/* 模型网格 */}
+        {filteredModels.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
+            {filteredModels.map(({ model, vendor }) => (
+              <ModelCard key={model.id} model={model} vendor={vendor} />
+            ))}
+          </div>
+        ) : (
+          /* 无结果提示 */
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="64"
+              height="64"
+              viewBox="0 0 64 64"
+              fill="none"
+              className="text-[#E5E7EB] mb-4"
+            >
+              <path
+                d="M56 56M8 8L28 28M36 28L56 8M28 36L8 56"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+              <circle
+                cx="28"
+                cy="28"
+                r="20"
+                stroke="currentColor"
+                strokeWidth="3"
+              />
+              <circle cx="36" cy="36" r="4" fill="currentColor" />
             </svg>
-          </a>
-        </div>
-      </div>
-
-      {/* 2. 核心数据展示 */}
-      <div className="w-full px-[20px] lg:px-0 lg:w-[1000px] py-[48px]">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div className="text-center p-8 bg-[#F7F8FA] rounded-[12px]">
-            <div className="text-[36px] font-[500] text-[#181E25] mb-2">
-              70<span style={{ fontSize: '24px' }}>%</span>
-            </div>
-            <div className="text-[14px] text-[#666]">成本降低</div>
-          </div>
-          <div className="text-center p-8 bg-[#F7F8FA] rounded-[12px]">
-            <div className="text-[36px] font-[500] text-[#181E25] mb-2">
-              50<span style={{ fontSize: '24px' }}>ms</span>
-            </div>
-            <div className="text-[14px] text-[#666]">平均响应</div>
-          </div>
-          <div className="text-center p-8 bg-[#F7F8FA] rounded-[12px]">
-            <div className="text-[36px] font-[500] text-[#181E25] mb-2">
-              128<span style={{ fontSize: '24px' }}>K</span>
-            </div>
-            <div className="text-[14px] text-[#666]">上下文长度</div>
-          </div>
-          <div className="text-center p-8 bg-[#F7F8FA] rounded-[12px]">
-            <div className="text-[36px] font-[500] text-[#181E25] mb-2">
-              99.9<span style={{ fontSize: '24px' }}>%</span>
-            </div>
-            <div className="text-[14px] text-[#666]">服务可用性</div>
-          </div>
-        </div>
-      </div>
-
-      {/* 3. 模型系列 */}
-      <div className="w-full px-[20px] lg:px-0 lg:w-[1000px] py-[32px]">
-        <h2 className="text-[32px] font-[500] text-[#181E25] text-center mb-[48px]">模型系列</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-8 bg-[#F7F8FA] rounded-[16px] hover:shadow-lg transition-shadow duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-[12px] bg-[#181E25] flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">TierFlow Pro</h3>
-                <p className="text-[14px] text-[#666] leading-[24px]">
-                  旗舰级模型，适用于复杂的推理任务和高要求的应用场景，提供最准确的回答和最佳的性能。
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-8 bg-[#F7F8FA] rounded-[16px] hover:shadow-lg transition-shadow duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-[12px] bg-[#181E25] flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">TierFlow Turbo</h3>
-                <p className="text-[14px] text-[#666] leading-[24px]">
-                  高速响应模型，针对低延迟场景优化，适合实时对话和大规模调用场景。
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-8 bg-[#F7F8FA] rounded-[16px] hover:shadow-lg transition-shadow duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-[12px] bg-[#181E25] flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">TierFlow Lite</h3>
-                <p className="text-[14px] text-[#666] leading-[24px]">
-                  轻量级模型，适合简单任务和成本敏感的应用，提供高性价比的 AI 能力。
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-8 bg-[#F7F8FA] rounded-[16px] hover:shadow-lg transition-shadow duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-[12px] bg-[#181E25] flex items-center justify-center flex-shrink-0">
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-[18px] font-[500] text-[#181E25] mb-2">定制模型</h3>
-                <p className="text-[14px] text-[#666] leading-[24px]">
-                  根据企业需求定制的专属模型，针对特定领域进行深度优化，提供最佳效果。
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. 模型能力 */}
-      <div className="w-full px-[20px] lg:px-0 lg:w-[768px] py-[48px]">
-        <h2 className="text-[32px] font-[500] text-[#181E25] text-center mb-[48px]">模型能力</h2>
-
-        <div className="bg-[#F7F8FA] rounded-[16px] p-8">
-          <h3 className="text-[18px] font-[500] text-[#181E25] mb-4">支持的功能</h3>
-          <MarkdownRenderer content={`\`\`\`
-- 文本补全 (Completions)
-- 聊天完成 (Chat Completions)
-- 函数调用 (Function Calling)
-- 流式输出 (Streaming)
-- 嵌入向量 (Embeddings)
-- JSON 模式 (JSON Mode)
-\`\`\``} />
-
-          <h3 className="text-[18px] font-[500] text-[#181E25] mb-4 mt-8">支持的语言</h3>
-          <MarkdownRenderer content={`\`\`\`
-- 中文 (简体中文、繁体中文)
-- English (英语)
-- 日本語 (日语)
-- 한국어 (韩语)
-- 以及其他 100+ 种语言
-\`\`\``} />
-        </div>
-      </div>
-
-      {/* 5. API 端点 */}
-      <div className="w-full px-[20px] lg:px-0 lg:w-[1000px] py-[48px]">
-        <h2 className="text-[32px] font-[500] text-[#181E25] text-center mb-[48px]">API 端点</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-[#F7F8FA] rounded-[16px] p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-3 py-1 bg-green-500 text-white text-[12px] rounded-[8px] font-[500]">POST</span>
-              <span className="text-[16px] font-mono text-[#181E25]">/v1/chat/completions</span>
-            </div>
-            <p className="text-[14px] text-[#666] leading-[24px]">
-              创建聊天完成，返回模型生成的响应。支持多轮对话和流式输出。
+            <p className="text-[16px] text-[#666666]">未找到匹配模型</p>
+            <p className="text-[14px] text-[#9CA3AF] mt-1">
+              请尝试调整搜索词或清除筛选
             </p>
+            <button
+              onClick={clearAllFilters}
+              className="mt-4 px-4 py-2 bg-[#181E25] text-white text-[14px] rounded-lg hover:opacity-90 transition-opacity"
+            >
+              清除所有筛选
+            </button>
           </div>
-
-          <div className="bg-[#F7F8FA] rounded-[16px] p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-3 py-1 bg-green-500 text-white text-[12px] rounded-[8px] font-[500]">POST</span>
-              <span className="text-[16px] font-mono text-[#181E25]">/v1/completions</span>
-            </div>
-            <p className="text-[14px] text-[#666] leading-[24px]">
-              创建文本补全，根据提示生成完整的文本内容。
-            </p>
-          </div>
-
-          <div className="bg-[#F7F8FA] rounded-[16px] p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-3 py-1 bg-blue-500 text-white text-[12px] rounded-[8px] font-[500]">GET</span>
-              <span className="text-[16px] font-mono text-[#181E25]">/v1/models</span>
-            </div>
-            <p className="text-[14px] text-[#666] leading-[24px]">
-              列出所有可用的模型，获取模型信息和使用限制。
-            </p>
-          </div>
-
-          <div className="bg-[#F7F8FA] rounded-[16px] p-8">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-3 py-1 bg-green-500 text-white text-[12px] rounded-[8px] font-[500]">POST</span>
-              <span className="text-[16px] font-mono text-[#181E25]">/v1/embeddings</span>
-            </div>
-            <p className="text-[14px] text-[#666] leading-[24px]">
-              创建向量嵌入，将文本转换为向量表示，用于相似度计算等场景。
-            </p>
-          </div>
-        </div>
+        )}
       </div>
     </main>
   )
