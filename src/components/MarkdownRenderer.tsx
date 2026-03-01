@@ -3,6 +3,7 @@
 import ReactMarkdown from 'react-markdown'
 import Image from 'next/image'
 import remarkGfm from 'remark-gfm'
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
@@ -11,15 +12,31 @@ interface MarkdownRendererProps {
   className?: string
 }
 
+// 自定义 schema：在默认白名单基础上允许代码高亮所需的 class
+const sanitizeSchema = {
+  ...defaultSchema,
+  attributes: {
+    ...defaultSchema.attributes,
+    code: [...(defaultSchema.attributes?.code || []), 'className'],
+    span: [...(defaultSchema.attributes?.span || []), 'className'],
+    pre: [...(defaultSchema.attributes?.pre || []), 'className'],
+  },
+}
+
 /**
  * Markdown 渲染组件
  * 统一处理 Markdown 内容的渲染样式
+ * 已启用 rehype-sanitize 防止 XSS 攻击
  */
 export default function MarkdownRenderer({ content, className = '' }: MarkdownRendererProps) {
   return (
     <article className={`prose prose-lg max-w-none ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        // rehype-sanitize 必须在其他 rehype 插件之前，否则高亮注入的 class 会被清除
+        rehypePlugins={[
+          [rehypeSanitize, sanitizeSchema],
+        ]}
         components={{
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '')
@@ -71,20 +88,42 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
           b: ({ children }) => <b className="font-[500] text-[#181E25]">{children}</b>,
           em: ({ children }) => <em className="italic">{children}</em>,
           i: ({ children }) => <i className="italic">{children}</i>,
-          a: ({ href, children }) => <a href={href} className="text-primary-600 hover:text-primary-700 no-underline hover:underline">{children}</a>,
+          a: ({ href, children }) => {
+            // 安全验证：检查是否为外部链接
+            // rehype-sanitize 已过滤危险协议，这里只需处理外链行为
+            const isExternal = href?.startsWith('http')
+            return (
+              <a
+                href={href}
+                target={isExternal ? '_blank' : undefined}
+                rel={isExternal ? 'noopener noreferrer' : undefined}
+                className="text-primary-600 hover:text-primary-700 no-underline hover:underline"
+              >
+                {children}
+              </a>
+            )
+          },
           blockquote: ({ children }) => <blockquote className="border-l-2 border-[#181E25] pl-4 my-6 italic text-[#666666] text-[18px] leading-[32px]">{children}</blockquote>,
           hr: () => <hr className="my-8 border-gray-200" />,
           center: ({ children }) => <div className="text-center">{children}</div>,
-          img: ({ src, alt }) => (
-            <span className="block relative w-full aspect-video my-6">
-              <Image
-                src={src || ''}
-                alt={alt || ''}
-                fill
-                className="object-contain rounded-[12px]"
-              />
-            </span>
-          ),
+          img: ({ src, alt }) => {
+            // 安全验证：禁止危险协议 URL
+            // rehype-sanitize 已过滤大部分危险协议，这里作为额外保护
+            const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'blob:']
+            if (!src || dangerousProtocols.some(p => src.startsWith(p))) {
+              return null
+            }
+            return (
+              <span className="block relative w-full aspect-video my-6">
+                <Image
+                  src={src}
+                  alt={alt || ''}
+                  fill
+                  className="object-contain rounded-[12px]"
+                />
+              </span>
+            )
+          },
           table: ({ children }) => <table className="w-full border-collapse my-6">{children}</table>,
           thead: ({ children }) => <thead className="bg-[#F7F8FA]">{children}</thead>,
           tbody: ({ children }) => <tbody>{children}</tbody>,

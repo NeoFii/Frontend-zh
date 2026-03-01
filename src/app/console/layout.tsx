@@ -5,7 +5,6 @@ import { useRouter, usePathname } from 'next/navigation'
 import ConsoleHeader from '@/components/console/ConsoleHeader'
 import ConsoleSidebar from '@/components/console/ConsoleSidebar'
 import { useAuthStore } from '@/stores/auth'
-import type { UserInfo } from '@/types'
 
 // 统一的菜单路径映射常量
 export const MENU_PATH_MAP: Record<string, string> = {
@@ -31,20 +30,6 @@ export const PATH_MENU_MAP: Record<string, string> = Object.entries(MENU_PATH_MA
   {} as Record<string, string>
 )
 
-interface ConsoleContextType {
-  userInfo: UserInfo | null
-  setUserInfo: (info: UserInfo | null) => void
-}
-
-import { createContext, useContext } from 'react'
-
-export const ConsoleContext = createContext<ConsoleContextType>({
-  userInfo: null,
-  setUserInfo: () => {},
-})
-
-export const useConsole = () => useContext(ConsoleContext)
-
 export default function ConsoleLayout({
   children,
 }: {
@@ -52,8 +37,9 @@ export default function ConsoleLayout({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { isAuthenticated, hydrated } = useAuthStore()
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  // 使用选择器精确订阅
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const hydrated = useAuthStore(state => state.hydrated)
   const [loading, setLoading] = useState(true)
 
   // 等待状态从 localStorage 恢复完成
@@ -94,10 +80,17 @@ export default function ConsoleLayout({
     return (
       <div className="min-h-screen bg-gray-50">
         <ConsoleHeader />
+        <ConsoleSidebar activeMenu="basic-information" onMenuChange={() => {}} />
         <main className="ml-64 pt-16 min-h-screen">
           <div className="w-full p-8">
-            <div className="flex items-center justify-center h-64">
-              <div className="text-gray-500">加载中...</div>
+            {/* 骨架屏效果，减少感知延迟 */}
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-48 mb-8"></div>
+              <div className="space-y-4">
+                <div className="h-20 bg-gray-100 rounded-lg"></div>
+                <div className="h-20 bg-gray-100 rounded-lg"></div>
+                <div className="h-20 bg-gray-100 rounded-lg"></div>
+              </div>
             </div>
           </div>
         </main>
@@ -106,16 +99,14 @@ export default function ConsoleLayout({
   }
 
   return (
-    <ConsoleContext.Provider value={{ userInfo, setUserInfo }}>
-      <div className="min-h-screen bg-gray-50">
-        <ConsoleHeader />
-        <ConsoleSidebar activeMenu={activeMenu} onMenuChange={handleMenuChange} />
-        <main className="ml-64 pt-16 min-h-screen">
-          <div className="w-full p-8">
-            {children}
-          </div>
-        </main>
-      </div>
-    </ConsoleContext.Provider>
+    <div className="min-h-screen bg-gray-50">
+      <ConsoleHeader />
+      <ConsoleSidebar activeMenu={activeMenu} onMenuChange={handleMenuChange} />
+      <main className="ml-64 pt-16 min-h-screen">
+        <div className="w-full p-8">
+          {children}
+        </div>
+      </main>
+    </div>
   )
 }

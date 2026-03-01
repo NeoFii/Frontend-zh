@@ -1,19 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useConsole } from '../../layout'
 import { useUser } from '@/hooks/useUser'
 
 export default function BasicInformationPage() {
-  const { setUserInfo: setContextUserInfo } = useConsole()
+  // 直接使用 useUser 返回的用户信息，不再需要通过 Context 传递
   const { user, isLoading, isError, mutate } = useUser()
-
-  // 同步用户信息到 Context
-  useEffect(() => {
-    if (user) {
-      setContextUserInfo(user)
-    }
-  }, [user, setContextUserInfo])
 
   // 加载状态
   if (isLoading) {

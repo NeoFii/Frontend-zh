@@ -6,11 +6,12 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuthStore } from '@/stores/auth'
-import { setAccessToken, setRefreshToken } from '@/lib/token'
+import { setAccessToken } from '@/lib/token'
 import { LoginTypeSwitcher } from './LoginTypeSwitcher'
 import { CodeCountdown } from './CodeCountdown'
 import { LoginError } from './LoginError'
 import { login, loginWithCode, sendLoginCode } from '@/lib/api/auth'
+import { validateEmail } from '@/lib/utils/validation'
 
 interface LoginFormProps {
   onSuccess: () => void
@@ -40,11 +41,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       [name]: value,
     }))
     setError('')
-  }
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
   }
 
   const handleSendCode = async () => {
@@ -107,10 +103,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       }
 
       if (res.code === 200) {
-        // 存储 Token
-        const { access_token, refresh_token, expires_in } = res.data
+        // 存储 Token（Refresh Token 由后端通过 httpOnly Cookie 管理）
+        const { access_token, expires_in } = res.data
         setAccessToken(access_token, expires_in)
-        setRefreshToken(refresh_token)
         // 保存用户信息到本地 store
         saveUser(res.data.user)
         onSuccess()

@@ -7,7 +7,9 @@ import { useAuthStore } from '@/stores/auth'
 
 export default function ConsoleHeader() {
   const router = useRouter()
-  const { user, logoutAsync } = useAuthStore()
+  // 使用选择器精确订阅，避免不必要的重渲染
+  const user = useAuthStore(state => state.user)
+  const logoutAsync = useAuthStore(state => state.logoutAsync)
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)

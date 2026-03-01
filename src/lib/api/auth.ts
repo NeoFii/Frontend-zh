@@ -35,7 +35,7 @@ export interface LoginResponse {
   code: number
   message: string
   data: {
-    user: User
+    user: UserInfo
     access_token: string
     refresh_token: string
     expires_in: number

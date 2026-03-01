@@ -32,7 +32,9 @@ export default function AppHeader() {
   const [isHidden, setIsHidden] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
-  const { isAuthenticated, hydrated } = useAuthStore()
+  // 使用选择器精确订阅，避免不必要的重渲染
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const hydrated = useAuthStore(state => state.hydrated)
 
   // 判断是否已登录
   const isLoggedIn = hydrated && isAuthenticated
@@ -196,7 +198,7 @@ export default function AppHeader() {
               onClick={handleAuthClick}
               className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 hover:shadow-lg hover:shadow-gray-900/20 hover:scale-105 transition-all duration-300"
             >
-              登录
+              {isLoggedIn ? '控制台' : '登录'}
             </button>
           </div>
 
@@ -276,7 +278,7 @@ export default function AppHeader() {
                 onClick={handleAuthClick}
                 className="block w-full text-center px-4 py-3 bg-gray-900 text-white rounded-xl text-[15px] font-semibold hover:bg-gray-800 transition-colors duration-200"
               >
-                登录
+                {isLoggedIn ? '控制台' : '登录'}
               </button>
             </div>
           </div>

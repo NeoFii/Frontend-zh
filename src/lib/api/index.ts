@@ -3,8 +3,6 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import {
   getAccessToken,
   setAccessToken,
-  getRefreshToken,
-  setRefreshToken,
   clearAllTokens,
   isAccessTokenExpiringSoon,
 } from '@/lib/token'
@@ -14,7 +12,7 @@ import { useAuthStore } from '@/stores/auth'
 const apiClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1',
   timeout: 10000,
-  withCredentials: true, // 允许发送 cookies（用于 CSRF 防护）
+  withCredentials: true, // 允许发送 cookies（浏览器自动携带 httpOnly Cookie）
   headers: {
     'Content-Type': 'application/json',
   },
@@ -22,6 +20,7 @@ const apiClient: AxiosInstance = axios.create({
 
 // ============ Token 刷新相关状态 ============
 let isRefreshing = false
+let refreshPromise: Promise<string | null> | null = null
 let failedQueue: Array<{
   resolve: (value: string) => void
   reject: (error: Error) => void
@@ -40,39 +39,41 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 }
 
 // 刷新 Token 的核心逻辑
+// 依赖 withCredentials 自动携带 httpOnly Cookie 中的 refresh_token
+// 使用 refreshPromise 防止并发刷新
 async function refreshToken(): Promise<string | null> {
-  const refreshTokenValue = getRefreshToken()
-  if (!refreshTokenValue) {
-    return null
+  // 如果已有刷新中的 Promise，复用它
+  if (refreshPromise) {
+    return refreshPromise
   }
 
-  try {
-    // 使用 axios 直接发送刷新请求（不使用拦截器，避免循环）
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/auth/refresh`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${refreshTokenValue}`,
-        },
-        withCredentials: true,
-      }
-    )
+  refreshPromise = (async () => {
+    try {
+      // 不需要手动传 Token
+      // 浏览器自动携带 httpOnly Cookie 中的 refresh_token
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/auth/refresh`,
+        {},
+        { withCredentials: true }
+      )
 
-    const { access_token, refresh_token, expires_in } = response.data.data
+      const { access_token, expires_in } = response.data.data
 
-    // 更新 Token
-    setAccessToken(access_token, expires_in)
-    if (refresh_token) {
-      setRefreshToken(refresh_token)
+      // 更新 Access Token
+      setAccessToken(access_token, expires_in)
+
+      return access_token
+    } catch {
+      // 刷新失败，清除所有 Token
+      clearAllTokens()
+      return null
+    } finally {
+      // 完成后清除，下次可以正常触发刷新
+      refreshPromise = null
     }
+  })()
 
-    return access_token
-  } catch {
-    // 刷新失败，清除所有 Token
-    clearAllTokens()
-    return null
-  }
+  return refreshPromise
 }
 
 // 获取有效 Token（带刷新逻辑）
@@ -85,7 +86,7 @@ async function getValidToken(): Promise<string | null> {
   }
 
   // 正在刷新中，等待刷新完成
-  if (isRefreshing) {
+  if (refreshPromise) {
     return new Promise((resolve, reject) => {
       failedQueue.push({ resolve, reject })
     })
@@ -123,6 +124,7 @@ function handleLogout(): void {
   clearAllTokens()
   useAuthStore.getState().logout()
   if (typeof window !== 'undefined') {
+    // 使用 window.location 强制跳转，确保完全清除状态
     window.location.href = '/login'
   }
 }
@@ -160,14 +162,20 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
-    // 详细错误日志
-    console.error('API Error:', {
-      url: originalRequest?.url,
-      method: originalRequest?.method,
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    })
+    // 错误日志（根据环境决定输出内容）
+    if (process.env.NODE_ENV === 'development') {
+      // 开发环境保留完整日志便于调试
+      console.error('API Error:', {
+        url: originalRequest?.url,
+        method: originalRequest?.method,
+        status: error.response?.status,
+      })
+    } else {
+      // 生产环境只保留状态码，不暴露 URL（可能含 token 等敏感信息）
+      console.error('API Error:', {
+        status: error.response?.status,
+      })
+    }
 
     // 非 401 错误直接抛出
     if (error.response?.status !== 401) {

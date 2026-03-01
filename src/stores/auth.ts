@@ -1,20 +1,14 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { getRefreshToken, clearAllTokens } from '@/lib/token'
-import { logout as apiLogout } from '@/lib/api/auth'
-
-interface User {
-  uid: number
-  email: string
-  nickname: string | null
-  avatar_url: string | null
-}
+import { clearAllTokens } from '@/lib/token'
+import { logout as apiLogout, type UserInfo } from '@/lib/api/auth'
 
 interface AuthState {
   isAuthenticated: boolean
-  user: User | null
+  user: UserInfo | null
   hydrated: boolean
-  login: (user: User) => void
+  login: (user: UserInfo) => void
+  setUser: (user: UserInfo | null) => void
   logout: () => void
   logoutAsync: () => Promise<void>
 }
@@ -32,6 +26,11 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
           user,
         })
+      },
+
+      // 设置用户信息（用于 SWR 数据同步）
+      setUser: (user) => {
+        set({ user })
       },
 
       // 同步登出（仅清除本地状态）
@@ -58,15 +57,14 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      // 只持久化 user，不持久化认证状态（由 Token 决定）
-      partialize: (state) => ({ user: state.user }),
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          // 检查是否存在 Refresh Token 来决定认证状态
-          const hasRefreshToken = !!getRefreshToken()
-          state.isAuthenticated = hasRefreshToken
-          state.hydrated = true
-        }
+      // 持久化 user 和 isAuthenticated，确保页面刷新后登录状态不丢失
+      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      onRehydrateStorage: () => async (state) => {
+        if (!state) return
+        // 不在这里请求 /auth/me，避免重复调用
+        // isAuthenticated 由登录/登出动作维护
+        // 用户数据由 useUser 的 SWR 管理
+        state.hydrated = true
       },
     }
   )
