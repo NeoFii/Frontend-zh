@@ -9,6 +9,8 @@ import { PasswordStrength } from './PasswordStrength'
 import { AgreementLinks } from './AgreementLinks'
 import { RegisterError } from './RegisterError'
 import { CodeCountdown } from './CodeCountdown'
+import { useAuthStore } from '@/stores/auth'
+import { setAccessToken, setRefreshToken } from '@/lib/token'
 import { sendVerificationCode, register } from '@/lib/api/auth'
 
 interface RegisterFormProps {
@@ -25,6 +27,7 @@ interface FormData {
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const router = useRouter()
+  const { login: saveUser } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [codeLoading, setCodeLoading] = useState(false)
 
@@ -114,7 +117,21 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       })
 
       if (res.code === 201) {
-        if (onSuccess) {
+        // 检查是否有 Token（注册成功后自动登录）
+        if (res.data.access_token && res.data.refresh_token && res.data.expires_in) {
+          // 存储 Token
+          setAccessToken(res.data.access_token, res.data.expires_in)
+          setRefreshToken(res.data.refresh_token)
+          // 保存用户信息到 store
+          saveUser({
+            uid: res.data.uid,
+            email: res.data.email,
+            nickname: res.data.nickname,
+            avatar_url: null,
+          })
+          // 跳转到控制台
+          router.push('/console/account/basic-information')
+        } else if (onSuccess) {
           onSuccess()
         } else {
           router.push('/login?registered=true')

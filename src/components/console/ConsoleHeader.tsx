@@ -3,12 +3,11 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { logout } from '@/lib/api/auth'
 import { useAuthStore } from '@/stores/auth'
 
 export default function ConsoleHeader() {
   const router = useRouter()
-  const { user, logout: clearUser } = useAuthStore()
+  const { user, logoutAsync } = useAuthStore()
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -46,16 +45,10 @@ export default function ConsoleHeader() {
   }, [])
 
   const handleLogout = async () => {
-    try {
-      await logout()
-    } catch {
-      // API 拦截器已处理错误日志
-    } finally {
-      // 清除本地存储的用户信息
-      clearUser()
-      // 跳转到首页
-      router.push('/')
-    }
+    // 调用异步登出（会自动清除 Token 和跳转）
+    await logoutAsync()
+    // 跳转到首页
+    router.push('/')
   }
 
   // 获取用户头像显示内容

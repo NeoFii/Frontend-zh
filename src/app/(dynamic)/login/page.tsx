@@ -19,13 +19,13 @@ function LoginContent() {
   // 检查是否已登录（仅在 hydration 完成后）
   useEffect(() => {
     if (hydrated && isAuthenticated) {
-      router.replace('/console/account/basic-information')
+      router.replace('/console/usage/record')
     }
   }, [hydrated, isAuthenticated, router])
 
   const handleLoginSuccess = () => {
-    // 登录成功，跳转到控制台账户信息页
-    router.push('/console/account/basic-information')
+    // 登录成功，跳转到控制台使用记录页
+    router.push('/console/usage/record')
   }
 
   return (

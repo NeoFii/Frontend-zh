@@ -36,7 +36,19 @@ export interface LoginResponse {
   message: string
   data: {
     user: User
-    // token 已移至 HttpOnly Cookie，无需在响应中返回
+    access_token: string
+    refresh_token: string
+    expires_in: number
+  }
+}
+
+export interface RefreshResponse {
+  code: number
+  message: string
+  data: {
+    access_token: string
+    refresh_token?: string
+    expires_in: number
   }
 }
 
@@ -48,6 +60,9 @@ export interface RegisterResponse {
     email: string
     nickname: string | null
     created_at: string
+    access_token?: string
+    refresh_token?: string
+    expires_in?: number
   }
 }
 

@@ -6,6 +6,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuthStore } from '@/stores/auth'
+import { setAccessToken, setRefreshToken } from '@/lib/token'
 import { LoginTypeSwitcher } from './LoginTypeSwitcher'
 import { CodeCountdown } from './CodeCountdown'
 import { LoginError } from './LoginError'
@@ -106,7 +107,11 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       }
 
       if (res.code === 200) {
-        // 保存用户信息到本地 store（token 由 HttpOnly Cookie 处理）
+        // 存储 Token
+        const { access_token, refresh_token, expires_in } = res.data
+        setAccessToken(access_token, expires_in)
+        setRefreshToken(refresh_token)
+        // 保存用户信息到本地 store
         saveUser(res.data.user)
         onSuccess()
       } else {
