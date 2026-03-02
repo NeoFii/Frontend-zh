@@ -1,78 +1,105 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import createMiddleware from 'next-intl/middleware'
+import { routing } from './i18n/routing'
 
-// 受保护的路由路径
+const intlMiddleware = createMiddleware(routing)
 const protectedPaths = ['/console']
-
-// 不需要认证的路径
-const publicPaths = [
-  '/login',
-  '/register',
-  '/forgot-password',
-]
-
-// 与后端 Set-Cookie key 保持一致
-// TODO: 确认后端实际设置的 cookie 名称
 const AUTH_COOKIE_NAME = 'access_token'
 
 /**
- * Next.js Middleware - 服务端路由保护
- *
- * 在请求到达页面之前进行权限检查，提供更好的安全性和用户体验
- * 注意：此 middleware 依赖后端设置的认证 cookie
- * 注意：Middleware 只能检查 Cookie 是否存在，无法验证签名（签名验证在后端 API 层）
+ * 解析 Accept-Language 头，返回最佳匹配语言
+ * 优先级: zh-CN > zh > en
  */
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+function getLocaleFromAcceptLanguage(acceptLanguage: string | null): string | null {
+  if (!acceptLanguage) return null
 
-  // 检查是否为受保护路径
-  const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path))
+  // 解析 Accept-Language 头
+  const languages = acceptLanguage
+    .split(',')
+    .map((lang) => {
+      const [locale, quality] = lang.trim().split(';q=')
+      return {
+        locale: locale?.toLowerCase().split('-')[0] || '',
+        quality: quality ? parseFloat(quality) : 1.0,
+      }
+    })
+    .filter((lang) => lang.locale)
+    .sort((a, b) => b.quality - a.quality)
 
-  // 检查是否为公开路径
-  const isPublicPath = publicPaths.some(path => pathname === path || pathname.startsWith(path))
-
-  // 如果不是受保护路径，直接放行
-  if (!isProtectedPath) {
-    return NextResponse.next()
-  }
-
-  // 检查认证状态
-  // 只接受后端实际设置的 Cookie 名称
-  const authCookie = request.cookies.get(AUTH_COOKIE_NAME)
-  // 验证 Cookie 存在且值非空（防止 key 存在但 value 为空的边界情况）
-  const hasValidAuthCookie = authCookie && authCookie.value.trim().length > 0
-
-  // 检查是否是公开路径（已登录用户访问登录页等）
-  if (isPublicPath && hasValidAuthCookie) {
-    // 已登录用户访问公开路径，重定向到控制台
-    if (pathname === '/login') {
-      return NextResponse.redirect(new URL('/console/usage/record', request.url))
+  // 匹配支持的语言
+  for (const lang of languages) {
+    if (lang.locale.startsWith('zh')) {
+      return 'zh'
+    }
+    if (lang.locale.startsWith('en')) {
+      return 'en'
     }
   }
 
-  // 未认证用户访问受保护路径，重定向到登录页
-  if (!hasValidAuthCookie) {
-    const loginUrl = new URL('/login', request.url)
-    // 保存原始路径，登录后可重定向回来
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  return NextResponse.next()
+  return null
 }
 
 /**
- * 配置 middleware 匹配的路由
- * 只匹配受保护路径和公开路径，减少不必要的执行
+ * 判断路径是否已包含 locale
  */
+function hasLocale(pathname: string): boolean {
+  const segments = pathname.split('/').filter(Boolean)
+  const firstSegment = segments[0]
+  return Boolean(firstSegment) && (firstSegment === 'en' || firstSegment === 'zh')
+}
+
+export default function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // 跳过静态资源和 API 路由
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/static') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next()
+  }
+
+  const pathnameWithoutLocale = pathname.replace(/^\/(zh|en)/, '') || '/'
+  const isProtectedPath = protectedPaths.some((p) => pathnameWithoutLocale.startsWith(p))
+  const authCookie = request.cookies.get(AUTH_COOKIE_NAME)
+  const hasValidAuthCookie = authCookie && authCookie.value.trim().length > 0
+
+  // 已登录用户访问登录页，重定向到控制台
+  if (pathnameWithoutLocale === '/login' && hasValidAuthCookie) {
+    const userLocale = pathname.split('/')[1] || routing.defaultLocale
+    return NextResponse.redirect(new URL(`/${userLocale}/console/usage/record`, request.url))
+  }
+
+  // 未登录用户访问受保护路径，重定向到登录页
+  if (isProtectedPath && !hasValidAuthCookie) {
+    const userLocale = pathname.split('/')[1] || routing.defaultLocale
+    const loginUrl = new URL(`/${userLocale}/login`, request.url)
+    loginUrl.searchParams.set('redirect', pathnameWithoutLocale)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // 如果路径已经包含 locale，直接调用 i18n middleware
+  if (hasLocale(pathname)) {
+    return intlMiddleware(request)
+  }
+
+  // 从 Accept-Language 获取用户偏好语言
+  const acceptLanguage = request.headers.get('Accept-Language')
+  const preferredLocale = getLocaleFromAcceptLanguage(acceptLanguage)
+
+  // 根据用户偏好重定向到对应语言路径
+  if (preferredLocale && preferredLocale !== routing.defaultLocale) {
+    const newPath = `/${preferredLocale}${pathname}`
+    return NextResponse.redirect(new URL(newPath, request.url))
+  }
+
+  // 调用 i18n middleware 处理 locale 路由（使用默认语言）
+  return intlMiddleware(request)
+}
+
 export const config = {
-  matcher: [
-    /*
-     * 匹配所有路径除了:
-     * - api 路由 (/api/*)
-     * - 静态文件
-     * - _next 内部路径
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*$).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*$).*)']
 }

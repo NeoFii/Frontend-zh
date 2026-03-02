@@ -1,0 +1,579 @@
+{
+  "nav": {
+    "products": "Products",
+    "models": "Models",
+    "price": "Pricing",
+    "docs": "Documentation",
+    "ecosystem": "Ecosystem",
+    "about": "About",
+    "login": "Login",
+    "console": "Console",
+    "logout": "Logout"
+  },
+  "hero": {
+    "tagline": "Intelligent Tiered Inference Engine",
+    "description": "High-performance inference optimization platform for LLM applications",
+    "ctaApi": "Get Started Now",
+    "learnMore": "Learn More",
+    "viewDocs": "View Documentation"
+  },
+  "home": {
+    "hero": {
+      "productName": "TierFlow",
+      "tagline": "Intelligent Tiered Inference Engine",
+      "shortDescription": "High-performance inference optimization platform for LLM applications",
+      "ctaApi": "Get Started Now",
+      "ctaProduct": "Learn More",
+      "ctaDocs": "View Documentation"
+    },
+    "stats": {
+      "cost": "Cost Reduction",
+      "response": "Avg Response",
+      "availability": "Availability"
+    },
+    "features": {
+      "title": "Core Capabilities",
+      "subtitle": "Three core technologies for ultimate performance and cost optimization",
+      "smartCaching": "Smart Tiered Caching",
+      "smartCachingDesc": "Multi-level caching system based on semantic similarity, automatically identifying duplicate queries with 85% cache hit rate, significantly reducing API costs",
+      "dynamicRouting": "Dynamic Model Routing",
+      "dynamicRoutingDesc": "Real-time task complexity evaluation, intelligently selecting optimal model combinations - lightweight models for simple tasks, auto-upgrade to large models for complex tasks",
+      "highAvailability": "High Availability Architecture",
+      "highAvailabilityDesc": "Multi-node redundant deployment with automatic failover, supporting 100k+ QPS concurrency, enterprise-grade SLA guarantee for business continuity"
+    },
+    "performance": {
+      "title": "Real-time Performance",
+      "subtitle": "TierFlow Platform Real-time Operating Data",
+      "chartTitle": "Throughput Performance Chart",
+      "input": "Input",
+      "output": "Output",
+      "liveUpdate": "Live Update",
+      "yAxis": "Throughput (tokens/s)",
+      "xAxis": "Latency (log scale)",
+      "legendOptimal": "Optimal Performance",
+      "legendHigh": "High Performance",
+      "legendStandard": "Standard Performance",
+      "legendBasic": "Basic Performance"
+    },
+    "coreCapabilities": "Core Capabilities",
+    "coreCapabilitiesDesc": "Three core technologies for ultimate performance and cost optimization",
+    "smartCaching": "Smart Tiered Caching",
+    "smartCachingDesc": "Multi-level caching system based on semantic similarity",
+    "dynamicRouting": "Dynamic Model Routing",
+    "dynamicRoutingDesc": "Real-time task complexity evaluation",
+    "highAvailability": "High Availability Architecture",
+    "highAvailabilityDesc": "Multi-node redundant deployment",
+    "costReduction": "Cost Reduction",
+    "avgResponse": "Avg Response",
+    "availability": "Availability",
+    "performance": {
+      "title": "Real-time Performance",
+      "subtitle": "TierFlow Platform Real-time Operating Data",
+      "chartTitle": "Throughput Performance Chart",
+      "input": "Input Tokens",
+      "output": "Output Tokens",
+      "liveUpdate": "Live Update",
+      "yAxis": "Throughput (tokens/s)",
+      "xAxis": "Latency TTFT (log scale)",
+      "legendOptimal": "TierFlow (Optimal)",
+      "legendHigh": "OpenAI (High)",
+      "legendStandard": "Azure (Standard)",
+      "legendBasic": "AWS (Basic)"
+    },
+    "throughput": "Throughput (tokens/s)",
+    "latency": "Latency"
+  },
+  "price": {
+    "title": "Transparent Pricing",
+    "subtitle": "Pay as you go, flexible choices, providing you with the most cost-effective AI services",
+    "description": "We offer competitive pricing, allowing you to get high-quality AI capabilities at lower costs. Enterprise users can also enjoy bulk discounts and customized plans.",
+    "free": {
+      "name": "Free",
+      "price": "$0",
+      "period": "/month",
+      "description": "Suitable for individual developers and testing",
+      "features": ["1,000 API calls per month", "Basic models supported", "Standard response speed", "Community support"],
+      "cta": "Get Started"
+    },
+    "pro": {
+      "name": "Pro",
+      "badge": "Most Popular",
+      "price": "$99",
+      "period": "/month",
+      "description": "Suitable for individual developers and small teams",
+      "features": ["100,000 API calls per month", "All models supported", "Priority response speed", "Email support"],
+      "cta": "Upgrade Now"
+    },
+    "enterprise": {
+      "name": "Enterprise",
+      "price": "Custom",
+      "description": "Suitable for large enterprises and high-concurrency scenarios",
+      "features": ["Unlimited API calls", "Custom model training", "Ultra-low latency response", "7×24 dedicated support"],
+      "cta": "Contact Sales"
+    },
+    "billing": {
+      "title": "Billing Methods",
+      "payAsYouGo": "Pay as You Go",
+      "payAsYouGoDesc": "Charged based on actual usage, no fixed monthly fee, suitable for unstable usage scenarios. Charged by token with transparent pricing.",
+      "monthly": "Monthly Plan",
+      "monthlyDesc": "Fixed monthly fee with lower unit prices, suitable for enterprise users with stable usage. API calls can be accumulated within the plan."
+    },
+    "faq": {
+      "title": "FAQ",
+      "q1": "How to choose the right plan for me?",
+      "a1": "If you are an individual developer or just for testing, we recommend starting with the Free plan. If your project needs to go live, we recommend Pro or Enterprise for better service support.",
+      "q2": "How to view my usage?",
+      "a2": "After logging into the console, you can view detailed API call statistics and usage reports on the Account Management page.",
+      "q3": "Is refund supported?",
+      "a3": "We offer 7-day no-questions-asked refund service. If you are not satisfied with the service, you can apply for a full refund within 7 days of purchase.",
+      "q4": "What exclusive services does Enterprise plan include?",
+      "a4": "Enterprise users enjoy exclusive customer support, SLA service guarantees, customized model training, priority technical support and other exclusive services."
+    }
+  },
+  "aboutNews": {
+    "title": "Latest News",
+    "description": "Stay updated with the latest company news and industry insights"
+  },
+  "about": {
+    "page": {
+      "title": "Leading AI Innovation",
+      "subtitle": "We are committed to transforming cutting-edge AI technology into practical business value, providing powerful momentum for enterprise intelligent transformation"
+    },
+    "tabs": {
+      "about": "About",
+      "news": "News"
+    },
+    "intro": {
+      "title": "Dedicated to AI Technology Innovation",
+      "description1": "Founded in 2026, Eucal AI is an innovative technology company specializing in AI technology research, development and applications. We are committed to transforming cutting-edge AI technology into practical business value, providing intelligent solutions for enterprises.",
+      "description2": "Our team consists of AI experts from top global universities and technology companies, with deep technical expertise in machine learning, natural language processing, and computer vision."
+    },
+    "stats": {
+      "years": "Years Experience",
+      "customers": "Enterprise Customers",
+      "experts": "AI Experts",
+      "patents": "Core Patents"
+    },
+    "brand": {
+      "name": "Eucal AI",
+      "tagline": "Intelligent · Innovative · Future"
+    },
+    "visionMission": {
+      "title": "Driving Intelligent Transformation"
+    },
+    "values": {
+      "title": "Core Values",
+      "subtitle": "Behavioral guidelines and cultural foundation that guide our daily work",
+      "customerFirst": "Customer First",
+      "customerFirstDesc": "Always centered on customer needs, providing services beyond expectations to build long-term trust",
+      "innovation": "Innovation Driven",
+      "innovationDesc": "Continuously exploring cutting-edge AI technology, delivering industry-leading intelligent solutions",
+      "integrity": "Integrity",
+      "integrityDesc": "Built on trust with transparent data and fair, explainable algorithms",
+      "collaboration": "Win-Win Collaboration",
+      "collaborationDesc": "Growing together with customers and partners to drive AI technology adoption and create a better future"
+    },
+    "title": "Leading AI Innovation",
+    "subtitle": "We are committed to transforming cutting-edge AI technology into practical productivity",
+    "tabAbout": "About",
+    "tabNews": "News",
+    "vision": "Our Vision",
+    "visionDesc": "To become a global leading AI technology provider",
+    "mission": "Our Mission",
+    "missionDesc": "Innovative AI technology and professional services",
+    "values": "Core Values",
+    "valuesDesc": "Behavioral guidelines and cultural foundation",
+    "customerFirst": "Customer First",
+    "customerFirstDesc": "Always centered on customer needs, providing services beyond expectations to build long-term trust",
+    "innovation": "Innovation Driven",
+    "innovationDesc": "Continuously exploring cutting-edge AI technology, delivering industry-leading intelligent solutions",
+    "integrity": "Integrity",
+    "integrityDesc": "Built on trust with transparent data and fair, explainable algorithms",
+    "collaboration": "Win-Win Collaboration",
+    "collaborationDesc": "Growing together with customers and partners to drive AI technology adoption and create a better future",
+    "experience": "Years Experience",
+    "customers": "Enterprise Customers",
+    "experts": "AI Experts",
+    "patents": "Core Patents"
+  },
+  "model": {
+    "title": "Discover and Use the Best AI Models",
+    "description": "Curating top-tier AI models from the industry",
+    "resultCount": "{count} models",
+    "clearFilters": "Clear All Filters",
+    "noResults": "No matching models found",
+    "tryAdjust": "Try adjusting your search terms or clearing filters",
+    "backToList": "Back to Model List",
+    "modelScale": "Model Scale",
+    "openSource": "Open Source",
+    "modelType": "Model Type",
+    "closedSource": "Closed Source",
+    "contextLength": "Context Length",
+    "pricing": "Pricing",
+    "noPricing": "Pricing TBD",
+    "modelIntro": "Model Introduction",
+    "noIntro": "No introduction available",
+    "modelFeatures": "Model Features",
+    "coreCapabilities": "Core Capabilities",
+    "tryNow": "Try Now",
+    "viewDocs": "View Docs",
+    "input": "Input",
+    "output": "Output",
+    "tokens": "Tokens"
+  },
+  "product": {
+    "tryNow": "Try Now",
+    "learnMore": "Learn More",
+    "coreCapabilities": "Core Capabilities",
+    "useCases": "Use Cases",
+    "scene": "Scene",
+    "faq": "FAQ"
+  },
+  "ecosystem": {
+    "title": "Ecosystem",
+    "subtitle": "Building AI Ecosystem Together",
+    "description": "We are committed to building an open AI ecosystem with our partners, providing richer and more powerful AI capabilities for developers and enterprises.",
+    "cta": "Become a Partner",
+    "partners": "Partners",
+    "partnerA": "Partner A",
+    "partnerB": "Partner B",
+    "partnerC": "Partner C",
+    "partnerD": "Partner D",
+    "cooperation": "Cooperation Ways",
+    "technical": "Technical Cooperation",
+    "technicalDesc": "Collaborate with technology partners to develop innovative solutions, combining双方的 technical strengths to provide better AI products and services for customers.",
+    "channel": "Channel Cooperation",
+    "channelDesc": "Recruit regional agents and channel partners to jointly explore the market, providing competitive commission policies and marketing support.",
+    "solution": "Solution Cooperation",
+    "solutionDesc": "Partner with industry solution providers to create vertical industry AI application solutions, meeting specific industry needs.",
+    "strategic": "Strategic Cooperation",
+    "strategicDesc": "Establish deep cooperation with strategic partners to jointly explore AI technology frontiers and conduct joint R&D and marketing.",
+    "benefits": "Partner Benefits",
+    "benefit1": "Dedicated technical support",
+    "benefit1Desc": "Get one-on-one support from professional technical team",
+    "benefit2": "Preferential pricing",
+    "benefit2Desc": "Enjoy partner-exclusive price discounts",
+    "benefit3": "Marketing support",
+    "benefit3Desc": "Jointly host marketing activities for co-promotion",
+    "benefit4": "Product early access",
+    "benefit4Desc": "Experience new features and products first",
+    "benefit5": "Training & enablement",
+    "benefit5Desc": "Regular product training and technical exchanges",
+    "benefit6": "Business opportunity sharing",
+    "benefit6Desc": "Priority access to customer referrals and business opportunities",
+    "contact": "Contact Us",
+    "contactDesc": "Welcome interested partners to reach out and explore cooperation opportunities together"
+  },
+  "auth": {
+    "login": {
+      "pageTitle": "Eucal AI | Login",
+      "title": "Login",
+      "email": "Email",
+      "password": "Password",
+      "code": "Code",
+      "emailPlaceholder": "Enter email",
+      "passwordPlaceholder": "Enter password",
+      "codePlaceholder": "Enter code",
+      "submit": "Login Now",
+      "submitting": "Logging in...",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "No account?",
+      "registerNow": "Register Now",
+      "getCode": "Get Code",
+      "sending": "Sending..."
+    },
+    "register": {
+      "pageTitle": "Eucal AI | Register",
+      "title": "Register",
+      "email": "Email",
+      "code": "Code",
+      "emailPlaceholder": "Enter email",
+      "codePlaceholder": "Enter code",
+      "password": "Password",
+      "passwordPlaceholder": "Set password (min 8 characters)",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter password",
+      "submit": "Register Now",
+      "submitting": "Registering...",
+      "hasAccount": "Already have an account?",
+      "loginNow": "Login Now",
+      "agreementPrefix": "I have read and agree to the",
+      "userAgreement": "User Agreement",
+      "privacyPolicy": "Privacy Policy"
+    },
+    "loginType": {
+      "password": "Password Login",
+      "code": "Email Code Login"
+    },
+    "validation": {
+      "enterEmail": "Please enter email first",
+      "invalidEmail": "Please enter a valid email",
+      "enterPassword": "Please enter password",
+      "enterCode": "Please enter code",
+      "passwordMismatch": "Passwords do not match",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "agreeToTerms": "Please agree to terms and privacy policy",
+      "fillAllRequired": "Please fill in all required fields"
+    },
+    "errors": {
+      "loginFailed": "Login failed",
+      "loginFailedRetry": "Login failed, please try again later",
+      "registerFailed": "Registration failed",
+      "registerFailedRetry": "Registration failed, please try again later",
+      "sendFailed": "Send failed"
+    },
+    "forgotPassword": {
+      "titleStep1": "Forgot Password",
+      "titleStep2": "Reset Password",
+      "subtitleStep1": "Enter the email you registered with",
+      "subtitleStep2": "Enter the verification code and new password from your email",
+      "email": "Email",
+      "emailPlaceholder": "Enter email",
+      "code": "Verification Code",
+      "codePlaceholder": "Enter verification code",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Set new password (min 8 characters)",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Re-enter new password",
+      "sendCode": "Send Code",
+      "sending": "Sending...",
+      "resend": "Resend",
+      "resetPassword": "Reset Password",
+      "processing": "Processing...",
+      "rememberPassword": "Remember your password?",
+      "loginNow": "Login Now",
+      "validation": {
+        "enterEmail": "Please enter email first",
+        "invalidEmail": "Please enter a valid email",
+        "enterCode": "Please enter verification code",
+        "enterPassword": "Please enter new password",
+        "passwordTooShort": "Password must be at least 8 characters",
+        "passwordMismatch": "Passwords do not match"
+      },
+      "errors": {
+        "sendFailed": "Send failed",
+        "sendFailedRetry": "Send failed, please try again later",
+        "resetFailed": "Reset failed",
+        "resetFailedRetry": "Reset failed, please try again later"
+      }
+    }
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "contact": "Contact",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "about": "About",
+    "products": "Products",
+    "news": "News",
+    "login": "Login",
+    "tagline": "Committed to providing high-performance AI inference optimization solutions for enterprises, driving intelligent transformation.",
+    "address": "88 Technology Park, Chaoyang District, Beijing",
+    "email": "contact@eucal.ai",
+    "phone": "400-888-8888",
+    "businessHours": "Monday - Friday, 9:00 AM - 6:00 PM",
+    "companyName": "Eucal AI",
+    "copyright": "© 2026 Eucal AI. All rights reserved."
+  },
+  "console": {
+    "header": {
+      "docs": "Documentation",
+      "account": "Account",
+      "logout": "Logout"
+    },
+    "menu": {
+      "usage": "Usage",
+      "usageRecord": "Usage Records",
+      "api": "API Management",
+      "getApi": "Get API",
+      "thirdPartyApi": "Third-party API",
+      "payment": "Payment",
+      "balance": "Balance",
+      "recharge": "Recharge Records",
+      "voucher": "Voucher Records",
+      "billingHistory": "Billing History",
+      "account": "Account",
+      "accountInfo": "Account Info",
+      "interfaceKey": "API Key",
+      "requestLimits": "Request Limits",
+      "childAccount": "Sub Accounts"
+    },
+    "usage": {
+      "title": "Usage Records",
+      "subtitle": "View your API usage statistics",
+      "totalRequests": "Total Requests",
+      "totalTokens": "Total Tokens",
+      "totalCost": "Total Cost",
+      "avgLatency": "Avg Latency",
+      "responseTime": "Response Time",
+      "vsYesterday": "vs yesterday",
+      "costComparison": "Cost Comparison",
+      "compareModel": "Compare Model:",
+      "saved": "Saved",
+      "premium": "Premium",
+      "currentSpend": "Current Spend",
+      "referencePlan": "Reference Plan",
+      "mixedPlan": "Mixed Plan",
+      "modelRanking": "Model Requests Ranking",
+      "costShare": "Cost Share by Model",
+      "trend": "Usage Trend",
+      "tokenTrend": "Token Trend",
+      "callCount": "Calls",
+      "requests": "Requests",
+      "tokens": "Tokens",
+      "cost": "Cost",
+      "inputTokens": "Input Tokens",
+      "outputTokens": "Output Tokens"
+    },
+    "api": {
+      "title": "API Management",
+      "getApiSubtitle": "Get your API key to start calling the interface",
+      "generateApi": "Create API Key",
+      "regenerateKey": "Regenerate Key",
+      "generating": "Generating...",
+      "yourApiKey": "Your API Key",
+      "revokeApi": "Revoke",
+      "apiKey": "API Key",
+      "createdAt": "Created",
+      "lastUsed": "Last used",
+      "status": "Status",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "revoked": "Revoked",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "usageGuide": "Usage Guide",
+      "addApiKey": "Add API Key in Request Header",
+      "addApiKeyDesc": "Pass your API Key using the Authorization header",
+      "protectApiKey": "Protect Your API Key",
+      "protectApiKeyDesc": "Do not expose your API Key in client-side code",
+      "exampleRequest": "Example Request",
+      "thirdPartyApi": {
+        "title": "Third-party API Management",
+        "subtitle": "Manage your third-party AI service API keys to ensure proper operation.",
+        "configured": "configured",
+        "notConfigured": "Not configured",
+        "selectProvider": "Select Provider",
+        "configuredApis": "Configured APIs",
+        "provider": "Provider",
+        "status": "Status",
+        "createdAt": "Created At",
+        "actions": "Actions",
+        "edit": "Edit",
+        "delete": "Delete",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "emptyState": "No configured third-party APIs",
+        "emptyStateHint": "Select a provider above to configure",
+        "configureApi": "Configure API",
+        "visitWebsite": "Visit Website",
+        "cancel": "Cancel",
+        "saveConfig": "Save Config"
+      }
+    },
+    "account": {
+      "title": "Account Settings",
+      "basicInfo": "Basic Info",
+      "security": "Security",
+      "save": "Save Changes",
+      "confirm": "Confirm",
+      "basicInformation": {
+        "title": "Basic Information",
+        "email": "Email",
+        "getKey": "Get your key",
+        "rechargeNow": "Recharge Now"
+      },
+      "verification": {
+        "title": "Verification",
+        "enterprise": "Enterprise Verification",
+        "unverified": "Unverified",
+        "verifyNow": "Verify Now →"
+      },
+      "securitySettings": {
+        "title": "Security Settings",
+        "password": "Login Password",
+        "passwordDesc": "It is recommended to change your password regularly to protect your account",
+        "changePassword": "Change Password",
+        "emailBinding": "Email Binding",
+        "boundEmail": "Your bound email:",
+        "bound": "Bound"
+      },
+      "loadFailed": "Failed to load user info, please try again later",
+      "retry": "Retry",
+      "interfaceKey": {
+        "title": "Interface Keys",
+        "subtitle": "Manage your API Keys",
+        "createNew": "Create New Key",
+        "default": "Default Key",
+        "testEnv": "Test Environment",
+        "createdOn": "Created on",
+        "lastUsed": "Last used",
+        "copy": "Copy",
+        "delete": "Delete"
+      },
+      "requestLimits": {
+        "title": "Request Limits",
+        "perMinute": "Per minute requests",
+        "perDay": "Daily requests",
+        "perMonth": "Monthly tokens"
+      },
+      "childAccount": {
+        "title": "Sub Account Management",
+        "addChild": "Add Sub Account",
+        "noChildAccounts": "No sub accounts yet",
+        "addChildHint": "Add sub accounts to assign permissions"
+      }
+    },
+    "payment": {
+      "title": "Payment",
+      "balance": "Balance",
+      "recharge": "Recharge",
+      "history": "History",
+      "success": "Success",
+      "pending": "Pending",
+      "failed": "Failed",
+      "rechargePage": {
+        "title": "Recharge Records",
+        "recharge": "Recharge"
+      },
+      "voucherPage": {
+        "title": "Voucher Records",
+        "noVouchers": "No vouchers yet",
+        "activityHint": "Follow our activities to get vouchers"
+      },
+      "billingHistoryPage": {
+        "title": "Billing Records",
+        "consumption": "Consumption"
+      },
+      "balancePage": {
+        "title": "Account Balance",
+        "availableDays": "Estimated available for 30 days",
+        "rechargeNow": "Recharge Now",
+        "viewBill": "View Bill",
+        "monthlySpend": "Monthly Spend",
+        "vsLastMonth": "vs last month",
+        "totalCalls": "Total Calls",
+        "cumulative": "Cumulative this month",
+        "apiSuccessRate": "API Call Success Rate",
+        "stable": "Stable"
+      }
+    }
+  },
+  "errors": {
+    "notFound": "Page Not Found",
+    "notFoundDesc": "Sorry, the page you are looking for does not exist",
+    "backHome": "Back to Home",
+    "backPrevious": "Go Back",
+    "INVALID_API_KEY": "Invalid API Key, please check and retry",
+    "RATE_LIMIT_EXCEEDED": "Rate limit exceeded, please try again later",
+    "UNAUTHORIZED": "Please log in first"
+  },
+  "common": {
+    "loading": "Loading...",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "clear": "Clear",
+    "clearAll": "Clear All Filters"
+  }
+}

@@ -1,33 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useLocale } from 'next-intl'
+import { Link, useRouter } from '@/i18n/routing'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import type { NavItem } from '@/types'
 import { useAuthStore } from '@/stores/auth'
+import LanguageSwitcher from './LanguageSwitcher'
 
 const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'Eucal AI'
 
-const navItems: NavItem[] = [
-  {
-    name: '产品服务',
-    path: '',
-    children: [
-      { name: 'TierFlow', path: '/products/tierflow' },
-    ],
-  },
-  { name: '模型', path: '/model' },
-  { name: '价格', path: '/price' },
-  {
-    name: '文档中心',
-    path: 'https://neofii.github.io/TierFlow-Doc/',
-    external: true,
-  },
-  { name: '生态合作', path: '/ecosystem' },
-  { name: '关于我们', path: '/about' },
-]
-
 export default function AppHeader() {
+  const t = useTranslations('nav')
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -39,10 +25,32 @@ export default function AppHeader() {
   // 判断是否已登录
   const isLoggedIn = hydrated && isAuthenticated
 
-  // 处理登录/控制台按钮点击
+  // 动态导航项 - 使用相对路径，next-intl Link 会自动处理 locale
+  const navItems: NavItem[] = [
+    {
+      name: t('products'),
+      path: '',
+      children: [
+        { name: 'TierFlow', path: '/products/tierflow' },
+      ],
+    },
+    { name: t('models'), path: '/model' },
+    { name: t('price'), path: '/price' },
+    {
+      name: t('docs'),
+      path: 'https://neofii.github.io/TierFlow-Doc/',
+      external: true,
+    },
+    { name: t('ecosystem'), path: '/ecosystem' },
+    { name: t('about'), path: '/about' },
+  ]
+
+  const locale = useLocale()
+
+  // 处理登录按钮点击
   const handleAuthClick = (e: React.MouseEvent) => {
     e.preventDefault()
-    const targetUrl = isLoggedIn ? '/console/account/basic-information' : '/login'
+    const targetUrl = `/${locale}/login`
     window.open(targetUrl, '_blank')
   }
 
@@ -90,9 +98,12 @@ export default function AppHeader() {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
-  const isActive = (path: string) => pathname === path
+  // 移除 locale 前缀用于路径比较
+  const pathnameWithoutLocale = pathname.replace(/^\/(zh|en)/, '') || '/'
+
+  const isActive = (path: string) => pathnameWithoutLocale === path
   const isChildActive = (children?: NavItem[]) =>
-    children?.some((child) => pathname === child.path)
+    children?.some((child) => pathnameWithoutLocale === child.path)
 
   return (
     <header
@@ -194,11 +205,12 @@ export default function AppHeader() {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-4">
+            <LanguageSwitcher />
             <button
               onClick={handleAuthClick}
               className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 hover:shadow-lg hover:shadow-gray-900/20 hover:scale-105 transition-all duration-300"
             >
-              {isLoggedIn ? '控制台' : '登录'}
+              {t('login')}
             </button>
           </div>
 
@@ -278,7 +290,7 @@ export default function AppHeader() {
                 onClick={handleAuthClick}
                 className="block w-full text-center px-4 py-3 bg-gray-900 text-white rounded-xl text-[15px] font-semibold hover:bg-gray-800 transition-colors duration-200"
               >
-                {isLoggedIn ? '控制台' : '登录'}
+                {t('login')}
               </button>
             </div>
           </div>

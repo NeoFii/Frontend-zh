@@ -3,12 +3,16 @@
  * 支持密码登录和邮箱验证码登录切换
  */
 
+import { useTranslations } from 'next-intl'
+
 interface LoginTypeSwitcherProps {
   loginType: 'password' | 'code'
   onChange: (type: 'password' | 'code') => void
 }
 
 export function LoginTypeSwitcher({ loginType, onChange }: LoginTypeSwitcherProps) {
+  const t = useTranslations('auth.loginType')
+
   return (
     <div className="flex border-b border-gray-200 mb-6">
       <button
@@ -17,7 +21,7 @@ export function LoginTypeSwitcher({ loginType, onChange }: LoginTypeSwitcherProp
           loginType === 'password' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
         }`}
       >
-        密码登录
+        {t('password')}
         {loginType === 'password' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>}
       </button>
       <button
@@ -26,7 +30,7 @@ export function LoginTypeSwitcher({ loginType, onChange }: LoginTypeSwitcherProp
           loginType === 'code' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
         }`}
       >
-        邮箱验证码登录
+        {t('code')}
         {loginType === 'code' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></div>}
       </button>
     </div>

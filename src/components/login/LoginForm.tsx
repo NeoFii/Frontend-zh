@@ -4,7 +4,8 @@
  */
 
 import { useState } from 'react'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
+import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/stores/auth'
 import { setAccessToken } from '@/lib/token'
 import { LoginTypeSwitcher } from './LoginTypeSwitcher'
@@ -24,6 +25,9 @@ interface FormData {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
+  const t = useTranslations('auth.login')
+  const tValidation = useTranslations('auth.validation')
+  const tErrors = useTranslations('auth.errors')
   const { login: saveUser } = useAuthStore()
   const [loginType, setLoginType] = useState<'password' | 'code'>('password')
   const [form, setForm] = useState<FormData>({
@@ -45,35 +49,35 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   const handleSendCode = async () => {
     if (!form.email) {
-      setError('请先输入邮箱')
+      setError(tValidation('enterEmail'))
       return
     }
 
     if (!validateEmail(form.email)) {
-      setError('请输入有效的邮箱地址')
+      setError(tValidation('invalidEmail'))
       return
     }
 
     setError('')
     const res = await sendLoginCode(form.email)
     if (res.code !== 200) {
-      setError(res.message || '发送失败')
+      setError(res.message || tErrors('sendFailed'))
     }
   }
 
   const validateForm = (): boolean => {
     if (!form.email) {
-      setError('请填写邮箱')
+      setError(tValidation('enterEmail'))
       return false
     }
 
     if (loginType === 'password' && !form.password) {
-      setError('请填写密码')
+      setError(tValidation('enterPassword'))
       return false
     }
 
     if (loginType === 'code' && !form.code) {
-      setError('请填写验证码')
+      setError(tValidation('enterCode'))
       return false
     }
 
@@ -111,13 +115,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         onSuccess()
       } else {
         // 业务逻辑错误，直接使用后端返回的 message
-        setError(res.message || '登录失败')
+        setError(res.message || tErrors('loginFailed'))
       }
     } catch (err: unknown) {
       // HTTP 错误，直接使用后端返回的 message
       const axiosError = err as { response?: { data?: { message?: string } } }
       const message = axiosError.response?.data?.message
-      setError(message || '登录失败，请稍后重试')
+      setError(message || tErrors('loginFailedRetry'))
     } finally {
       setLoading(false)
     }
@@ -131,7 +135,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <LoginError error={error} />
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">邮箱</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
           <input
             name="email"
             type="email"
@@ -139,13 +143,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             value={form.email}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-            placeholder="请输入邮箱"
+            placeholder={t('emailPlaceholder')}
           />
         </div>
 
         {loginType === 'password' ? (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">密码</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('password')}</label>
             <input
               name="password"
               type="password"
@@ -153,12 +157,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
               value={form.password}
               onChange={handleChange}
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-              placeholder="请输入密码"
+              placeholder={t('passwordPlaceholder')}
             />
           </div>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">验证码</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('code')}</label>
             <div className="flex space-x-3">
               <input
                 name="code"
@@ -168,7 +172,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                 value={form.code}
                 onChange={handleChange}
                 className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                placeholder="请输入验证码"
+                placeholder={t('codePlaceholder')}
               />
               <CodeCountdown onSendCode={handleSendCode} />
             </div>
@@ -180,14 +184,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           disabled={loading}
           className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? '登录中...' : '立即登录'}
+          {loading ? t('submitting') : t('submit')}
         </button>
       </form>
 
       <div className="mt-6 flex items-center justify-between text-sm">
-        <Link href="/forgot-password" className="text-gray-500 hover:text-gray-700">忘记密码？</Link>
+        <Link href="/forgot-password" className="text-gray-500 hover:text-gray-700">{t('forgotPassword')}</Link>
         <Link href="/register" className="text-gray-900 font-medium hover:text-gray-700">
-          还没有账号？立即注册
+          {t('noAccount')}{t('registerNow')}
         </Link>
       </div>
     </>

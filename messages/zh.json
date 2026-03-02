@@ -1,0 +1,579 @@
+{
+  "nav": {
+    "products": "产品服务",
+    "models": "模型",
+    "price": "价格",
+    "docs": "文档中心",
+    "ecosystem": "生态合作",
+    "about": "关于我们",
+    "login": "登录",
+    "console": "控制台",
+    "logout": "退出登录"
+  },
+  "hero": {
+    "tagline": "智能分层推理引擎",
+    "description": "面向大模型应用的高性能推理优化平台",
+    "ctaApi": "即刻接入API",
+    "learnMore": "了解产品功能",
+    "viewDocs": "查看文档"
+  },
+  "home": {
+    "hero": {
+      "productName": "TierFlow",
+      "tagline": "智能分层推理引擎",
+      "shortDescription": "面向大模型应用的高性能推理优化平台",
+      "ctaApi": "即刻接入API",
+      "ctaProduct": "了解产品功能",
+      "ctaDocs": "查看文档"
+    },
+    "stats": {
+      "cost": "成本降低",
+      "response": "平均响应",
+      "availability": "服务可用性"
+    },
+    "features": {
+      "title": "核心能力",
+      "subtitle": "三大核心技术，为您的 AI 应用提供极致性能与成本优化",
+      "smartCaching": "智能分层缓存",
+      "smartCachingDesc": "基于语义相似度的多级缓存系统，自动识别重复查询，缓存命中率达 85%，显著降低 API 调用成本",
+      "dynamicRouting": "动态模型路由",
+      "dynamicRoutingDesc": "实时评估任务复杂度，智能选择最优模型组合，简单任务使用轻量模型，复杂任务自动升级至大模型",
+      "highAvailability": "高可用架构",
+      "highAvailabilityDesc": "多节点冗余部署，自动故障转移，支持 10万+ QPS 并发，企业级 SLA 保障，确保业务连续性"
+    },
+    "performance": {
+      "title": "实时性能监控",
+      "subtitle": "TierFlow 平台实时运行数据",
+      "chartTitle": "吞吐性能坐标图",
+      "input": "输入",
+      "output": "输出",
+      "liveUpdate": "实时更新",
+      "yAxis": "吞吐量 (tokens/s)",
+      "xAxis": "延迟 Latency (对数坐标)",
+      "legendOptimal": "最优性能区",
+      "legendHigh": "高性能区",
+      "legendStandard": "标准性能区",
+      "legendBasic": "基础性能区"
+    },
+    "coreCapabilities": "核心能力",
+    "coreCapabilitiesDesc": "三大核心技术，为您的 AI 应用提供极致性能与成本优化",
+    "smartCaching": "智能分层缓存",
+    "smartCachingDesc": "基于语义相似度的多级缓存系统",
+    "dynamicRouting": "动态模型路由",
+    "dynamicRoutingDesc": "实时评估任务复杂度",
+    "highAvailability": "高可用架构",
+    "highAvailabilityDesc": "多节点冗余部署",
+    "costReduction": "成本降低",
+    "avgResponse": "平均响应",
+    "availability": "服务可用性",
+    "performance": {
+      "title": "实时性能监控",
+      "subtitle": "TierFlow 平台实时运行数据",
+      "chartTitle": "吞吐量性能图表",
+      "input": "输入 Token",
+      "output": "输出 Token",
+      "liveUpdate": "实时更新",
+      "yAxis": "吞吐量 (tokens/s)",
+      "xAxis": "首字延迟 TTFT (对数坐标)",
+      "legendOptimal": "TierFlow (最优)",
+      "legendHigh": "OpenAI (高性能)",
+      "legendStandard": "Azure (标准)",
+      "legendBasic": "AWS (基础)"
+    },
+    "throughput": "吞吐量 (tokens/s)",
+    "latency": "延迟 Latency"
+  },
+  "price": {
+    "title": "透明定价",
+    "subtitle": "按需付费，灵活选择，为您提供最具性价比的 AI 服务",
+    "description": "我们提供竞争力的定价，让您以更低的成本获得高质量的 AI 能力。企业用户还可享受批量折扣和定制方案。",
+    "free": {
+      "name": "免费版",
+      "price": "¥0",
+      "period": "/月",
+      "description": "适合个人开发者和测试使用",
+      "features": ["每月 1,000 次 API 调用", "支持基础模型", "标准响应速度", "社区支持"],
+      "cta": "立即开始"
+    },
+    "pro": {
+      "name": "专业版",
+      "badge": "最受欢迎",
+      "price": "¥99",
+      "period": "/月",
+      "description": "适合个人开发者和小型团队",
+      "features": ["每月 100,000 次 API 调用", "支持全部模型", "优先响应速度", "邮件支持"],
+      "cta": "立即升级"
+    },
+    "enterprise": {
+      "name": "企业版",
+      "price": "定制",
+      "description": "适合大型企业和高并发场景",
+      "features": ["无限 API 调用", "专属模型定制", "超低延迟响应", "7×24 专属客服"],
+      "cta": "联系销售"
+    },
+    "billing": {
+      "title": "计费方式",
+      "payAsYouGo": "按量付费",
+      "payAsYouGoDesc": "根据实际使用量计费，无固定月费，适合使用量不稳定的场景。按 token 计费，价格透明。",
+      "monthly": "包月套餐",
+      "monthlyDesc": "固定月费，享受更低单价，适合稳定使用的企业用户。套餐内 API 调用可累计使用。"
+    },
+    "faq": {
+      "title": "常见问题",
+      "q1": "如何选择适合自己的方案？",
+      "a1": "如果您是个人开发者或仅用于测试，建议先使用免费版。如果您的项目需要上线运营，建议选择专业版或企业版以获得更好的服务支持。",
+      "q2": "如何查看我的使用量？",
+      "a2": "登录控制台后，您可以在「账户管理」页面查看详细的 API 调用统计和使用量报表。",
+      "q3": "是否支持退款？",
+      "a3": "我们提供 7 天无理由退款服务。如果您对服务不满意，可以在购买后 7 天内申请全额退款。",
+      "q4": "企业版有哪些专属服务？",
+      "a4": "企业版用户可享受专属客服、SLA 服务保障、定制化模型训练、优先技术支持等多项专属服务。"
+    }
+  },
+  "aboutNews": {
+    "title": "最新资讯",
+    "description": "了解公司最新动态与行业资讯"
+  },
+  "about": {
+    "page": {
+      "title": "引领 AI 创新",
+      "subtitle": "我们致力于将前沿人工智能技术转化为实际的商业价值，为企业智能化转型提供强劲动力"
+    },
+    "tabs": {
+      "about": "关于我们",
+      "news": "新闻动态"
+    },
+    "intro": {
+      "title": "专注于 AI 技术创新",
+      "description1": "Eucal AI 成立于2026年，是一家专注于人工智能技术研发与应用的创新型科技公司。我们致力于将前沿的 AI 技术转化为实际的商业价值，为企业提供智能化的解决方案。",
+      "description2": "我们的团队由来自全球顶尖高校和科技公司的 AI 专家组成，在机器学习、自然语言处理、计算机视觉等领域拥有深厚的技术积累。"
+    },
+    "stats": {
+      "years": "年行业经验",
+      "customers": "企业客户",
+      "experts": "AI 专家",
+      "patents": "核心专利"
+    },
+    "brand": {
+      "name": "Eucal AI",
+      "tagline": "智能 · 创新 · 未来"
+    },
+    "visionMission": {
+      "title": "驱动智能变革"
+    },
+    "values": {
+      "title": "核心价值观",
+      "subtitle": "指导我们日常工作的行为准则和文化基石",
+      "customerFirst": "客户至上",
+      "customerFirstDesc": "始终以客户需求为中心，提供超越期望的服务体验，建立长期信任的合作关系",
+      "innovation": "创新驱动",
+      "innovationDesc": "持续探索前沿 AI 技术，为客户带来行业领先的智能化解决方案",
+      "integrity": "诚信正直",
+      "integrityDesc": "以信任为基础，数据透明，算法公平可解释",
+      "collaboration": "合作共赢",
+      "collaborationDesc": "与客户和合作伙伴共同成长，推动 AI 技术的落地应用，共创美好未来"
+    },
+    "title": "引领 AI 创新",
+    "subtitle": "我们致力于将前沿人工智能技术转化为实际的商业价值",
+    "tabAbout": "关于我们",
+    "tabNews": "新闻动态",
+    "vision": "我们的愿景",
+    "visionDesc": "成为全球领先的 AI 技术提供商，用人工智能赋能千行百业，让智能技术惠及每一个人",
+    "mission": "我们的使命",
+    "missionDesc": "以创新的 AI 技术和专业的服务，帮助客户解决复杂问题，创造智能化的未来",
+    "values": "核心价值观",
+    "valuesDesc": "指导我们日常工作的行为准则和文化基石",
+    "customerFirst": "客户至上",
+    "customerFirstDesc": "始终以客户需求为中心，提供超越期望的服务体验，建立长期信任的合作关系",
+    "innovation": "创新驱动",
+    "innovationDesc": "持续探索前沿 AI 技术，为客户带来行业领先的智能化解决方案",
+    "integrity": "诚信正直",
+    "integrityDesc": "以诚信为本，数据真实透明，算法公平可解释，建立值得信赖的 AI 产品",
+    "collaboration": "协作共赢",
+    "collaborationDesc": "与客户、合作伙伴携手并进，共同推动 AI 技术落地应用，共创美好未来",
+    "experience": "年行业经验",
+    "customers": "企业客户",
+    "experts": "AI 专家",
+    "patents": "核心专利"
+  },
+  "model": {
+    "title": "发现并使用最适合你的 AI 模型",
+    "description": "汇聚业界顶尖 AI 模型",
+    "resultCount": "共 {count} 个模型",
+    "clearFilters": "清除所有筛选",
+    "noResults": "未找到匹配模型",
+    "tryAdjust": "请尝试调整搜索词或清除筛选",
+    "backToList": "返回模型列表",
+    "modelScale": "模型规模",
+    "openSource": "开源模型",
+    "modelType": "模型类型",
+    "closedSource": "闭源模型",
+    "contextLength": "上下文长度",
+    "pricing": "定价",
+    "noPricing": "暂无定价",
+    "modelIntro": "模型简介",
+    "noIntro": "暂无简介",
+    "modelFeatures": "模型特色",
+    "coreCapabilities": "核心能力",
+    "tryNow": "立即体验",
+    "viewDocs": "查看文档",
+    "input": "输入",
+    "output": "输出",
+    "tokens": "Tokens"
+  },
+  "product": {
+    "tryNow": "立即体验",
+    "learnMore": "了解更多",
+    "coreCapabilities": "核心能力",
+    "useCases": "应用场景",
+    "scene": "场景",
+    "faq": "常见问题"
+  },
+  "ecosystem": {
+    "title": "生态合作",
+    "subtitle": "携手共建 AI 生态，共创智能未来",
+    "description": "我们致力于与合作伙伴共同构建开放的 AI 生态系统，为开发者和企业提供更丰富、更强大的 AI 能力。",
+    "cta": "成为合作伙伴",
+    "partners": "合作伙伴",
+    "partnerA": "合作伙伴 A",
+    "partnerB": "合作伙伴 B",
+    "partnerC": "合作伙伴 C",
+    "partnerD": "合作伙伴 D",
+    "cooperation": "合作方式",
+    "technical": "技术合作",
+    "technicalDesc": "与技术合作伙伴共同研发创新解决方案，整合双方技术优势，为客户提供更完善的 AI 产品和服务。",
+    "channel": "渠道合作",
+    "channelDesc": "招募区域代理商和渠道合作伙伴，共同开拓市场，提供有竞争力的佣金政策和市场支持。",
+    "solution": "解决方案合作",
+    "solutionDesc": "与行业解决方案提供商合作，共同打造垂直行业的 AI 应用解决方案，满足特定行业需求。",
+    "strategic": "战略合作",
+    "strategicDesc": "与战略合作伙伴建立深度合作关系，共同探索 AI 技术前沿，开展联合研发和市场推广。",
+    "benefits": "合作伙伴权益",
+    "benefit1": "专属技术支持",
+    "benefit1Desc": "获得专业技术团队的一对一支持",
+    "benefit2": "优惠价格政策",
+    "benefit2Desc": "享受合作伙伴专属价格优惠",
+    "benefit3": "市场推广支持",
+    "benefit3Desc": "联合举办市场活动，共同推广",
+    "benefit4": "产品优先体验",
+    "benefit4Desc": "优先体验新功能和新产品",
+    "benefit5": "培训与赋能",
+    "benefit5Desc": "定期产品培训和技术交流",
+    "benefit6": "商业机会共享",
+    "benefit6Desc": "优先获得客户推荐和商业机会",
+    "contact": "联系我们",
+    "contactDesc": "欢迎有意向的合作伙伴与我们联系，共同探索合作机会"
+  },
+  "auth": {
+    "login": {
+      "pageTitle": "Eucal AI | 登录",
+      "title": "登录",
+      "email": "邮箱",
+      "password": "密码",
+      "code": "验证码",
+      "emailPlaceholder": "请输入邮箱",
+      "passwordPlaceholder": "请输入密码",
+      "codePlaceholder": "请输入验证码",
+      "submit": "立即登录",
+      "submitting": "登录中...",
+      "forgotPassword": "忘记密码？",
+      "noAccount": "还没有账号？",
+      "registerNow": "立即注册",
+      "getCode": "获取验证码",
+      "sending": "发送中..."
+    },
+    "register": {
+      "pageTitle": "Eucal AI | 注册",
+      "title": "注册",
+      "email": "邮箱",
+      "code": "验证码",
+      "emailPlaceholder": "请输入邮箱",
+      "codePlaceholder": "请输入验证码",
+      "password": "密码",
+      "passwordPlaceholder": "请设置密码（至少8位）",
+      "confirmPassword": "确认密码",
+      "confirmPasswordPlaceholder": "请再次输入密码",
+      "submit": "立即注册",
+      "submitting": "注册中...",
+      "hasAccount": "已有账号？",
+      "loginNow": "立即登录",
+      "agreementPrefix": "我已阅读并同意",
+      "userAgreement": "用户协议",
+      "privacyPolicy": "隐私政策"
+    },
+    "loginType": {
+      "password": "密码登录",
+      "code": "邮箱验证码登录"
+    },
+    "validation": {
+      "enterEmail": "请先输入邮箱",
+      "invalidEmail": "请输入有效的邮箱地址",
+      "enterPassword": "请填写密码",
+      "enterCode": "请填写验证码",
+      "passwordMismatch": "两次输入的密码不一致",
+      "passwordTooShort": "密码长度至少为8位",
+      "agreeToTerms": "请阅读并同意用户协议和隐私政策",
+      "fillAllRequired": "请填写所有必填项"
+    },
+    "errors": {
+      "loginFailed": "登录失败",
+      "loginFailedRetry": "登录失败，请稍后重试",
+      "registerFailed": "注册失败",
+      "registerFailedRetry": "注册失败，请稍后重试",
+      "sendFailed": "发送失败"
+    },
+    "forgotPassword": {
+      "titleStep1": "忘记密码",
+      "titleStep2": "重置密码",
+      "subtitleStep1": "请输入您注册时使用的邮箱",
+      "subtitleStep2": "请输入邮箱收到的验证码和新密码",
+      "email": "邮箱",
+      "emailPlaceholder": "请输入邮箱",
+      "code": "验证码",
+      "codePlaceholder": "请输入验证码",
+      "newPassword": "新密码",
+      "newPasswordPlaceholder": "请设置新密码（至少8位）",
+      "confirmPassword": "确认新密码",
+      "confirmPasswordPlaceholder": "请再次输入新密码",
+      "sendCode": "发送验证码",
+      "sending": "发送中...",
+      "resend": "重新发送",
+      "resetPassword": "重置密码",
+      "processing": "处理中...",
+      "rememberPassword": "想起密码了？",
+      "loginNow": "立即登录",
+      "validation": {
+        "enterEmail": "请先输入邮箱",
+        "invalidEmail": "请输入有效的邮箱地址",
+        "enterCode": "请填写验证码",
+        "enterPassword": "请填写新密码",
+        "passwordTooShort": "密码长度至少为8位",
+        "passwordMismatch": "两次输入的密码不一致"
+      },
+      "errors": {
+        "sendFailed": "发送失败",
+        "sendFailedRetry": "发送失败，请稍后重试",
+        "resetFailed": "重置失败",
+        "resetFailedRetry": "重置失败，请稍后重试"
+      }
+    }
+  },
+  "footer": {
+    "quickLinks": "快速链接",
+    "contact": "联系方式",
+    "privacy": "隐私政策",
+    "terms": "服务条款",
+    "about": "关于我们",
+    "products": "产品服务",
+    "news": "新闻动态",
+    "login": "登录",
+    "tagline": "致力于为企业提供高性能 AI 推理优化方案，推动智能化转型。",
+    "address": "北京市朝阳区科技园区88号",
+    "email": "contact@eucal.ai",
+    "phone": "400-888-8888",
+    "businessHours": "周一至周五 9:00-18:00",
+    "companyName": "Eucal AI",
+    "copyright": "© 2026 Eucal AI. 保留所有权利。"
+  },
+  "console": {
+    "header": {
+      "docs": "文档中心",
+      "account": "账户管理",
+      "logout": "退出登录"
+    },
+    "menu": {
+      "usage": "用量记录",
+      "usageRecord": "用量记录",
+      "api": "API管理",
+      "getApi": "获取API",
+      "thirdPartyApi": "第三方API管理",
+      "payment": "财务管理",
+      "balance": "余额",
+      "recharge": "充值记录",
+      "voucher": "代金券记录",
+      "billingHistory": "账单记录",
+      "account": "账户管理",
+      "accountInfo": "账户信息",
+      "interfaceKey": "接口密钥",
+      "requestLimits": "请求限制",
+      "childAccount": "子账号"
+    },
+    "usage": {
+      "title": "用量记录",
+      "subtitle": "查看您的 API 使用情况统计",
+      "totalRequests": "总请求次数",
+      "totalTokens": "总 Token 消耗",
+      "totalCost": "总消费金额",
+      "avgLatency": "平均延迟",
+      "responseTime": "响应时间",
+      "vsYesterday": "较昨日",
+      "costComparison": "成本对比",
+      "compareModel": "对比模型：",
+      "saved": "节省",
+      "premium": "溢价",
+      "currentSpend": "当前消费",
+      "referencePlan": "参考方案",
+      "mixedPlan": "混合方案",
+      "modelRanking": "模型调用次数排行",
+      "costShare": "模型费用占比",
+      "trend": "调用趋势",
+      "tokenTrend": "Token 消耗趋势",
+      "callCount": "调用次数",
+      "requests": "请求次数",
+      "tokens": "Token消耗",
+      "cost": "费用($)",
+      "inputTokens": "输入Token",
+      "outputTokens": "输出Token"
+    },
+    "api": {
+      "title": "API管理",
+      "getApiSubtitle": "获取您的 API Key 以便调用接口",
+      "generateApi": "创建API密钥",
+      "regenerateKey": "重新生成 Key",
+      "generating": "生成中...",
+      "yourApiKey": "您的 API Key",
+      "revokeApi": "撤销",
+      "apiKey": "API密钥",
+      "createdAt": "创建时间",
+      "lastUsed": "最后使用",
+      "status": "状态",
+      "enabled": "正常",
+      "disabled": "禁用",
+      "revoked": "已撤销",
+      "copy": "复制",
+      "copied": "已复制!",
+      "usageGuide": "使用说明",
+      "addApiKey": "在请求头中添加 API Key",
+      "addApiKeyDesc": "使用 Authorization 头传递您的 API Key",
+      "protectApiKey": "保护您的 API Key",
+      "protectApiKeyDesc": "请勿在客户端代码中暴露您的 API Key",
+      "exampleRequest": "示例请求",
+      "thirdPartyApi": {
+        "title": "第三方 API 管理",
+        "subtitle": "管理您的第三方 AI 服务 API 密钥，确保服务正常运行。",
+        "configured": "已配置",
+        "notConfigured": "未配置",
+        "selectProvider": "选择服务商",
+        "configuredApis": "已配置的 API",
+        "provider": "服务商",
+        "status": "状态",
+        "createdAt": "创建时间",
+        "actions": "操作",
+        "edit": "编辑",
+        "delete": "删除",
+        "enabled": "启用中",
+        "disabled": "已禁用",
+        "emptyState": "暂无已配置的第三方 API",
+        "emptyStateHint": "请在上方选择服务商进行配置",
+        "configureApi": "配置",
+        "visitWebsite": "访问官网",
+        "cancel": "取消",
+        "saveConfig": "保存配置"
+      }
+    },
+    "account": {
+      "title": "账户设置",
+      "basicInfo": "基本信息",
+      "security": "安全设置",
+      "save": "保存修改",
+      "confirm": "确认",
+      "basicInformation": {
+        "title": "基本信息",
+        "email": "邮箱",
+        "getKey": "获取你的 key",
+        "rechargeNow": "立即充值"
+      },
+      "verification": {
+        "title": "认证信息",
+        "enterprise": "企业认证",
+        "unverified": "未认证",
+        "verifyNow": "去实名认证 →"
+      },
+      "securitySettings": {
+        "title": "安全设置",
+        "password": "登录密码",
+        "passwordDesc": "建议您定期更换密码，以保护账户安全",
+        "changePassword": "修改密码",
+        "emailBinding": "邮箱绑定",
+        "boundEmail": "您的绑定邮箱：",
+        "bound": "已绑定"
+      },
+      "loadFailed": "获取用户信息失败，请稍后重试",
+      "retry": "重试",
+      "interfaceKey": {
+        "title": "接口密钥",
+        "subtitle": "管理您的 API Keys",
+        "createNew": "创建新 Key",
+        "default": "默认 Key",
+        "testEnv": "测试环境",
+        "createdOn": "创建于",
+        "lastUsed": "最后使用",
+        "copy": "复制",
+        "delete": "删除"
+      },
+      "requestLimits": {
+        "title": "请求限制",
+        "perMinute": "每分钟请求",
+        "perDay": "每日请求",
+        "perMonth": "每月 tokens"
+      },
+      "childAccount": {
+        "title": "子账号管理",
+        "addChild": "添加子账号",
+        "noChildAccounts": "暂无子账号",
+        "addChildHint": "添加子账号来分配权限"
+      }
+    },
+    "payment": {
+      "title": "财务管理",
+      "balance": "余额",
+      "recharge": "充值",
+      "history": "历史记录",
+      "success": "成功",
+      "pending": "待处理",
+      "failed": "失败",
+      "rechargePage": {
+        "title": "充值记录",
+        "recharge": "充值"
+      },
+      "voucherPage": {
+        "title": "代金券记录",
+        "noVouchers": "暂无代金券",
+        "activityHint": "关注活动获取代金券"
+      },
+      "billingHistoryPage": {
+        "title": "账单记录",
+        "consumption": "消费"
+      },
+      "balancePage": {
+        "title": "账户余额",
+        "availableDays": "预计可用 30 天",
+        "rechargeNow": "立即充值",
+        "viewBill": "查看账单",
+        "monthlySpend": "本月消费",
+        "vsLastMonth": "较上月",
+        "totalCalls": "总调用次数",
+        "cumulative": "本月累计",
+        "apiSuccessRate": "API 调用成功率",
+        "stable": "稳定运行中"
+      }
+    }
+  },
+  "errors": {
+    "notFound": "页面不存在",
+    "notFoundDesc": "抱歉，您访问的页面不存在或已被移除",
+    "backHome": "返回首页",
+    "backPrevious": "返回上一页",
+    "INVALID_API_KEY": "API Key 无效，请检查后重试",
+    "RATE_LIMIT_EXCEEDED": "请求频率超限，请稍后再试",
+    "UNAUTHORIZED": "请先登录"
+  },
+  "common": {
+    "loading": "加载中...",
+    "submit": "提交",
+    "cancel": "取消",
+    "confirm": "确认",
+    "clear": "清除",
+    "clearAll": "清除所有筛选"
+  }
+}

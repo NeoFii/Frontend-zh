@@ -130,6 +130,7 @@ export interface CMSQueryParams {
   category?: string
   sortBy?: 'date' | 'title' | 'sort_order'
   sortOrder?: 'asc' | 'desc'
+  locale?: string
 }
 
 // CMS 查询结果
