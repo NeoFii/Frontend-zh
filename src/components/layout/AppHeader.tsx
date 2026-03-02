@@ -2,28 +2,20 @@
 
 import { useState, useEffect } from 'react'
 import { useLocale } from 'next-intl'
-import { Link, useRouter } from '@/i18n/routing'
+import { Link } from '@/i18n/routing'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import type { NavItem } from '@/types'
-import { useAuthStore } from '@/stores/auth'
 import LanguageSwitcher from './LanguageSwitcher'
 
 const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'Eucal AI'
 
 export default function AppHeader() {
   const t = useTranslations('nav')
-  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
-  // 使用选择器精确订阅，避免不必要的重渲染
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
-  const hydrated = useAuthStore(state => state.hydrated)
-
-  // 判断是否已登录
-  const isLoggedIn = hydrated && isAuthenticated
 
   // 动态导航项 - 使用相对路径，next-intl Link 会自动处理 locale
   const navItems: NavItem[] = [

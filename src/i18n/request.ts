@@ -10,12 +10,12 @@ export default getRequestConfig(async ({requestLocale}) => {
   if (!locale) {
     const cookieStore = await cookies();
     const preferredLocale = cookieStore.get('preferred-locale')?.value;
-    if (preferredLocale && routing.locales.includes(preferredLocale as any)) {
+    if (preferredLocale && routing.locales.includes(preferredLocale as typeof routing.locales[number])) {
       locale = preferredLocale;
     }
   }
 
-  if (!locale || !routing.locales.includes(locale as any)) {
+  if (!locale || !routing.locales.includes(locale as typeof routing.locales[number])) {
     locale = routing.defaultLocale;
   }
 

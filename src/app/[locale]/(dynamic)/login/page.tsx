@@ -9,7 +9,6 @@ import { LoginForm } from '@/components/login'
 
 function LoginContent() {
   const t = useTranslations('auth.login')
-  const tCommon = useTranslations('common')
   const router = useRouter()
   const searchParams = useSearchParams()
   const { isAuthenticated, hydrated } = useAuthStore()

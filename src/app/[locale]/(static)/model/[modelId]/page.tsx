@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
-import { getTranslations } from 'next-intl/server'
 import { modelVendors, getModelById, getVendorByModelId } from '@/data/models'
 
 interface ModelDetailPageProps {
