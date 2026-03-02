@@ -4,7 +4,8 @@
  */
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/routing'
+import { useTranslations } from 'next-intl'
 import { PasswordStrength } from './PasswordStrength'
 import { AgreementLinks } from './AgreementLinks'
 import { RegisterError } from './RegisterError'
@@ -28,6 +29,9 @@ interface FormData {
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const router = useRouter()
+  const t = useTranslations('auth.register')
+  const tValidation = useTranslations('auth.validation')
+  const tErrors = useTranslations('auth.errors')
   const { login: saveUser } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [codeLoading, setCodeLoading] = useState(false)
@@ -53,12 +57,12 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
   const handleSendCode = async () => {
     if (!form.email) {
-      setError('请先输入邮箱')
+      setError(tValidation('enterEmail'))
       return
     }
 
     if (!validateEmail(form.email)) {
-      setError('请输入有效的邮箱地址')
+      setError(tValidation('invalidEmail'))
       return
     }
 
@@ -68,11 +72,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     try {
       const res = await sendVerificationCode(form.email)
       if (res.code !== 200) {
-        setError(res.message || '发送失败')
+        setError(res.message || tErrors('sendFailed'))
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || '发送失败，请稍后重试')
+      setError(error.response?.data?.message || tErrors('sendFailed'))
     } finally {
       setCodeLoading(false)
     }
@@ -80,19 +84,19 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
   const validateForm = (): boolean => {
     if (!form.agreement) {
-      setError('请阅读并同意用户协议和隐私政策')
+      setError(tValidation('agreeToTerms'))
       return false
     }
     if (!form.email || !form.code || !form.password || !form.confirmPassword) {
-      setError('请填写所有必填项')
+      setError(tValidation('fillAllRequired'))
       return false
     }
     if (form.password !== form.confirmPassword) {
-      setError('两次输入的密码不一致')
+      setError(tValidation('passwordMismatch'))
       return false
     }
     if (form.password.length < 8) {
-      setError('密码长度至少为8位')
+      setError(tValidation('passwordTooShort'))
       return false
     }
     return true
@@ -136,11 +140,11 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           router.push('/login?registered=true')
         }
       } else {
-        setError(res.message || '注册失败')
+        setError(res.message || tErrors('registerFailed'))
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || '注册失败，请稍后重试')
+      setError(error.response?.data?.message || tErrors('registerFailedRetry'))
     } finally {
       setLoading(false)
     }
@@ -151,7 +155,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       <RegisterError error={error} />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">邮箱</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
         <input
           name="email"
           type="email"
@@ -159,12 +163,12 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           value={form.email}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-          placeholder="请输入邮箱"
+          placeholder={t('emailPlaceholder')}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">验证码</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t('code')}</label>
         <div className="flex space-x-3">
           <input
             name="code"
@@ -174,14 +178,14 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             value={form.code}
             onChange={handleChange}
             className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-            placeholder="请输入验证码"
+            placeholder={t('codePlaceholder')}
           />
           <CodeCountdown onSendCode={handleSendCode} disabled={codeLoading} />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">密码</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t('password')}</label>
         <input
           name="password"
           type="password"
@@ -190,13 +194,13 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           value={form.password}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-          placeholder="请设置密码（至少8位）"
+          placeholder={t('passwordPlaceholder')}
         />
         <PasswordStrength password={form.password} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">确认密码</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">{t('confirmPassword')}</label>
         <input
           name="confirmPassword"
           type="password"
@@ -204,7 +208,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           value={form.confirmPassword}
           onChange={handleChange}
           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-          placeholder="请再次输入密码"
+          placeholder={t('confirmPasswordPlaceholder')}
         />
       </div>
 
@@ -218,7 +222,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         disabled={loading}
         className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? '注册中...' : '立即注册'}
+        {loading ? t('submitting') : t('submit')}
       </button>
     </form>
   )

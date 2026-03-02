@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, ReactNode } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface MenuItem {
   id: string
@@ -46,47 +47,48 @@ const UsageIcon = () => (
 )
 
 export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSidebarProps) {
+  const t = useTranslations('console.menu')
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['account', 'api'])
 
   const menuGroups: MenuGroup[] = [
     {
       id: 'usage',
-      name: '用量记录',
+      name: t('usage'),
       icon: <UsageIcon />,
       isDirect: true,
       items: [
-        { id: 'usage-record', name: '用量记录' },
+        { id: 'usage-record', name: t('usageRecord') },
       ],
     },
     {
       id: 'api',
-      name: 'API管理',
+      name: t('api'),
       icon: <ApiIcon />,
       items: [
-        { id: 'get-api', name: '获取API' },
-        { id: 'third-party-api', name: '第三方API管理' },
+        { id: 'get-api', name: t('getApi') },
+        { id: 'third-party-api', name: t('thirdPartyApi') },
       ],
     },
     {
       id: 'payment',
-      name: '财务管理',
+      name: t('payment'),
       icon: <FinanceIcon />,
       items: [
-        { id: 'balance', name: '余额' },
-        { id: 'recharge', name: '充值记录' },
-        { id: 'voucher', name: '代金券记录' },
-        { id: 'billing-history', name: '账单记录' },
+        { id: 'balance', name: t('balance') },
+        { id: 'recharge', name: t('recharge') },
+        { id: 'voucher', name: t('voucher') },
+        { id: 'billing-history', name: t('billingHistory') },
       ],
     },
     {
       id: 'account',
-      name: '账户管理',
+      name: t('account'),
       icon: <AccountIcon />,
       items: [
-        { id: 'basic-information', name: '账户信息' },
-        { id: 'interface-key', name: '接口密钥' },
-        { id: 'request-limits', name: '请求限制' },
-        { id: 'child-account', name: '子账号' },
+        { id: 'basic-information', name: t('accountInfo') },
+        { id: 'interface-key', name: t('interfaceKey') },
+        { id: 'request-limits', name: t('requestLimits') },
+        { id: 'child-account', name: t('childAccount') },
       ],
     },
   ]

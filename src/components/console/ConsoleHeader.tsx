@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { Link, useRouter } from '@/i18n/routing'
 import { useAuthStore } from '@/stores/auth'
+import { useTranslations } from 'next-intl'
 
 export default function ConsoleHeader() {
+  const t = useTranslations('console.header')
   const router = useRouter()
   // 使用选择器精确订阅，避免不必要的重渲染
   const user = useAuthStore(state => state.user)
@@ -92,10 +93,10 @@ export default function ConsoleHeader() {
             rel="noopener noreferrer"
             className="text-[15px] text-gray-600 hover:text-gray-900 transition-colors font-normal"
           >
-            文档中心
+            {t('docs')}
           </a>
           <Link href="/console/account/basic-information" className="text-[15px] text-gray-900 font-normal">
-            账户管理
+            {t('account')}
           </Link>
 
           {/* 通知图标 */}
@@ -132,7 +133,7 @@ export default function ConsoleHeader() {
                   <svg className="w-4 h-4 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
-                  退出登录
+                  {t('logout')}
                 </button>
               </div>
             )}

@@ -21,6 +21,18 @@ const NEWS_DIR = path.join(CONTENT_DIR, 'news')
 const PRODUCTS_DIR = path.join(CONTENT_DIR, 'products')
 
 /**
+ * 获取新闻目录路径（支持 locale）
+ */
+function getNewsDir(locale: string = 'zh'): string {
+  const localeDir = path.join(NEWS_DIR, locale)
+  // fallback to zh if locale dir not exists
+  if (!fs.existsSync(localeDir)) {
+    return path.join(NEWS_DIR, 'zh')
+  }
+  return localeDir
+}
+
+/**
  * 确保目录存在
  */
 function ensureDirectoryExists(dir: string): void {
@@ -53,15 +65,16 @@ function readMarkdownFile<T>(filePath: string): { data: T; content: string } | n
 /**
  * 获取所有新闻文章
  */
-export function getAllNews(): NewsItem[] {
-  ensureDirectoryExists(NEWS_DIR)
+export function getAllNews(locale: string = 'zh'): NewsItem[] {
+  const newsDir = getNewsDir(locale)
+  ensureDirectoryExists(newsDir)
 
-  const files = fs.readdirSync(NEWS_DIR)
+  const files = fs.readdirSync(newsDir)
   const markdownFiles = files.filter((file) => file.endsWith('.md'))
 
   const news = markdownFiles
     .map((filename) => {
-      const filePath = path.join(NEWS_DIR, filename)
+      const filePath = path.join(newsDir, filename)
       const result = readMarkdownFile<NewsFrontmatter>(filePath)
 
       if (!result) return null
@@ -87,8 +100,9 @@ export function getAllNews(): NewsItem[] {
 /**
  * 根据 slug 获取单篇新闻
  */
-export function getNewsBySlug(slug: string): NewsItem | null {
-  const filePath = path.join(NEWS_DIR, `${slug}.md`)
+export function getNewsBySlug(slug: string, locale: string = 'zh'): NewsItem | null {
+  const newsDir = getNewsDir(locale)
+  const filePath = path.join(newsDir, `${slug}.md`)
 
   if (!fs.existsSync(filePath)) {
     return null
@@ -114,9 +128,9 @@ export function getNewsBySlug(slug: string): NewsItem | null {
  * 查询新闻列表（支持分页和过滤）
  */
 export function queryNews(params: CMSQueryParams = {}): CMSQueryResult<NewsItem> {
-  const { limit = 10, offset = 0, category, sortBy = 'date', sortOrder = 'desc' } = params
+  const { limit = 10, offset = 0, category, sortBy = 'date', sortOrder = 'desc', locale = 'zh' } = params
 
-  let items = getAllNews()
+  let items = getAllNews(locale)
 
   // 分类过滤
   if (category) {
@@ -142,17 +156,31 @@ export function queryNews(params: CMSQueryParams = {}): CMSQueryResult<NewsItem>
 }
 
 /**
+ * 获取产品目录路径（支持 locale）
+ */
+function getProductDir(locale: string = 'zh'): string {
+  const localeDir = path.join(PRODUCTS_DIR, locale)
+  // fallback to zh if locale dir not exists
+  if (!fs.existsSync(localeDir)) {
+    console.warn(`[cms] Products directory for locale "${locale}" not found, falling back to "zh"`)
+    return path.join(PRODUCTS_DIR, 'zh')
+  }
+  return localeDir
+}
+
+/**
  * 获取所有产品
  */
-export function getAllProducts(): ProductItem[] {
-  ensureDirectoryExists(PRODUCTS_DIR)
+export function getAllProducts(locale: string = 'zh'): ProductItem[] {
+  const productDir = getProductDir(locale)
+  ensureDirectoryExists(productDir)
 
-  const files = fs.readdirSync(PRODUCTS_DIR)
+  const files = fs.readdirSync(productDir)
   const markdownFiles = files.filter((file) => file.endsWith('.md'))
 
   const products = markdownFiles
     .map((filename) => {
-      const filePath = path.join(PRODUCTS_DIR, filename)
+      const filePath = path.join(productDir, filename)
       const result = readMarkdownFile<ProductFrontmatter>(filePath)
 
       if (!result) return null
@@ -176,8 +204,9 @@ export function getAllProducts(): ProductItem[] {
 /**
  * 根据 slug 获取单个产品
  */
-export function getProductBySlug(slug: string): ProductItem | null {
-  const filePath = path.join(PRODUCTS_DIR, `${slug}.md`)
+export function getProductBySlug(slug: string, locale: string = 'zh'): ProductItem | null {
+  const productDir = getProductDir(locale)
+  const filePath = path.join(productDir, `${slug}.md`)
 
   if (!fs.existsSync(filePath)) {
     return null
@@ -200,8 +229,8 @@ export function getProductBySlug(slug: string): ProductItem | null {
 /**
  * 获取活跃的产品列表
  */
-export function getActiveProducts(): ProductItem[] {
-  return getAllProducts().filter((product) => product.isActive)
+export function getActiveProducts(locale: string = 'zh'): ProductItem[] {
+  return getAllProducts(locale).filter((product) => product.isActive)
 }
 
 /**

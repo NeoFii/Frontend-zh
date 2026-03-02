@@ -1,7 +1,11 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
+import createNextIntlPlugin from 'next-intl/plugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// next-intl 插件配置
+const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 /** @type {import('next').NextConfig} */
 // 通过环境变量控制 standalone 模式（用于 Docker 构建）
@@ -64,4 +68,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);
