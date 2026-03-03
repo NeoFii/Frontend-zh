@@ -95,19 +95,31 @@ export default function ModelPage() {
           </div>
 
           {/* 排序控件 */}
-          <ModelSort value={sortOrder} onChange={setSortOrder} />
+          <ModelSort value={sortOrder} onChange={setSortOrder}
+            labels={{
+              default: t('sortDefault'),
+              newestDesc: t('sortNewestDesc'),
+              newestAsc: t('sortNewestAsc'),
+            }}
+          />
         </div>
 
         {/* 厂商筛选 */}
         <VendorFilter
           selectedVendors={selectedVendors}
           onChange={setSelectedVendors}
+          labels={{
+            vendorFilter: t('vendorFilter'),
+            clearFilter: t('clearVendorFilter'),
+            selectAll: t('selectAll'),
+            selectedVendors: t('selectedVendors', { count: selectedVendors.length }),
+          }}
         />
 
         {/* 搜索栏 */}
         <div className="mb-6">
           <div className="max-w-md">
-            <ModelSearch value={searchQuery} onChange={setSearchQuery} />
+            <ModelSearch value={searchQuery} onChange={setSearchQuery} placeholder={t('searchPlaceholder')} />
           </div>
         </div>
 
@@ -145,7 +157,9 @@ export default function ModelPage() {
         {filteredModels.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
             {filteredModels.map(({ model, vendor }) => (
-              <ModelCard key={model.id} model={model} vendor={vendor} />
+              <ModelCard key={model.id} model={model} vendor={vendor}
+                labels={{ input: t('input'), output: t('output') }}
+              />
             ))}
           </div>
         ) : (

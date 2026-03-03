@@ -8,11 +8,11 @@ import { getTranslations } from 'next-intl/server'
 export async function generateStaticParams() {
   const products = getAllProducts('en')
   const slugs = products.map((product) => product.slug)
-  // 为每个 locale 生成路径
-  const paths: { locale: string; slug: string }[] = []
+  // 为每个 slug 生成路径：英文版无 locale 字段，中文版带 locale 字段
+  const paths: { locale?: string; slug: string }[] = []
   for (const slug of slugs) {
-    paths.push({ locale: 'zh', slug })
-    paths.push({ locale: 'en', slug })
+    paths.push({ slug })  // 英文版（默认语言）
+    paths.push({ locale: 'zh', slug })  // 中文版
   }
   return paths
 }

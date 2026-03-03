@@ -12,12 +12,28 @@ import Image from 'next/image'
 interface VendorFilterProps {
   selectedVendors: string[]
   onChange: (vendorIds: string[]) => void
+  labels?: {
+    vendorFilter: string
+    clearFilter: string
+    selectAll: string
+    selectedVendors: string
+  }
+}
+
+const defaultLabels = {
+  vendorFilter: '厂商筛选',
+  clearFilter: '清除筛选',
+  selectAll: '全选',
+  selectedVendors: '已选择 {count} 个厂商',
 }
 
 export const VendorFilter: React.FC<VendorFilterProps> = ({
   selectedVendors,
   onChange,
+  labels,
 }) => {
+  const t = labels || defaultLabels
+
   const toggleVendor = (vendorId: string) => {
     if (selectedVendors.includes(vendorId)) {
       onChange(selectedVendors.filter((id) => id !== vendorId))
@@ -37,21 +53,21 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[14px] font-medium text-[#181E25]">厂商筛选</span>
+        <span className="text-[14px] font-medium text-[#181E25]">{t.vendorFilter}</span>
         <div className="flex gap-2">
           {selectedVendors.length > 0 && (
             <button
               onClick={clearAll}
               className="text-[13px] text-[#666666] hover:text-[#181E25] transition-colors"
             >
-              清除筛选
+              {t.clearFilter}
             </button>
           )}
           <button
             onClick={selectAll}
             className="text-[13px] text-[#2563EB] hover:text-[#1D4ED8] transition-colors"
           >
-            全选
+            {t.selectAll}
           </button>
         </div>
       </div>
@@ -107,7 +123,7 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
       {/* 已选数量提示 */}
       {selectedVendors.length > 0 && (
         <div className="mt-3 text-[13px] text-[#666666]">
-          已选择 <span className="text-[#181E25] font-medium">{selectedVendors.length}</span> 个厂商
+          {t.selectedVendors.replace('{count}', String(selectedVendors.length))}
         </div>
       )}
     </div>

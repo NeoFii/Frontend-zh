@@ -13,6 +13,10 @@ import { Model, ModelVendor } from '@/data/models'
 interface ModelCardProps {
   model: Model
   vendor: ModelVendor
+  labels?: {
+    input: string
+    output: string
+  }
 }
 
 // 备用图标组件
@@ -48,8 +52,9 @@ const formatDate = (dateStr: string): string => {
   })
 }
 
-export const ModelCard: React.FC<ModelCardProps> = ({ model, vendor }) => {
+export const ModelCard: React.FC<ModelCardProps> = ({ model, vendor, labels }) => {
   const [imgError, setImgError] = React.useState(false)
+  const t = labels || { input: '输入', output: '输出' }
 
   return (
     <Link href={`/model/${model.id}`} className="block">
@@ -121,11 +126,11 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model, vendor }) => {
         <div className="mt-auto pt-3 border-t border-gray-100">
           <div className="flex justify-between text-[13px]">
             <div>
-              <span className="text-[#9CA3AF]">输入:</span>
+              <span className="text-[#9CA3AF]">{t.input}:</span>
               <span className="text-[#666666] ml-1">{model.pricing.input}</span>
             </div>
             <div>
-              <span className="text-[#9CA3AF]">输出:</span>
+              <span className="text-[#9CA3AF]">{t.output}:</span>
               <span className="text-[#666666] ml-1">{model.pricing.output}</span>
             </div>
           </div>

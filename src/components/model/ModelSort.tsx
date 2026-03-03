@@ -12,16 +12,27 @@ export type SortOrder = 'default' | 'desc' | 'asc'
 interface ModelSortProps {
   value: SortOrder
   onChange: (value: SortOrder) => void
+  labels?: {
+    default: string
+    newestDesc: string
+    newestAsc: string
+  }
 }
 
-const sortOptions: { value: SortOrder; label: string }[] = [
-  { value: 'default', label: '按默认排序' },
-  { value: 'desc', label: '发布时间倒序' },
-  { value: 'asc', label: '发布时间正序' },
-]
+const defaultLabels = {
+  default: '按默认排序',
+  newestDesc: '发布时间倒序',
+  newestAsc: '发布时间正序',
+}
 
-export const ModelSort: React.FC<ModelSortProps> = ({ value, onChange }) => {
+export const ModelSort: React.FC<ModelSortProps> = ({ value, onChange, labels }) => {
   const [isOpen, setIsOpen] = useState(false)
+  const t = labels || defaultLabels
+  const sortOptions: { value: SortOrder; label: string }[] = [
+    { value: 'default', label: t.default },
+    { value: 'desc', label: t.newestDesc },
+    { value: 'asc', label: t.newestAsc },
+  ]
   const selectedOption = sortOptions.find((opt) => opt.value === value)
 
   const handleSelect = (sortValue: SortOrder) => {
@@ -35,7 +46,7 @@ export const ModelSort: React.FC<ModelSortProps> = ({ value, onChange }) => {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[14px] text-[#181E25] hover:border-gray-300 transition-colors"
       >
-        <span>{selectedOption?.label || '按默认排序'}</span>
+        <span>{selectedOption?.label || t.default}</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"

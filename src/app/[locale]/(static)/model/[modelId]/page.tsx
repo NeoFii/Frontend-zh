@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
 import { modelVendors, getModelById, getVendorByModelId } from '@/data/models'
@@ -12,12 +13,14 @@ interface ModelDetailPageProps {
 
 // 生成静态路径
 export function generateStaticParams() {
-  const paths: { locale: string; modelId: string }[] = []
+  const paths: { locale?: string; modelId: string }[] = []
 
   modelVendors.forEach((vendor) => {
     vendor.models.forEach((model) => {
+      // 英文版（默认语言）不包含 locale 字段
+      paths.push({ modelId: model.id })
+      // 中文版包含 locale 字段
       paths.push({ locale: 'zh', modelId: model.id })
-      paths.push({ locale: 'en', modelId: model.id })
     })
   })
 
@@ -34,7 +37,7 @@ function formatDate(dateStr: string, locale: string): string {
   })
 }
 
-export default function ModelDetailPage({ params }: ModelDetailPageProps) {
+export default async function ModelDetailPage({ params }: ModelDetailPageProps) {
   const { modelId, locale } = params
 
   const model = getModelById(modelId)
@@ -44,46 +47,8 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
     notFound()
   }
 
-  // 同步获取翻译
-  const tModel = locale === 'zh' ? {
-    backToList: '返回模型列表',
-    modelScale: '模型规模',
-    openSource: '开源模型',
-    modelType: '模型类型',
-    closedSource: '闭源模型',
-    contextLength: '上下文长度',
-    pricing: '定价',
-    noPricing: '暂无定价',
-    modelIntro: '模型简介',
-    noIntro: '暂无简介',
-    modelFeatures: '模型特色',
-    coreCapabilities: '核心能力',
-    tryNow: '立即体验',
-    viewDocs: '查看文档',
-    input: '输入',
-    output: '输出',
-    tokens: 'Tokens',
-    publishedAt: '发布时间',
-  } : {
-    backToList: 'Back to Model List',
-    modelScale: 'Model Scale',
-    openSource: 'Open Source',
-    modelType: 'Model Type',
-    closedSource: 'Closed Source',
-    contextLength: 'Context Length',
-    pricing: 'Pricing',
-    noPricing: 'Pricing TBD',
-    modelIntro: 'Model Introduction',
-    noIntro: 'No introduction available',
-    modelFeatures: 'Model Features',
-    coreCapabilities: 'Core Capabilities',
-    tryNow: 'Try Now',
-    viewDocs: 'View Docs',
-    input: 'Input',
-    output: 'Output',
-    tokens: 'Tokens',
-    publishedAt: 'Published',
-  }
+  // 异步获取翻译
+  const t = await getTranslations({ locale, namespace: 'model' })
 
   return (
     <main className="min-h-screen bg-white">
@@ -108,7 +73,7 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
               strokeLinejoin="round"
             />
           </svg>
-          {tModel.backToList}
+          {t('backToList')}
         </Link>
 
         {/* 头部信息 */}
@@ -137,7 +102,7 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
             {/* 发布时间 */}
             {model.publishedAt && (
               <div className="text-[14px] text-[#9CA3AF]">
-                {tModel.publishedAt}: {formatDate(model.publishedAt, locale)}
+                {t('publishedAt')}: {formatDate(model.publishedAt, locale)}
               </div>
             )}
           </div>
@@ -148,28 +113,28 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
           {/* 模型大小 - 仅开源模型显示 */}
           {model.isOpenSource && model.modelSize && (
             <div className="bg-[#F7F8FA] rounded-xl p-5">
-              <div className="text-[13px] text-[#666666] mb-1">{tModel.modelScale}</div>
+              <div className="text-[13px] text-[#666666] mb-1">{t('modelScale')}</div>
               <div className="text-[24px] font-semibold text-[#181E25]">
                 {model.modelSize}
               </div>
-              <div className="text-[12px] text-[#10B981] mt-1">{tModel.openSource}</div>
+              <div className="text-[12px] text-[#10B981] mt-1">{t('openSource')}</div>
             </div>
           )}
 
           {/* 闭源模型显示类型标签 */}
           {!model.isOpenSource && (
             <div className="bg-[#F7F8FA] rounded-xl p-5">
-              <div className="text-[13px] text-[#666666] mb-1">{tModel.modelType}</div>
+              <div className="text-[13px] text-[#666666] mb-1">{t('modelType')}</div>
               <div className="text-[24px] font-semibold text-[#181E25]">
                 {model.type || (locale === 'zh' ? '对话' : 'Chat')}
               </div>
-              <div className="text-[12px] text-[#2563EB] mt-1">{tModel.closedSource}</div>
+              <div className="text-[12px] text-[#2563EB] mt-1">{t('closedSource')}</div>
             </div>
           )}
 
           {/* 上下文长度 */}
           <div className="bg-[#F7F8FA] rounded-xl p-5">
-            <div className="text-[13px] text-[#666666] mb-1">{tModel.contextLength}</div>
+            <div className="text-[13px] text-[#666666] mb-1">{t('contextLength')}</div>
             <div className="text-[24px] font-semibold text-[#181E25]">
               {model.contextLength
                 ? model.contextLength >= 1000
@@ -177,24 +142,24 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
                   : model.contextLength.toString()
                 : (locale === 'zh' ? '未知' : 'N/A')}
             </div>
-            <div className="text-[12px] text-[#666666] mt-1">{tModel.tokens}</div>
+            <div className="text-[12px] text-[#666666] mt-1">{t('tokens')}</div>
           </div>
 
           {/* 价格信息 */}
           <div className="bg-[#F7F8FA] rounded-xl p-5">
-            <div className="text-[13px] text-[#666666] mb-1">{tModel.pricing}</div>
+            <div className="text-[13px] text-[#666666] mb-1">{t('pricing')}</div>
             {model.pricing ? (
               <div className="space-y-1">
                 <div className="text-[14px] text-[#181E25]">
-                  {tModel.input}: {model.pricing.input}
+                  {t('input')}: {model.pricing.input}
                 </div>
                 <div className="text-[14px] text-[#181E25]">
-                  {tModel.output}: {model.pricing.output}
+                  {t('output')}: {model.pricing.output}
                 </div>
               </div>
             ) : (
               <div className="text-[24px] font-semibold text-[#181E25]">
-                {tModel.noPricing}
+                {t('noPricing')}
               </div>
             )}
           </div>
@@ -203,11 +168,11 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
         {/* 模型简介 */}
         <div className="mb-8">
           <h2 className="text-[20px] font-semibold text-[#181E25] mb-4">
-            {tModel.modelIntro}
+            {t('modelIntro')}
           </h2>
           <div className="bg-[#F7F8FA] rounded-xl p-6">
             <p className="text-[15px] text-[#666666] leading-[1.8]">
-              {model.fullDescription || model.description || tModel.noIntro}
+              {model.fullDescription || model.description || t('noIntro')}
             </p>
           </div>
         </div>
@@ -216,7 +181,7 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
         {model.featureTags && model.featureTags.length > 0 && (
           <div className="mb-8">
             <h2 className="text-[20px] font-semibold text-[#181E25] mb-4">
-              {tModel.modelFeatures}
+              {t('modelFeatures')}
             </h2>
             <div className="flex flex-wrap gap-3">
               {model.featureTags.map((tag) => (
@@ -235,7 +200,7 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
         {model.capabilities && model.capabilities.length > 0 && (
           <div className="mb-8">
             <h2 className="text-[20px] font-semibold text-[#181E25] mb-4">
-              {tModel.coreCapabilities}
+              {t('coreCapabilities')}
             </h2>
             <div className="flex flex-wrap gap-3">
               {model.capabilities.map((capability) => (
@@ -257,10 +222,10 @@ export default function ModelDetailPage({ params }: ModelDetailPageProps) {
         {/* 操作按钮 */}
         <div className="flex gap-4 pt-4 border-t border-gray-100">
           <button className="px-6 py-3 bg-[#181E25] text-white text-[14px] font-medium rounded-lg hover:opacity-90 transition-opacity">
-            {tModel.tryNow}
+            {t('tryNow')}
           </button>
           <button className="px-6 py-3 border border-gray-200 text-[#181E25] text-[14px] font-medium rounded-lg hover:bg-gray-50 transition-colors">
-            {tModel.viewDocs}
+            {t('viewDocs')}
           </button>
         </div>
       </div>
