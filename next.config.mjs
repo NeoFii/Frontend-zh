@@ -46,9 +46,16 @@ const nextConfig = {
   async rewrites() {
     const apiUrl = process.env.API_URL || 'http://127.0.0.1:8000';
     return [
+      // API 代理
       {
         source: '/api/:path*',
         destination: `${apiUrl}/api/:path*`,
+      },
+      // 处理英文 locale 的 model 路由（localePrefix: 'as-needed' 配置下）
+      // /model/:id -> /en/model/:id (内部重写，不改变 URL)
+      {
+        source: '/model/:path*',
+        destination: '/en/model/:path*',
       },
     ];
   },

@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { modelVendors, ModelVendor, Model } from '@/data/models'
 import ModelSearch from '@/components/model/ModelSearch'
 import ModelSort, { SortOrder } from '@/components/model/ModelSort'
@@ -15,6 +15,7 @@ import VendorFilter from '@/components/model/VendorFilter'
 
 export default function ModelPage() {
   const t = useTranslations('model')
+  const locale = useLocale()
   // 状态管理
   const [searchQuery, setSearchQuery] = useState('')
   const [sortOrder, setSortOrder] = useState<SortOrder>('default')
@@ -48,7 +49,7 @@ export default function ModelPage() {
       result = result.filter(
         ({ model, vendor }) =>
           model.name.toLowerCase().includes(query) ||
-          model.description?.toLowerCase().includes(query) ||
+          model.description?.[locale as 'zh' | 'en']?.toLowerCase().includes(query) ||
           vendor.name.toLowerCase().includes(query)
       )
     }

@@ -2,29 +2,13 @@ import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import Image from 'next/image'
 import { Link } from '@/i18n/routing'
-import { modelVendors, getModelById, getVendorByModelId } from '@/data/models'
+import { getModelById, getVendorByModelId } from '@/data/models'
 
 interface ModelDetailPageProps {
   params: {
     locale: string
     modelId: string
   }
-}
-
-// 生成静态路径
-export function generateStaticParams() {
-  const paths: { locale?: string; modelId: string }[] = []
-
-  modelVendors.forEach((vendor) => {
-    vendor.models.forEach((model) => {
-      // 英文版（默认语言）不包含 locale 字段
-      paths.push({ modelId: model.id })
-      // 中文版包含 locale 字段
-      paths.push({ locale: 'zh', modelId: model.id })
-    })
-  })
-
-  return paths
 }
 
 // 格式化日期
@@ -172,7 +156,7 @@ export default async function ModelDetailPage({ params }: ModelDetailPageProps) 
           </h2>
           <div className="bg-[#F7F8FA] rounded-xl p-6">
             <p className="text-[15px] text-[#666666] leading-[1.8]">
-              {model.fullDescription || model.description || t('noIntro')}
+              {(model.fullDescription?.[locale as 'zh' | 'en'] || model.description?.[locale as 'zh' | 'en'] || t('noIntro'))}
             </p>
           </div>
         </div>
