@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { Link } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
 import { useAuthStore } from '@/stores/auth'
-import { setAccessToken, setAccessTokenToCookie } from '@/lib/token'
+import { setAccessToken } from '@/lib/token'
 import { LoginTypeSwitcher } from './LoginTypeSwitcher'
 import { CodeCountdown } from './CodeCountdown'
 import { LoginError } from './LoginError'
@@ -110,8 +110,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         // 存储 Token（Refresh Token 由后端通过 httpOnly Cookie 管理）
         const { access_token, expires_in } = res.data
         setAccessToken(access_token, expires_in)
-        // 设置 Cookie，确保中间件立即识别登录状态
-        setAccessTokenToCookie(access_token)
         // 保存用户信息到本地 store
         saveUser(res.data.user)
         onSuccess()

@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Link, useRouter } from '@/i18n/routing'
+import { Link } from '@/i18n/routing'
 import { useAuthStore } from '@/stores/auth'
 import { useTranslations } from 'next-intl'
 
 export default function ConsoleHeader() {
   const t = useTranslations('console.header')
-  const router = useRouter()
   // 使用选择器精确订阅，避免不必要的重渲染
   const user = useAuthStore(state => state.user)
   const logoutAsync = useAuthStore(state => state.logoutAsync)
@@ -48,10 +47,15 @@ export default function ConsoleHeader() {
   }, [])
 
   const handleLogout = async () => {
-    // 调用异步登出（会自动清除 Token 和跳转）
-    await logoutAsync()
-    // 跳转到首页
-    router.push('/')
+    console.log('[Logout] Step 1: 按钮点击，开始执行 handleLogout')
+    try {
+      console.log('[Logout] Step 2: 准备调用 logoutAsync')
+      await logoutAsync()
+      console.log('[Logout] Step 3: logoutAsync 完成，准备跳转')
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('[Logout] ERROR:', error)
+    }
   }
 
   // 获取用户头像显示内容

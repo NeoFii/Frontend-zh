@@ -293,7 +293,7 @@ export default function UsageRecordPage() {
         },
       },
     ],
-  }), [sortedByRequests])
+  }), [sortedByRequests, t])
 
   // 模型费用占比图表配置
   const modelCostShareOption = useMemo(() => ({
@@ -356,7 +356,7 @@ export default function UsageRecordPage() {
         })),
       },
     ],
-  }), [sortedByCost])
+  }), [sortedByCost, t])
 
   // 调用趋势图表配置
   const trendOption = useMemo(() => ({
@@ -446,7 +446,7 @@ export default function UsageRecordPage() {
         itemStyle: { color: '#10B981' },
       },
     ],
-  }), [trendData])
+  }), [trendData, t])
 
   // Token 消耗趋势图表配置
   const tokenTrendOption = useMemo(() => ({
@@ -532,7 +532,7 @@ export default function UsageRecordPage() {
         },
       },
     ],
-  }), [tokenTrendData])
+  }), [tokenTrendData, t])
 
   const formatNumber = (num: number): string => {
     return new Intl.NumberFormat('zh-CN').format(num)

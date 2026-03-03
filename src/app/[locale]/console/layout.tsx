@@ -59,7 +59,9 @@ export default function ConsoleLayout({
 
   // 根据当前路径确定活动菜单
   const getActiveMenuFromPath = (path: string): string => {
-    return PATH_MENU_MAP[path] || 'basic-information'
+    // 剥离语言前缀（如 /zh/console/... -> /console/...）
+    const pathWithoutLocale = path.replace(/^\/(zh|en)\//, '/')
+    return PATH_MENU_MAP[pathWithoutLocale] || 'basic-information'
   }
 
   const [activeMenu, setActiveMenu] = useState(() => getActiveMenuFromPath(pathname))

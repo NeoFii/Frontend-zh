@@ -2,6 +2,7 @@
  * Token 管理模块
  * 双 Token 方案：Access Token 存内存，Refresh Token 由 httpOnly Cookie 管理
  * 认证状态通过调用 /auth/me 验证，不再依赖 localStorage
+ * 注意：Cookie 由后端通过 Set-Cookie 响应头管理，前端不直接操作
  */
 
 // Access Token 存内存（不持久化，页面关闭即失效）
@@ -55,29 +56,10 @@ export function isTokenExpired(): boolean {
 /**
  * 清除所有 Token（登录/登出时调用）
  * 注意：Refresh Token 存储在 httpOnly Cookie 中，由后端管理清除
- * 前端需要清除 Access Token 内存变量和手动设置的 Cookie
+ * Access Token 仅存内存，由前端清除
  */
 export function clearAllTokens(): void {
   removeAccessToken()
-  clearAccessTokenFromCookie()
-}
-
-/**
- * 将 Access Token 写入 Cookie（供中间件读取）
- * 用于登录成功后确保中间件立即识别登录状态
- * @param token Access Token 字符串
- * @param expiresInSeconds 过期时间（秒），默认 7 天
- */
-export function setAccessTokenToCookie(token: string, expiresInSeconds: number = 60 * 60 * 24 * 7): void {
-  const expires = new Date(Date.now() + expiresInSeconds * 1000).toUTCString()
-  document.cookie = `access_token=${token};expires=${expires};path=/;SameSite=Lax`
-}
-
-/**
- * 从 Cookie 中清除 Access Token
- */
-export function clearAccessTokenFromCookie(): void {
-  document.cookie = 'access_token=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/'
 }
 
 /**
