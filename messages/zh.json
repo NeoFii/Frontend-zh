@@ -19,69 +19,22 @@
   },
   "home": {
     "hero": {
-      "productName": "TierFlow",
-      "tagline": "智能分层推理引擎",
-      "shortDescription": "面向大模型应用的高性能推理优化平台",
-      "ctaApi": "即刻接入API",
-      "ctaProduct": "了解产品功能",
-      "ctaDocs": "查看文档"
+      "title": "一个接口",
+      "titleHighlight": "主流大模型",
+      "subtitle": "只需替换 BASE URL，即可通过统一接口访问所有主流大模型"
     },
-    "stats": {
-      "cost": "成本降低",
-      "response": "平均响应",
-      "availability": "服务可用性"
+    "baseUrl": {
+      "label": "BASE URL",
+      "copyTitle": "复制",
+      "copied": "已复制"
     },
-    "features": {
-      "title": "核心能力",
-      "subtitle": "三大核心技术，为您的 AI 应用提供极致性能与成本优化",
-      "smartCaching": "智能分层缓存",
-      "smartCachingDesc": "基于语义相似度的多级缓存系统，自动识别重复查询，缓存命中率达 85%，显著降低 API 调用成本",
-      "dynamicRouting": "动态模型路由",
-      "dynamicRoutingDesc": "实时评估任务复杂度，智能选择最优模型组合，简单任务使用轻量模型，复杂任务自动升级至大模型",
-      "highAvailability": "高可用架构",
-      "highAvailabilityDesc": "多节点冗余部署，自动故障转移，支持 10万+ QPS 并发，企业级 SLA 保障，确保业务连续性"
+    "cta": {
+      "getKey": "获取密钥",
+      "docs": "文档"
     },
-    "performance": {
-      "title": "实时性能监控",
-      "subtitle": "TierFlow 平台实时运行数据",
-      "chartTitle": "吞吐性能坐标图",
-      "input": "输入",
-      "output": "输出",
-      "liveUpdate": "实时更新",
-      "yAxis": "吞吐量 (tokens/s)",
-      "xAxis": "延迟 Latency (对数坐标)",
-      "legendOptimal": "最优性能区",
-      "legendHigh": "高性能区",
-      "legendStandard": "标准性能区",
-      "legendBasic": "基础性能区"
-    },
-    "coreCapabilities": "核心能力",
-    "coreCapabilitiesDesc": "三大核心技术，为您的 AI 应用提供极致性能与成本优化",
-    "smartCaching": "智能分层缓存",
-    "smartCachingDesc": "基于语义相似度的多级缓存系统",
-    "dynamicRouting": "动态模型路由",
-    "dynamicRoutingDesc": "实时评估任务复杂度",
-    "highAvailability": "高可用架构",
-    "highAvailabilityDesc": "多节点冗余部署",
-    "costReduction": "成本降低",
-    "avgResponse": "平均响应",
-    "availability": "服务可用性",
-    "performance": {
-      "title": "实时性能监控",
-      "subtitle": "TierFlow 平台实时运行数据",
-      "chartTitle": "吞吐量性能图表",
-      "input": "输入 Token",
-      "output": "输出 Token",
-      "liveUpdate": "实时更新",
-      "yAxis": "吞吐量 (tokens/s)",
-      "xAxis": "首字延迟 TTFT (对数坐标)",
-      "legendOptimal": "TierFlow (最优)",
-      "legendHigh": "OpenAI (高性能)",
-      "legendStandard": "Azure (标准)",
-      "legendBasic": "AWS (基础)"
-    },
-    "throughput": "吞吐量 (tokens/s)",
-    "latency": "延迟 Latency"
+    "providers": {
+      "title": "支持众多的大模型供应商"
+    }
   },
   "price": {
     "title": "透明定价",

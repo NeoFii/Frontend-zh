@@ -1,353 +1,206 @@
 'use client'
 
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/routing'
 import Reveal from '@/components/Reveal'
-import CountUp from '@/components/CountUp'
 import { useAuthStore } from '@/stores/auth'
-import { useTranslations } from 'next-intl'
+import Image from 'next/image'
+
+const BASE_URL = 'https://api.eucal.ai/v1/chat/completions'
+
+// 支持的供应商 Logo（使用本地图标）
+const providers = [
+  { name: 'OpenAI', icon: '/icons/providers/openai.png' },
+  { name: 'Claude', icon: '/icons/providers/anthropic.png' },
+  { name: 'Gemini', icon: '/icons/providers/gemini.png' },
+  { name: '智谱', icon: '/icons/providers/zhipu.png' },
+  { name: 'DeepSeek', icon: '/icons/providers/deepseek.png' },
+  { name: 'Kimi', icon: '/icons/providers/moonshot.png' },
+  { name: '通义千问', icon: '/icons/providers/qwen.png' },
+  { name: '百川', icon: '/icons/providers/cornerstone.png' },
+  { name: 'MiniMax', icon: '/icons/providers/minimax.png' },
+  { name: '阶跃星辰', icon: '/icons/providers/stepfun.png' },
+  { name: '硅基流动', icon: '/icons/providers/silicon-flow.png' },
+  { name: 'Llama', icon: '/icons/providers/meta.png' },
+]
 
 export default function Home() {
   const t = useTranslations('home')
   const { isAuthenticated, hydrated } = useAuthStore()
   const isLoggedIn = hydrated && isAuthenticated
+  const [copied, setCopied] = useState(false)
 
-  // 处理 CTA 按钮点击 - 使用相对路径，next-intl 会自动处理 locale
+  // 处理 CTA 按钮点击
   const handleCtaClick = (e: React.MouseEvent) => {
     e.preventDefault()
     const targetUrl = isLoggedIn ? '/console/account/basic-information' : '/login'
     window.open(targetUrl, '_blank')
   }
 
-  // 统计数据配置
-  const stats = [
-    { label: t('stats.cost'), value: '70', suffix: '%' },
-    { label: t('stats.response'), value: '50', suffix: 'ms' },
-    { label: t('stats.availability'), value: '99.9', suffix: '%' },
-  ]
-
-  // 功能特性配置
-  const highlights = [
-    {
-      id: '1',
-      title: t('features.smartCaching'),
-      description: t('features.smartCachingDesc'),
-    },
-    {
-      id: '2',
-      title: t('features.dynamicRouting'),
-      description: t('features.dynamicRoutingDesc'),
-    },
-    {
-      id: '3',
-      title: t('features.highAvailability'),
-      description: t('features.highAvailabilityDesc'),
-    },
-  ]
+  // 复制 BASE URL
+  const copyBaseUrl = () => {
+    navigator.clipboard.writeText(BASE_URL)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
-    <main>
-      {/* 1. Hero Section - TierFlow 产品简介 */}
-      <section className="relative min-h-[90vh] flex flex-col items-center justify-center bg-white pt-20 overflow-hidden">
-        {/* 动态背景装饰 */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-[10%] left-[10%] w-[500px] h-[500px] bg-primary-200/20 rounded-full blur-[120px] animate-pulse-glow"></div>
-          <div className="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] bg-orange-200/20 rounded-full blur-[100px] animate-pulse-glow" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute top-[40%] right-[20%] w-[300px] h-[300px] bg-gradient-to-r from-primary-100/20 to-orange-100/20 rounded-full blur-[80px] animate-float"></div>
+    <main className="relative overflow-x-hidden">
+      {/* Hero Section */}
+      <section className="relative min-h-[85vh] flex flex-col items-center justify-center bg-[#FAF8F5] pt-16 overflow-hidden">
+        {/* 渐变模糊球体背景 */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[15%] left-[10%] w-[400px] h-[400px] bg-indigo-400/20 rounded-full blur-[100px] animate-pulse-glow"></div>
+          <div className="absolute bottom-[20%] right-[10%] w-[350px] h-[350px] bg-teal-400/20 rounded-full blur-[90px] animate-pulse-glow" style={{ animationDelay: '1.5s' }}></div>
+          <div className="absolute top-[40%] right-[25%] w-[250px] h-[250px] bg-orange-300/15 rounded-full blur-[70px] animate-float"></div>
         </div>
 
-        <div className="relative container-custom py-12">
-          <div className="max-w-5xl mx-auto text-center">
-            {/* 产品名称 - 超大标题 */}
+        {/* 装饰性花括号 */}
+        <div className="absolute top-[8%] left-[5%] text-[150px] md:text-[220px] font-light text-gray-900/[0.03] select-none pointer-events-none">
+          {'{'}
+        </div>
+        <div className="absolute bottom-[8%] right-[5%] text-[150px] md:text-[220px] font-light text-gray-900/[0.03] select-none pointer-events-none">
+          {'}'}
+        </div>
+
+        <div className="relative container-custom py-12 z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            {/* 主标题 */}
             <Reveal>
-              <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold text-gray-900 mb-6 tracking-tight leading-none">
-                {t('hero.productName')}
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 tracking-tight leading-[1.1]">
+                {t('hero.title')}
+                <br />
+                <span className="text-gradient">{t('hero.titleHighlight')}</span>
               </h1>
             </Reveal>
 
-            {/* 产品副标题 */}
+            {/* 副标题 */}
             <Reveal delay={100}>
-              <p className="text-2xl md:text-3xl text-gray-700 mb-4 font-medium">
-                {t('hero.tagline')}
+              <p className="text-lg md:text-xl text-gray-600/90 mb-8 max-w-xl mx-auto leading-relaxed">
+                {t('hero.subtitle')}
               </p>
             </Reveal>
 
-            {/* 产品描述 */}
+            {/* BASE URL 展示 */}
             <Reveal delay={200}>
-              <p className="text-lg text-gray-500 mb-10 max-w-2xl mx-auto leading-relaxed">
-                {t('hero.shortDescription')}
-              </p>
-            </Reveal>
-
-            {/* CTA 按钮 - 横向排列 */}
-            <Reveal delay={300}>
-              <div className="flex flex-wrap gap-4 justify-center mb-16">
+              <div className="inline-flex items-center gap-3 bg-white/80 backdrop-blur-sm border border-gray-200/60 rounded-xl px-5 py-3 mb-8 shadow-sm">
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('baseUrl.label')}</span>
+                <span className="text-sm font-mono text-gray-800">{BASE_URL}</span>
                 <button
-                  onClick={handleCtaClick}
-                  className="group inline-flex items-center px-8 py-4 bg-gray-900 text-white rounded-full font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-gray-900/20 btn-ripple"
+                  onClick={copyBaseUrl}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  title={copied ? t('baseUrl.copied') : t('baseUrl.copyTitle')}
                 >
-                  {t('hero.ctaApi')}
-                  <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  {copied ? (
+                    <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  )}
                 </button>
-                <Link
-                  href="/products/tierflow"
-                  className="inline-flex items-center px-8 py-4 bg-gray-100 text-gray-900 rounded-full font-medium hover:bg-gray-200 transition-all duration-300 hover:scale-105"
-                >
-                  {t('hero.ctaProduct')}
-                </Link>
-                <a
-                  href="https://neofii.github.io/TierFlow-Doc/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-8 py-4 bg-white border border-gray-200 text-gray-700 rounded-full font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 hover:scale-105"
-                >
-                  {t('hero.ctaDocs')}
-                  <svg className="w-5 h-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                </a>
               </div>
             </Reveal>
 
-            {/* 核心数据指标 */}
+            {/* CTA 按钮 */}
             <Reveal delay={400}>
-              <div className="grid grid-cols-3 gap-8 md:gap-16 max-w-3xl mx-auto">
-                {stats.slice(0, 3).map((stat) => (
-                  <div key={stat.label} className="text-center">
-                    <div className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
-                      <CountUp end={parseFloat(stat.value)} suffix={stat.suffix} />
-                    </div>
-                    <div className="text-gray-500 text-sm md:text-base">{stat.label}</div>
+              <div className="flex flex-wrap gap-4 justify-center items-center mb-16">
+                <button
+                  onClick={handleCtaClick}
+                  className="group inline-flex items-center px-8 py-3.5 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-all duration-300 hover:shadow-lg hover:shadow-primary-600/25 hover:-translate-y-0.5"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {t('cta.getKey')}
+                </button>
+                <Link
+                  href="/about"
+                  className="group inline-flex items-center px-8 py-3.5 bg-white text-gray-700 border border-gray-200 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 hover:-translate-y-0.5"
+                >
+                  <svg className="w-5 h-5 mr-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  {t('cta.docs')}
+                </Link>
+              </div>
+            </Reveal>
+
+            {/* 供应商 Logo 区域 */}
+            <Reveal delay={500}>
+              <div className="w-full">
+                <p className="text-base md:text-lg text-gray-500 mb-6 font-light">
+                  {t('providers.title')}
+                </p>
+                {/* 无限滚动 Logo */}
+                <div className="relative overflow-hidden max-w-4xl mx-auto">
+                  <div className="flex animate-marquee">
+                    {/* 第一组 Logo */}
+                    {providers.map((provider, index) => (
+                      <div
+                        key={`first-${index}`}
+                        className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 mx-4 md:mx-6 flex-shrink-0"
+                        title={provider.name}
+                      >
+                        <Image
+                          src={provider.icon}
+                          alt={provider.name}
+                          width={48}
+                          height={48}
+                          className="object-contain w-full h-full opacity-70 hover:opacity-100 transition-opacity"
+                        />
+                      </div>
+                    ))}
+                    {/* 第二组 Logo（复制用于无缝滚动） */}
+                    {providers.map((provider, index) => (
+                      <div
+                        key={`second-${index}`}
+                        className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 mx-4 md:mx-6 flex-shrink-0"
+                        title={provider.name}
+                      >
+                        <Image
+                          src={provider.icon}
+                          alt={provider.name}
+                          width={48}
+                          height={48}
+                          className="object-contain w-full h-full opacity-70 hover:opacity-100 transition-opacity"
+                        />
+                      </div>
+                    ))}
+                    {/* 第三组 Logo（复制用于无缝滚动） */}
+                    {providers.map((provider, index) => (
+                      <div
+                        key={`third-${index}`}
+                        className="flex items-center justify-center w-12 h-12 md:w-14 md:h-14 mx-4 md:mx-6 flex-shrink-0"
+                        title={provider.name}
+                      >
+                        <Image
+                          src={provider.icon}
+                          alt={provider.name}
+                          width={48}
+                          height={48}
+                          className="object-contain w-full h-full opacity-70 hover:opacity-100 transition-opacity"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </Reveal>
           </div>
         </div>
 
         {/* 向下滚动提示 */}
-        <Reveal delay={600}>
+        <Reveal delay={700}>
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
             <div className="w-6 h-10 border-2 border-gray-300 rounded-full flex justify-center pt-2">
               <div className="w-1.5 h-3 bg-gray-400 rounded-full animate-pulse"></div>
             </div>
           </div>
         </Reveal>
-      </section>
-
-      {/* 2. 产品功能简介 */}
-      <section id="features" className="py-24 bg-gradient-to-b from-gray-50 to-white">
-        <div className="container-custom">
-          <Reveal>
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{t('features.title')}</h2>
-              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                {t('features.subtitle')}
-              </p>
-            </div>
-          </Reveal>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {highlights.slice(0, 3).map((highlight, index) => {
-              const gradients = [
-                'from-primary-500 to-orange-600',
-                'from-violet-500 to-purple-600',
-                'from-emerald-500 to-teal-600'
-              ]
-              const shadows = [
-                'shadow-primary-500/25',
-                'shadow-violet-500/25',
-                'shadow-emerald-500/25'
-              ]
-              const icons = [
-                <svg key="1" className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>,
-                <svg key="2" className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>,
-                <svg key="3" className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              ]
-
-              return (
-                <Reveal key={highlight.id} delay={index * 100}>
-                  <div className="group bg-white p-8 rounded-3xl card-hover border border-gray-100/50">
-                    <div className={`w-14 h-14 mb-6 bg-gradient-to-br ${gradients[index % gradients.length]} rounded-2xl flex items-center justify-center shadow-lg ${shadows[index % shadows.length]} group-hover:scale-110 group-hover:shadow-xl transition-all duration-500`}>
-                      {icons[index % icons.length]}
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors duration-300">{highlight.title}</h3>
-                    <p className="text-gray-600 leading-relaxed">
-                      {highlight.description}
-                    </p>
-                  </div>
-                </Reveal>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. 实时性能监控 */}
-      <section className="py-24 bg-white">
-        <div className="container-custom">
-          <Reveal>
-            <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">{t('performance.title')}</h2>
-              <p className="text-gray-600 text-lg">{t('performance.subtitle')}</p>
-            </div>
-          </Reveal>
-
-          {/* 性能对比图表 */}
-          <Reveal delay={100}>
-            <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-lg shadow-gray-100/50">
-              <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <div className="flex items-center space-x-6">
-                  <h3 className="font-semibold text-gray-900 text-lg">{t('performance.chartTitle')}</h3>
-                  <div className="flex items-center space-x-4 text-sm text-gray-500">
-                    <span className="flex items-center">
-                      <span className="w-3 h-3 bg-orange-400 rounded-sm mr-2"></span>
-                      {t('performance.input')}
-                    </span>
-                    <span className="flex items-center">
-                      <span className="w-3 h-3 bg-blue-400 rounded-sm mr-2"></span>
-                      {t('performance.output')}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-500 flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
-                  {t('performance.liveUpdate')}
-                </span>
-              </div>
-
-              {/* 图表区域 */}
-              <div className="p-8 md:p-12">
-                <div className="relative">
-                  {/* Y轴标签 */}
-                  <div className="absolute -left-2 top-0 bottom-8 w-8 flex flex-col justify-between text-xs text-gray-400 text-right pr-2">
-                    <span>1k</span>
-                    <span>100</span>
-                    <span>10</span>
-                    <span>1</span>
-                  </div>
-
-                  {/* 图表主体 */}
-                  <div className="ml-8 relative">
-                    {/* Y轴标题 */}
-                    <div className="absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 text-xs text-gray-500 font-medium whitespace-nowrap">
-                      {t('performance.yAxis')}
-                    </div>
-
-                    {/* 网格背景 */}
-                    <div className="relative h-80 border-l border-b border-gray-200 bg-gradient-to-br from-orange-50/30 via-white to-blue-50/30">
-                      {/* 网格线 */}
-                      <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                        <div className="border-t border-gray-100 w-full h-0"></div>
-                        <div className="border-t border-gray-100 w-full h-0"></div>
-                        <div className="border-t border-gray-100 w-full h-0"></div>
-                        <div className="border-t border-gray-100 w-full h-0"></div>
-                      </div>
-
-                      {/* 垂直网格线 */}
-                      <div className="absolute inset-0 flex justify-between pointer-events-none px-8">
-                        <div className="border-l border-gray-100 h-full"></div>
-                        <div className="border-l border-gray-100 h-full"></div>
-                        <div className="border-l border-gray-100 h-full"></div>
-                        <div className="border-l border-gray-100 h-full"></div>
-                      </div>
-
-                      {/* 数据点 */}
-                      <Reveal delay={300}>
-                        <div className="absolute" style={{ left: '15%', bottom: '85%' }}>
-                          <div className="relative group cursor-pointer">
-                            <div className="w-5 h-5 bg-orange-500 rounded-sm shadow-lg shadow-orange-500/40 transform group-hover:scale-150 transition-transform duration-300"></div>
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                              TierFlow: 50ms, 850 tok/s
-                            </div>
-                          </div>
-                          <div className="absolute top-6 left-1/2 -translate-x-1/2 text-sm font-bold text-gray-900 whitespace-nowrap">TierFlow</div>
-                        </div>
-                      </Reveal>
-
-                      <Reveal delay={400}>
-                        <div className="absolute" style={{ left: '35%', bottom: '55%' }}>
-                          <div className="relative group cursor-pointer">
-                            <div className="w-5 h-5 bg-orange-400 rounded-sm shadow-md transform group-hover:scale-150 transition-transform duration-300"></div>
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                              OpenAI: 150ms, 350 tok/s
-                            </div>
-                          </div>
-                          <div className="absolute top-6 left-1/2 -translate-x-1/2 text-sm text-gray-600 whitespace-nowrap">OpenAI</div>
-                        </div>
-                      </Reveal>
-
-                      <Reveal delay={500}>
-                        <div className="absolute" style={{ left: '55%', bottom: '40%' }}>
-                          <div className="relative group cursor-pointer">
-                            <div className="w-5 h-5 bg-blue-400 rounded-sm shadow-md transform group-hover:scale-150 transition-transform duration-300"></div>
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                              Azure: 280ms, 220 tok/s
-                            </div>
-                          </div>
-                          <div className="absolute top-6 left-1/2 -translate-x-1/2 text-sm text-gray-600 whitespace-nowrap">Azure</div>
-                        </div>
-                      </Reveal>
-
-                      <Reveal delay={600}>
-                        <div className="absolute" style={{ left: '75%', bottom: '25%' }}>
-                          <div className="relative group cursor-pointer">
-                            <div className="w-5 h-5 bg-blue-500 rounded-sm shadow-md transform group-hover:scale-150 transition-transform duration-300"></div>
-                            <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                              AWS: 450ms, 120 tok/s
-                            </div>
-                          </div>
-                          <div className="absolute top-6 left-1/2 -translate-x-1/2 text-sm text-gray-600 whitespace-nowrap">AWS</div>
-                        </div>
-                      </Reveal>
-                    </div>
-
-                    {/* X轴标签 */}
-                    <div className="flex justify-between mt-4 text-xs text-gray-400 px-8">
-                      <span>10 ms</span>
-                      <span>100 ms</span>
-                      <span>1 s</span>
-                      <span>10 s</span>
-                      <span>1 min</span>
-                    </div>
-
-                    {/* X轴标题 */}
-                    <div className="text-center mt-4 text-sm text-gray-500 font-medium">
-                      {t('performance.xAxis')}
-                    </div>
-                  </div>
-                </div>
-
-                {/* 图例说明 */}
-                <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap justify-center gap-8 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <span className="w-4 h-4 bg-orange-500 rounded-sm mr-3"></span>
-                    <span>{t('performance.legendOptimal')}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="w-4 h-4 bg-orange-400 rounded-sm mr-3"></span>
-                    <span>{t('performance.legendHigh')}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="w-4 h-4 bg-blue-400 rounded-sm mr-3"></span>
-                    <span>{t('performance.legendStandard')}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="w-4 h-4 bg-blue-500 rounded-sm mr-3"></span>
-                    <span>{t('performance.legendBasic')}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-        </div>
       </section>
     </main>
   )

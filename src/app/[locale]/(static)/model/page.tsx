@@ -70,7 +70,7 @@ export default function ModelPage() {
     }
 
     return result
-  }, [allModels, searchQuery, sortOrder, selectedVendors])
+  }, [allModels, searchQuery, sortOrder, selectedVendors, locale])
 
   // 清除所有筛选
   const clearAllFilters = () => {

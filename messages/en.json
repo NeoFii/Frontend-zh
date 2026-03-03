@@ -19,69 +19,22 @@
   },
   "home": {
     "hero": {
-      "productName": "TierFlow",
-      "tagline": "Intelligent Tiered Inference Engine",
-      "shortDescription": "High-performance inference optimization platform for LLM applications",
-      "ctaApi": "Get Started Now",
-      "ctaProduct": "Learn More",
-      "ctaDocs": "View Documentation"
+      "title": "One API Endpoint",
+      "titleHighlight": "All Major LLMs",
+      "subtitle": "Simply replace the BASE URL to access all major large language models through a unified interface"
     },
-    "stats": {
-      "cost": "Cost Reduction",
-      "response": "Avg Response",
-      "availability": "Availability"
+    "baseUrl": {
+      "label": "BASE URL",
+      "copyTitle": "Copy",
+      "copied": "Copied"
     },
-    "features": {
-      "title": "Core Capabilities",
-      "subtitle": "Three core technologies for ultimate performance and cost optimization",
-      "smartCaching": "Smart Tiered Caching",
-      "smartCachingDesc": "Multi-level caching system based on semantic similarity, automatically identifying duplicate queries with 85% cache hit rate, significantly reducing API costs",
-      "dynamicRouting": "Dynamic Model Routing",
-      "dynamicRoutingDesc": "Real-time task complexity evaluation, intelligently selecting optimal model combinations - lightweight models for simple tasks, auto-upgrade to large models for complex tasks",
-      "highAvailability": "High Availability Architecture",
-      "highAvailabilityDesc": "Multi-node redundant deployment with automatic failover, supporting 100k+ QPS concurrency, enterprise-grade SLA guarantee for business continuity"
+    "cta": {
+      "getKey": "Get API Key",
+      "docs": "Documentation"
     },
-    "performance": {
-      "title": "Real-time Performance",
-      "subtitle": "TierFlow Platform Real-time Operating Data",
-      "chartTitle": "Throughput Performance Chart",
-      "input": "Input",
-      "output": "Output",
-      "liveUpdate": "Live Update",
-      "yAxis": "Throughput (tokens/s)",
-      "xAxis": "Latency (log scale)",
-      "legendOptimal": "Optimal Performance",
-      "legendHigh": "High Performance",
-      "legendStandard": "Standard Performance",
-      "legendBasic": "Basic Performance"
-    },
-    "coreCapabilities": "Core Capabilities",
-    "coreCapabilitiesDesc": "Three core technologies for ultimate performance and cost optimization",
-    "smartCaching": "Smart Tiered Caching",
-    "smartCachingDesc": "Multi-level caching system based on semantic similarity",
-    "dynamicRouting": "Dynamic Model Routing",
-    "dynamicRoutingDesc": "Real-time task complexity evaluation",
-    "highAvailability": "High Availability Architecture",
-    "highAvailabilityDesc": "Multi-node redundant deployment",
-    "costReduction": "Cost Reduction",
-    "avgResponse": "Avg Response",
-    "availability": "Availability",
-    "performance": {
-      "title": "Real-time Performance",
-      "subtitle": "TierFlow Platform Real-time Operating Data",
-      "chartTitle": "Throughput Performance Chart",
-      "input": "Input Tokens",
-      "output": "Output Tokens",
-      "liveUpdate": "Live Update",
-      "yAxis": "Throughput (tokens/s)",
-      "xAxis": "Latency TTFT (log scale)",
-      "legendOptimal": "TierFlow (Optimal)",
-      "legendHigh": "OpenAI (High)",
-      "legendStandard": "Azure (Standard)",
-      "legendBasic": "AWS (Basic)"
-    },
-    "throughput": "Throughput (tokens/s)",
-    "latency": "Latency"
+    "providers": {
+      "title": "Supporting Major AI Model Providers"
+    }
   },
   "price": {
     "title": "Transparent Pricing",

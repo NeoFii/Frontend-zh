@@ -29,7 +29,6 @@ const nextConfig = {
   productionBrowserSourceMaps: false,
 
   images: {
-    domains: ['localhost'],
     remotePatterns: [
       {
         protocol: 'https',
