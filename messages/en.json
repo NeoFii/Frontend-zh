@@ -219,7 +219,16 @@
     "viewDocs": "View Docs",
     "input": "Input",
     "output": "Output",
-    "tokens": "Tokens"
+    "tokens": "Tokens",
+    "searchPlaceholder": "Search model name",
+    "sortDefault": "Default Sort",
+    "sortNewestDesc": "Newest First",
+    "sortNewestAsc": "Oldest First",
+    "vendorFilter": "Vendor Filter",
+    "clearVendorFilter": "Clear Filter",
+    "selectAll": "Select All",
+    "selectedVendors": "{count} vendors selected",
+    "publishedAt": "Published"
   },
   "product": {
     "tryNow": "Try Now",
@@ -430,6 +439,14 @@
       "getApiSubtitle": "Get your API key to start calling the interface",
       "generateApi": "Create API Key",
       "regenerateKey": "Regenerate Key",
+      "createNewKey": "Create New Key",
+      "noApiKeys": "No API keys yet, click the button above to create one",
+      "confirmDelete": "Are you sure you want to delete this API key?",
+      "enterKeyName": "Enter key name",
+      "keyNamePlaceholder": "e.g., Production, Testing",
+      "cancel": "Cancel",
+      "create": "Create",
+      "delete": "Delete",
       "generating": "Generating...",
       "yourApiKey": "Your API Key",
       "revokeApi": "Revoke",
@@ -509,7 +526,14 @@
         "createdOn": "Created on",
         "lastUsed": "Last used",
         "copy": "Copy",
-        "delete": "Delete"
+        "copied": "Copied",
+        "delete": "Delete",
+        "confirmDelete": "Are you sure you want to delete this API key?",
+        "empty": "No API keys yet, click the button above to create one",
+        "enterName": "Enter key name",
+        "namePlaceholder": "e.g., Production, Testing",
+        "cancel": "Cancel",
+        "create": "Create"
       },
       "requestLimits": {
         "title": "Request Limits",

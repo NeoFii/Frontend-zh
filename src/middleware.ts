@@ -6,47 +6,17 @@ import { routing } from './i18n/routing'
 const intlMiddleware = createMiddleware(routing)
 const protectedPaths = ['/console']
 const AUTH_COOKIE_NAME = 'access_token'
+const LOCALE_COOKIE_NAME = 'preferred-locale'
 
 /**
- * 解析 Accept-Language 头，返回最佳匹配语言
- * 优先级: zh-CN > zh > en
+ * 从 Cookie 获取用户偏好的语言
  */
-function getLocaleFromAcceptLanguage(acceptLanguage: string | null): string | null {
-  if (!acceptLanguage) return null
-
-  // 解析 Accept-Language 头
-  const languages = acceptLanguage
-    .split(',')
-    .map((lang) => {
-      const [locale, quality] = lang.trim().split(';q=')
-      return {
-        locale: locale?.toLowerCase().split('-')[0] || '',
-        quality: quality ? parseFloat(quality) : 1.0,
-      }
-    })
-    .filter((lang) => lang.locale)
-    .sort((a, b) => b.quality - a.quality)
-
-  // 匹配支持的语言
-  for (const lang of languages) {
-    if (lang.locale.startsWith('zh')) {
-      return 'zh'
-    }
-    if (lang.locale.startsWith('en')) {
-      return 'en'
-    }
+function getLocaleFromCookie(request: NextRequest): string | null {
+  const localeCookie = request.cookies.get(LOCALE_COOKIE_NAME)
+  if (localeCookie?.value && routing.locales.includes(localeCookie.value as typeof routing.locales[number])) {
+    return localeCookie.value
   }
-
   return null
-}
-
-/**
- * 判断路径是否已包含 locale
- */
-function hasLocale(pathname: string): boolean {
-  const segments = pathname.split('/').filter(Boolean)
-  const firstSegment = segments[0]
-  return Boolean(firstSegment) && (firstSegment === 'en' || firstSegment === 'zh')
 }
 
 export default function middleware(request: NextRequest) {
@@ -62,6 +32,10 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // 从 Cookie 获取用户偏好的语言
+  const userLocale = getLocaleFromCookie(request) || routing.defaultLocale
+
+  // 移除路径中的 locale 前缀（如果存在）
   const pathnameWithoutLocale = pathname.replace(/^\/(zh|en)/, '') || '/'
   const isProtectedPath = protectedPaths.some((p) => pathnameWithoutLocale.startsWith(p))
   const authCookie = request.cookies.get(AUTH_COOKIE_NAME)
@@ -69,34 +43,23 @@ export default function middleware(request: NextRequest) {
 
   // 已登录用户访问登录页，重定向到控制台
   if (pathnameWithoutLocale === '/login' && hasValidAuthCookie) {
-    const userLocale = pathname.split('/')[1] || routing.defaultLocale
-    return NextResponse.redirect(new URL(`/${userLocale}/console/usage/record`, request.url))
+    const redirectUrl = userLocale === routing.defaultLocale
+      ? '/console/usage/record'
+      : `/${userLocale}/console/usage/record`
+    return NextResponse.redirect(new URL(redirectUrl, request.url))
   }
 
   // 未登录用户访问受保护路径，重定向到登录页
   if (isProtectedPath && !hasValidAuthCookie) {
-    const userLocale = pathname.split('/')[1] || routing.defaultLocale
-    const loginUrl = new URL(`/${userLocale}/login`, request.url)
+    const loginPath = userLocale === routing.defaultLocale
+      ? '/login'
+      : `/${userLocale}/login`
+    const loginUrl = new URL(loginPath, request.url)
     loginUrl.searchParams.set('redirect', pathnameWithoutLocale)
     return NextResponse.redirect(loginUrl)
   }
 
-  // 如果路径已经包含 locale，直接调用 i18n middleware
-  if (hasLocale(pathname)) {
-    return intlMiddleware(request)
-  }
-
-  // 从 Accept-Language 获取用户偏好语言
-  const acceptLanguage = request.headers.get('Accept-Language')
-  const preferredLocale = getLocaleFromAcceptLanguage(acceptLanguage)
-
-  // 根据用户偏好重定向到对应语言路径
-  if (preferredLocale && preferredLocale !== routing.defaultLocale) {
-    const newPath = `/${preferredLocale}${pathname}`
-    return NextResponse.redirect(new URL(newPath, request.url))
-  }
-
-  // 调用 i18n middleware 处理 locale 路由（使用默认语言）
+  // 调用 i18n middleware 处理 locale 路由
   return intlMiddleware(request)
 }
 

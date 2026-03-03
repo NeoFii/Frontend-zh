@@ -219,7 +219,16 @@
     "viewDocs": "查看文档",
     "input": "输入",
     "output": "输出",
-    "tokens": "Tokens"
+    "tokens": "Tokens",
+    "searchPlaceholder": "搜索模型名称",
+    "sortDefault": "按默认排序",
+    "sortNewestDesc": "发布时间倒序",
+    "sortNewestAsc": "发布时间正序",
+    "vendorFilter": "厂商筛选",
+    "clearVendorFilter": "清除筛选",
+    "selectAll": "全选",
+    "selectedVendors": "已选择 {count} 个厂商",
+    "publishedAt": "发布时间"
   },
   "product": {
     "tryNow": "立即体验",
@@ -430,6 +439,14 @@
       "getApiSubtitle": "获取您的 API Key 以便调用接口",
       "generateApi": "创建API密钥",
       "regenerateKey": "重新生成 Key",
+      "createNewKey": "创建新 Key",
+      "noApiKeys": "暂无 API 密钥，点击上方按钮创建",
+      "confirmDelete": "确定要删除这个 API 密钥吗？",
+      "enterKeyName": "输入密钥名称",
+      "keyNamePlaceholder": "例如：生产环境、测试环境",
+      "cancel": "取消",
+      "create": "创建",
+      "delete": "删除",
       "generating": "生成中...",
       "yourApiKey": "您的 API Key",
       "revokeApi": "撤销",
@@ -509,7 +526,14 @@
         "createdOn": "创建于",
         "lastUsed": "最后使用",
         "copy": "复制",
-        "delete": "删除"
+        "copied": "已复制",
+        "delete": "删除",
+        "confirmDelete": "确定要删除这个 API 密钥吗？",
+        "empty": "暂无 API 密钥，点击上方按钮创建",
+        "enterName": "输入密钥名称",
+        "namePlaceholder": "例如：生产环境、测试环境",
+        "cancel": "取消",
+        "create": "创建"
       },
       "requestLimits": {
         "title": "请求限制",

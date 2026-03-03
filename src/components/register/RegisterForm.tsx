@@ -11,7 +11,7 @@ import { AgreementLinks } from './AgreementLinks'
 import { RegisterError } from './RegisterError'
 import { CodeCountdown } from './CodeCountdown'
 import { useAuthStore } from '@/stores/auth'
-import { setAccessToken } from '@/lib/token'
+import { setAccessToken, setAccessTokenToCookie } from '@/lib/token'
 import { sendVerificationCode, register } from '@/lib/api/auth'
 import { validateEmail } from '@/lib/utils/validation'
 
@@ -121,6 +121,8 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
         if (res.data.access_token && res.data.expires_in) {
           // 存储 Token（Refresh Token 由后端通过 httpOnly Cookie 管理）
           setAccessToken(res.data.access_token, res.data.expires_in)
+          // 设置 Cookie，确保中间件立即识别登录状态
+          setAccessTokenToCookie(res.data.access_token)
           // 保存用户信息到 store
           saveUser({
             uid: res.data.uid,
