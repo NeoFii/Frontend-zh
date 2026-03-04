@@ -247,11 +247,27 @@
       "loginNow": "Login Now",
       "agreementPrefix": "I have read and agree to the",
       "userAgreement": "User Agreement",
-      "privacyPolicy": "Privacy Policy"
+      "privacyPolicy": "Privacy Policy",
+      "invitationCode": "Invitation Code",
+      "invitationCodePlaceholder": "Enter your invitation code",
+      "invitationOnlyTip": "This platform is invite-only"
     },
     "loginType": {
       "password": "Password Login",
       "code": "Email Code Login"
+    },
+    "common": {
+      "showPassword": "Show Password",
+      "hidePassword": "Hide Password",
+      "loginSuccess": "Login Successful",
+      "loginFailed": "Login Failed: {message}",
+      "registerSuccess": "Registration Successful",
+      "registerFailed": "Registration Failed: {message}",
+      "passwordRequirements": "Password Requirements",
+      "passwordMinLength": "At least 8 characters",
+      "passwordHasNumber": "Contains numbers",
+      "passwordHasLetter": "Contains letters",
+      "passwordHasSpecial": "Contains special characters"
     },
     "validation": {
       "enterEmail": "Please enter email first",
@@ -261,14 +277,19 @@
       "passwordMismatch": "Passwords do not match",
       "passwordTooShort": "Password must be at least 8 characters",
       "agreeToTerms": "Please agree to terms and privacy policy",
-      "fillAllRequired": "Please fill in all required fields"
+      "fillAllRequired": "Please fill in all required fields",
+      "enterInvitationCode": "Please enter your invitation code"
     },
     "errors": {
       "loginFailed": "Login failed",
       "loginFailedRetry": "Login failed, please try again later",
       "registerFailed": "Registration failed",
       "registerFailedRetry": "Registration failed, please try again later",
-      "sendFailed": "Send failed"
+      "sendFailed": "Send failed",
+      "invalidInvitationCode": "Invalid invitation code",
+      "invitationCodeUsed": "Invitation code has already been used",
+      "invitationCodeDisabled": "Invitation code is no longer valid",
+      "invitationCodeExpired": "Invitation code has expired"
     },
     "forgotPassword": {
       "titleStep1": "Forgot Password",
@@ -424,7 +445,8 @@
         "configureApi": "Configure API",
         "visitWebsite": "Visit Website",
         "cancel": "Cancel",
-        "saveConfig": "Save Config"
+        "saveConfig": "Save Config",
+        "apiKey": "API Key"
       }
     },
     "account": {
@@ -538,5 +560,63 @@
     "confirm": "Confirm",
     "clear": "Clear",
     "clearAll": "Clear All Filters"
+  },
+  "legal": {
+    "agreement": {
+      "title": "User Agreement",
+      "description": "Please read the Eucal AI User Agreement carefully",
+      "section1": {
+        "title": "1. Agreement Scope",
+        "content": "This User Agreement (hereinafter referred to as the 'Agreement') is an agreement between you and Eucal AI regarding the use of our AI inference optimization platform services. By accessing or using our services, you agree to be bound by the terms of this Agreement."
+      },
+      "section2": {
+        "title": "2. Service Content",
+        "content": "Eucal AI provides the following services:",
+        "item1": "AI large model unified interface service",
+        "item2": "Intelligent tiered inference optimization",
+        "item3": "API key management and usage statistics"
+      },
+      "section3": {
+        "title": "3. User Responsibilities",
+        "content": "You agree not to use our services for any illegal activities, including but not limited to: sending spam, spreading malware, infringing on others' intellectual property rights or privacy rights. You are responsible for all content you send through the API."
+      },
+      "section4": {
+        "title": "4. Service Limitations",
+        "content": "We reserve the right to modify, suspend, or terminate the service at any time without prior notice. We may limit API call frequency, concurrency, etc., to ensure service stability."
+      },
+      "section5": {
+        "title": "5. Disclaimer",
+        "content": "Eucal AI provides services 'as is' without any express or implied warranties. We are not responsible for any direct, indirect, incidental, special, or consequential damages resulting from the use or inability to use the service."
+      },
+      "lastUpdated": "Last Updated"
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "description": "Learn how Eucal AI protects your privacy",
+      "section1": {
+        "title": "1. Information Collection",
+        "content": "We collect information you provide when using our services, including registration information, API call records, payment information, etc. We only collect the minimum information necessary to provide the service."
+      },
+      "section2": {
+        "title": "2. Information Usage",
+        "content": "We use your information for:",
+        "item1": "Providing, maintaining, and improving our services",
+        "item2": "Processing payments and billing",
+        "item3": "Sending service notifications and updates"
+      },
+      "section3": {
+        "title": "3. Information Protection",
+        "content": "We adopt industry-standard security measures to protect your personal information, including data encryption, access control, security audits, etc. Your API keys are stored in encrypted form, and we do not store the specific content you transmit through the API."
+      },
+      "section4": {
+        "title": "4. Information Sharing",
+        "content": "We do not sell your personal information to third parties. Information may only be shared in the following cases: with your explicit consent, to comply with laws and regulations, or to protect our legitimate rights and interests."
+      },
+      "section5": {
+        "title": "5. Your Rights",
+        "content": "You have the right to access, correct, and delete your personal information, as well as to withdraw consent. To exercise these rights, please contact us at contact@eucal.ai."
+      },
+      "lastUpdated": "Last Updated"
+    }
   }
 }

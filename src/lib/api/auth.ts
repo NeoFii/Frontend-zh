@@ -6,6 +6,7 @@ export interface LoginParams {
 }
 
 export interface RegisterParams {
+  invitation_code: string
   email: string
   verification_code: string
   password: string
@@ -15,16 +16,12 @@ export interface RegisterParams {
 export interface User {
   uid: number
   email: string
-  nickname: string | null
-  avatar_url: string | null
 }
 
 // 完整的用户信息（包含状态和时间戳）
 export interface UserInfo {
   uid: number
   email: string
-  nickname: string | null
-  avatar_url: string | null
   status: number
   email_verified_at: string | null
   last_login_at: string | null
@@ -58,7 +55,6 @@ export interface RegisterResponse {
   data: {
     uid: number
     email: string
-    nickname: string | null
     created_at: string
     access_token?: string
     refresh_token?: string

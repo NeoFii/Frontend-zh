@@ -13,6 +13,7 @@ import { CodeCountdown } from './CodeCountdown'
 import { LoginError } from './LoginError'
 import { login, loginWithCode, sendLoginCode } from '@/lib/api/auth'
 import { validateEmail } from '@/lib/utils/validation'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 
 interface LoginFormProps {
   onSuccess: () => void
@@ -135,8 +136,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <LoginError error={error} />
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
           <input
+            id="email"
             name="email"
             type="email"
             required
@@ -150,21 +152,20 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         {loginType === 'password' ? (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">{t('password')}</label>
-            <input
+            <PasswordInput
               name="password"
-              type="password"
-              required
               value={form.password}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
               placeholder={t('passwordPlaceholder')}
+              required
             />
           </div>
         ) : (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t('code')}</label>
+            <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">{t('code')}</label>
             <div className="flex space-x-3">
               <input
+                id="code"
                 name="code"
                 type="text"
                 required

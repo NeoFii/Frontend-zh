@@ -27,8 +27,9 @@ function LoginContent() {
   }, [hydrated, isAuthenticated, router])
 
   const handleLoginSuccess = () => {
-    // 登录成功，跳转到控制台使用记录页
-    router.push('/console/usage/record')
+    // 登录成功，使用硬跳转到控制台使用记录页
+    // 使用 window.location.href 确保可靠的页面跳转
+    window.location.href = '/console/usage/record'
   }
 
   return (

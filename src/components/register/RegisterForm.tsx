@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { useRouter } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
 import { PasswordStrength } from './PasswordStrength'
+import { PasswordRequirements } from './PasswordRequirements'
 import { AgreementLinks } from './AgreementLinks'
 import { RegisterError } from './RegisterError'
 import { CodeCountdown } from './CodeCountdown'
@@ -14,12 +15,14 @@ import { useAuthStore } from '@/stores/auth'
 import { setAccessToken } from '@/lib/token'
 import { sendVerificationCode, register } from '@/lib/api/auth'
 import { validateEmail } from '@/lib/utils/validation'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 
 interface RegisterFormProps {
   onSuccess?: () => void
 }
 
 interface FormData {
+  invitationCode: string
   email: string
   code: string
   password: string
@@ -37,6 +40,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const [codeLoading, setCodeLoading] = useState(false)
 
   const [form, setForm] = useState<FormData>({
+    invitationCode: '',
     email: '',
     code: '',
     password: '',
@@ -83,6 +87,10 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   }
 
   const validateForm = (): boolean => {
+    if (!form.invitationCode.trim()) {
+      setError(tValidation('enterInvitationCode'))
+      return false
+    }
     if (!form.agreement) {
       setError(tValidation('agreeToTerms'))
       return false
@@ -110,6 +118,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
     setLoading(true)
     try {
       const res = await register({
+        invitation_code: form.invitationCode.trim(),
         email: form.email,
         verification_code: form.code,
         password: form.password,
@@ -125,8 +134,6 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
           saveUser({
             uid: res.data.uid,
             email: res.data.email,
-            nickname: res.data.nickname,
-            avatar_url: null,
             status: 1,
             email_verified_at: null,
             last_login_at: null,
@@ -155,8 +162,24 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       <RegisterError error={error} />
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
+        <label htmlFor="invitationCode" className="block text-sm font-medium text-gray-700 mb-2">{t('invitationCode')}</label>
         <input
+          id="invitationCode"
+          name="invitationCode"
+          type="text"
+          required
+          value={form.invitationCode}
+          onChange={handleChange}
+          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
+          placeholder={t('invitationCodePlaceholder')}
+        />
+        <p className="mt-1 text-xs text-gray-500">{t('invitationOnlyTip')}</p>
+      </div>
+
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
+        <input
+          id="email"
           name="email"
           type="email"
           required
@@ -168,9 +191,10 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">{t('code')}</label>
+        <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">{t('code')}</label>
         <div className="flex space-x-3">
           <input
+            id="code"
             name="code"
             type="text"
             required
@@ -185,30 +209,29 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">{t('password')}</label>
-        <input
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">{t('password')}</label>
+        <PasswordInput
+          id="password"
           name="password"
-          type="password"
-          required
-          minLength={8}
           value={form.password}
           onChange={handleChange}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
           placeholder={t('passwordPlaceholder')}
+          required
+          minLength={8}
         />
         <PasswordStrength password={form.password} />
+        <PasswordRequirements password={form.password} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">{t('confirmPassword')}</label>
-        <input
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">{t('confirmPassword')}</label>
+        <PasswordInput
+          id="confirmPassword"
           name="confirmPassword"
-          type="password"
-          required
           value={form.confirmPassword}
           onChange={handleChange}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
           placeholder={t('confirmPasswordPlaceholder')}
+          required
         />
       </div>
 

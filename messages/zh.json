@@ -247,11 +247,27 @@
       "loginNow": "立即登录",
       "agreementPrefix": "我已阅读并同意",
       "userAgreement": "用户协议",
-      "privacyPolicy": "隐私政策"
+      "privacyPolicy": "隐私政策",
+      "invitationCode": "邀请码",
+      "invitationCodePlaceholder": "请输入邀请码",
+      "invitationOnlyTip": "本平台仅限受邀用户注册"
     },
     "loginType": {
       "password": "密码登录",
       "code": "邮箱验证码登录"
+    },
+    "common": {
+      "showPassword": "显示密码",
+      "hidePassword": "隐藏密码",
+      "loginSuccess": "登录成功",
+      "loginFailed": "登录失败：{message}",
+      "registerSuccess": "注册成功",
+      "registerFailed": "注册失败：{message}",
+      "passwordRequirements": "密码要求",
+      "passwordMinLength": "至少8个字符",
+      "passwordHasNumber": "包含数字",
+      "passwordHasLetter": "包含字母",
+      "passwordHasSpecial": "包含特殊字符"
     },
     "validation": {
       "enterEmail": "请先输入邮箱",
@@ -261,14 +277,19 @@
       "passwordMismatch": "两次输入的密码不一致",
       "passwordTooShort": "密码长度至少为8位",
       "agreeToTerms": "请阅读并同意用户协议和隐私政策",
-      "fillAllRequired": "请填写所有必填项"
+      "fillAllRequired": "请填写所有必填项",
+      "enterInvitationCode": "请输入邀请码"
     },
     "errors": {
       "loginFailed": "登录失败",
       "loginFailedRetry": "登录失败，请稍后重试",
       "registerFailed": "注册失败",
       "registerFailedRetry": "注册失败，请稍后重试",
-      "sendFailed": "发送失败"
+      "sendFailed": "发送失败",
+      "invalidInvitationCode": "邀请码无效",
+      "invitationCodeUsed": "邀请码已被使用",
+      "invitationCodeDisabled": "邀请码已失效",
+      "invitationCodeExpired": "邀请码已过期"
     },
     "forgotPassword": {
       "titleStep1": "忘记密码",
@@ -424,7 +445,8 @@
         "configureApi": "配置",
         "visitWebsite": "访问官网",
         "cancel": "取消",
-        "saveConfig": "保存配置"
+        "saveConfig": "保存配置",
+        "apiKey": "API密钥"
       }
     },
     "account": {
@@ -538,5 +560,63 @@
     "confirm": "确认",
     "clear": "清除",
     "clearAll": "清除所有筛选"
+  },
+  "legal": {
+    "agreement": {
+      "title": "用户协议",
+      "description": "请仔细阅读 Eucal AI 用户协议",
+      "section1": {
+        "title": "1. 协议范围",
+        "content": "本用户协议（以下简称「协议」）是您与 Eucal AI 之间就使用我们的 AI 推理优化平台服务达成的协议。通过访问或使用我们的服务，您同意受本协议条款的约束。"
+      },
+      "section2": {
+        "title": "2. 服务内容",
+        "content": "Eucal AI 提供以下服务：",
+        "item1": "AI 大模型统一接口服务",
+        "item2": "智能分层推理优化",
+        "item3": "API 密钥管理与用量统计"
+      },
+      "section3": {
+        "title": "3. 用户责任",
+        "content": "您同意不会使用我们的服务进行任何非法活动，包括但不限于：发送垃圾邮件、传播恶意软件、侵犯他人知识产权或隐私权。您应对您通过 API 发送的所有内容负责。"
+      },
+      "section4": {
+        "title": "4. 服务限制",
+        "content": "我们保留随时修改、暂停或终止服务的权利，恕不另行通知。我们可能会对 API 调用频率、并发数等进行限制，以确保服务的稳定性。"
+      },
+      "section5": {
+        "title": "5. 免责声明",
+        "content": "Eucal AI 按「现状」提供服务，不作任何明示或暗示的保证。我们不对因使用或无法使用服务而导致的任何直接、间接、偶然、特殊或后果性损害负责。"
+      },
+      "lastUpdated": "最后更新日期"
+    },
+    "privacy": {
+      "title": "隐私政策",
+      "description": "了解 Eucal AI 如何保护您的隐私",
+      "section1": {
+        "title": "1. 信息收集",
+        "content": "我们收集您在使用服务时提供的信息，包括注册信息、API 调用记录、支付信息等。我们仅收集提供服务所必需的最少信息。"
+      },
+      "section2": {
+        "title": "2. 信息使用",
+        "content": "我们使用您的信息用于：",
+        "item1": "提供、维护和改进我们的服务",
+        "item2": "处理支付和账单",
+        "item3": "发送服务通知和更新"
+      },
+      "section3": {
+        "title": "3. 信息保护",
+        "content": "我们采用行业标准的安全措施保护您的个人信息，包括数据加密、访问控制、安全审计等。您的 API 密钥以加密形式存储，我们不会存储您通过 API 传输的具体内容。"
+      },
+      "section4": {
+        "title": "4. 信息共享",
+        "content": "我们不会向第三方出售您的个人信息。仅在以下情况下可能会共享信息：获得您的明确同意、遵守法律法规要求、保护我们的合法权益。"
+      },
+      "section5": {
+        "title": "5. 您的权利",
+        "content": "您有权访问、更正、删除您的个人信息，以及撤回同意。如需行使这些权利，请通过 contact@eucal.ai 联系我们。"
+      },
+      "lastUpdated": "最后更新日期"
+    }
   }
 }

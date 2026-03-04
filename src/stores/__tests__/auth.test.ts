@@ -35,8 +35,10 @@ describe('useAuthStore', () => {
     const testUser = {
       uid: 1,
       email: 'test@example.com',
-      nickname: '测试用户',
-      avatar_url: null,
+      status: 1,
+      email_verified_at: null,
+      last_login_at: null,
+      created_at: '2024-01-01T00:00:00Z',
     }
 
     act(() => {
@@ -54,8 +56,10 @@ describe('useAuthStore', () => {
     const testUser = {
       uid: 1,
       email: 'test@example.com',
-      nickname: '测试用户',
-      avatar_url: null,
+      status: 1,
+      email_verified_at: null,
+      last_login_at: null,
+      created_at: '2024-01-01T00:00:00Z',
     }
 
     act(() => {
@@ -74,15 +78,19 @@ describe('useAuthStore', () => {
     const user1 = {
       uid: 1,
       email: 'user1@example.com',
-      nickname: '用户1',
-      avatar_url: null,
+      status: 1,
+      email_verified_at: null,
+      last_login_at: null,
+      created_at: '2024-01-01T00:00:00Z',
     }
 
     const user2 = {
       uid: 2,
       email: 'user2@example.com',
-      nickname: '用户2',
-      avatar_url: null,
+      status: 1,
+      email_verified_at: null,
+      last_login_at: null,
+      created_at: '2024-01-01T00:00:00Z',
     }
 
     act(() => {
