@@ -63,9 +63,7 @@ export interface NavItem {
 
 // 从 CMS 类型重新导出
 export type {
-  NewsItem,
   ProductItem,
-  NewsFrontmatter,
   ProductFrontmatter,
   CMSQueryParams,
   CMSQueryResult,

@@ -3,16 +3,6 @@
  * 用于 Markdown 文件的内容管理
  */
 
-// 新闻文章类型
-export interface NewsItem {
-  slug: string
-  title: string
-  date: string
-  category: string
-  coverImage?: string
-  content: string
-}
-
 // 产品特性
 export interface ProductHighlight {
   id: string
@@ -92,14 +82,6 @@ export interface ProductItem {
   faqs?: FAQItem[]
   testimonials?: Testimonial[]
   content: string
-}
-
-// Markdown frontmatter 元数据（新闻）
-export interface NewsFrontmatter {
-  title: string
-  date: string
-  category: string
-  coverImage?: string
 }
 
 // Markdown frontmatter 元数据（产品）

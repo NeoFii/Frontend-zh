@@ -5,7 +5,7 @@ import Image from 'next/image'
 import remarkGfm from 'remark-gfm'
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
+import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
 interface MarkdownRendererProps {
   content: string
@@ -17,9 +17,10 @@ const sanitizeSchema = {
   ...defaultSchema,
   attributes: {
     ...defaultSchema.attributes,
-    code: [...(defaultSchema.attributes?.code || []), 'className'],
-    span: [...(defaultSchema.attributes?.span || []), 'className'],
-    pre: [...(defaultSchema.attributes?.pre || []), 'className'],
+    code: ['className'],
+    span: ['className', 'style'],
+    pre: ['className'],
+    div: ['className'],
   },
 }
 
@@ -40,7 +41,9 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
         components={{
           code({ className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '')
-            const isInline = !match && !className
+            const codeContent = String(children).replace(/\n$/, '')
+            // 有换行符或有 language-xxx className = 代码块；否则 = 行内代码
+            const isInline = !match && !codeContent.includes('\n')
 
             if (isInline) {
               return (
@@ -64,13 +67,16 @@ export default function MarkdownRenderer({ content, className = '' }: MarkdownRe
                     lineHeight: '24px',
                   }}
                 >
-                  {String(children).replace(/\n$/, '')}
+                  {codeContent}
                 </SyntaxHighlighter>
               </div>
             ) : (
-              <code className={className} {...props}>
-                {children}
-              </code>
+              // 无语言标识的代码块，用简单样式渲染
+              <div className="rounded-[12px] my-6 overflow-hidden bg-[#282c34]">
+                <pre className="p-4 text-[14px] text-white overflow-x-auto">
+                  <code>{codeContent}</code>
+                </pre>
+              </div>
             )
           },
           pre: ({ children }) => <>{children}</>,

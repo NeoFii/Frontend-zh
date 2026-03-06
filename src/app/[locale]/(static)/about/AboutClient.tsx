@@ -2,8 +2,17 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import type { NewsItem } from '@/types'
 import NewsGrid from './news/NewsGrid'
+
+// 新闻数据类型（API 返回格式）
+type NewsItem = {
+  slug: string
+  title: string
+  date: string
+  category: string
+  coverImage?: string
+  content: string
+}
 
 type TabType = 'about' | 'news'
 

@@ -104,9 +104,6 @@ export default async function RootLayout({
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
-          {/* 预加载关键资源 */}
-          <link rel="preload" href="/fonts/misans.css" as="style" />
-
           {/* favicon */}
           <link rel="icon" href="/favicon.ico" sizes="any" />
           <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

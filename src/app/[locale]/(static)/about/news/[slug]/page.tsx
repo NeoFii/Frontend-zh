@@ -5,6 +5,17 @@ import MarkdownRenderer from '@/components/MarkdownRenderer'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
+// 强制动态渲染，消除 DYNAMIC_SERVER_USAGE 错误
+export const dynamic = 'force-dynamic'
+// 允许动态渲染未预生成的路径
+export const dynamicParams = true
+
+// 将 locale 转换为后端 API 需要的 language 参数
+function getLanguageFromLocale(locale: string): string {
+  const lang = locale.split('-')[0]
+  return lang === 'zh' ? 'zh' : lang === 'en' ? 'en' : 'zh'
+}
+
 // 预生成静态页面参数
 export async function generateStaticParams() {
   const slugs = await fetchAllNewsSlugs()
@@ -14,7 +25,8 @@ export async function generateStaticParams() {
 // 生成页面元数据
 export async function generateMetadata({ params }: { params: { slug: string; locale: string } }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: 'errors' })
-  const news = await fetchNewsDetailFromApi(params.slug)
+  const language = getLanguageFromLocale(params.locale)
+  const news = await fetchNewsDetailFromApi(params.slug, language)
 
   if (!news) {
     return {
@@ -37,7 +49,8 @@ export async function generateMetadata({ params }: { params: { slug: string; loc
 
 // 页面组件（服务端组件）
 export default async function NewsDetailPage({ params }: { params: { slug: string; locale: string } }) {
-  const news = await fetchNewsDetailFromApi(params.slug)
+  const language = getLanguageFromLocale(params.locale)
+  const news = await fetchNewsDetailFromApi(params.slug, language)
 
   if (!news) {
     notFound()

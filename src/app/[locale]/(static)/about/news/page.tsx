@@ -3,6 +3,12 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import NewsGrid from './NewsGrid'
 
+// 将 locale 转换为后端 API 需要的 language 参数
+function getLanguageFromLocale(locale: string): string {
+  const lang = locale.split('-')[0]
+  return lang === 'zh' ? 'zh' : lang === 'en' ? 'en' : 'zh'
+}
+
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: 'aboutNews' })
   return {
@@ -13,7 +19,8 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 
 export default async function NewsPage({ params }: { params: { locale: string } }) {
   const t = await getTranslations({ locale: params.locale, namespace: 'aboutNews' })
-  const { items: newsList } = await fetchNewsListFromApi(1, 20)
+  const language = getLanguageFromLocale(params.locale)
+  const { items: newsList } = await fetchNewsListFromApi(1, 20, language)
 
   return (
     <div className="animate-fade-in">

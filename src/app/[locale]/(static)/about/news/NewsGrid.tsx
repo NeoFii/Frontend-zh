@@ -3,7 +3,16 @@
 import { useState } from 'react'
 import { Link } from '@/i18n/routing'
 import Image from 'next/image'
-import type { NewsItem } from '@/types/cms'
+
+// 新闻数据类型（API 返回格式）
+type NewsItem = {
+  slug: string
+  title: string
+  date: string
+  category: string
+  coverImage?: string
+  content: string
+}
 
 interface NewsGridProps {
   newsList: NewsItem[]
