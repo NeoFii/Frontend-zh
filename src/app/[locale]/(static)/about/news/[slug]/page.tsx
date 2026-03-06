@@ -1,17 +1,20 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import { getNewsBySlug } from '@/lib/cms'
+import { fetchNewsDetailFromApi, fetchAllNewsSlugs } from '@/lib/api/news'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 
-// 强制动态渲染
-export const dynamic = 'force-dynamic'
+// 预生成静态页面参数
+export async function generateStaticParams() {
+  const slugs = await fetchAllNewsSlugs()
+  return slugs.map((slug: string) => ({ slug }))
+}
 
 // 生成页面元数据
 export async function generateMetadata({ params }: { params: { slug: string; locale: string } }): Promise<Metadata> {
   const t = await getTranslations({ locale: params.locale, namespace: 'errors' })
-  const news = getNewsBySlug(params.slug, params.locale)
+  const news = await fetchNewsDetailFromApi(params.slug)
 
   if (!news) {
     return {
@@ -33,8 +36,8 @@ export async function generateMetadata({ params }: { params: { slug: string; loc
 }
 
 // 页面组件（服务端组件）
-export default function NewsDetailPage({ params }: { params: { slug: string; locale: string } }) {
-  const news = getNewsBySlug(params.slug, params.locale)
+export default async function NewsDetailPage({ params }: { params: { slug: string; locale: string } }) {
+  const news = await fetchNewsDetailFromApi(params.slug)
 
   if (!news) {
     notFound()

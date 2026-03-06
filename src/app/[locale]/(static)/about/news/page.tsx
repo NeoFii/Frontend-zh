@@ -1,4 +1,4 @@
-import { getAllNews } from '@/lib/cms'
+import { fetchNewsListFromApi } from '@/lib/api/news'
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import NewsGrid from './NewsGrid'
@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 
 export default async function NewsPage({ params }: { params: { locale: string } }) {
   const t = await getTranslations({ locale: params.locale, namespace: 'aboutNews' })
-  const newsList = getAllNews(params.locale)
+  const { items: newsList } = await fetchNewsListFromApi(1, 20)
 
   return (
     <div className="animate-fade-in">
