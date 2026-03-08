@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface CodeCountdownProps {
   initialCountdown?: number
@@ -17,7 +17,7 @@ export function CodeCountdown({
   onSendCode,
   disabled = false
 }: CodeCountdownProps) {
-  const t = useTranslations('auth.login')
+  const { t } = useTranslation('auth.login')
   const [countdown, setCountdown] = useState(0)
   const [loading, setLoading] = useState(false)
 

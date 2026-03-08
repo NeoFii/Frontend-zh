@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, ReactNode } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface MenuItem {
   id: string
@@ -47,7 +47,7 @@ const UsageIcon = () => (
 )
 
 export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSidebarProps) {
-  const t = useTranslations('console.menu')
+  const { t } = useTranslation('console.menu')
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['account', 'api'])
 
   const menuGroups: MenuGroup[] = [

@@ -16,25 +16,25 @@ describe('getPasswordStrength', () => {
   it('仅小写字母应返回弱强度', () => {
     const result = getPasswordStrength('abcdefgh')
     expect(result.level).toBe(1)
-    expect(result.text).toBe('弱')
+    expect(result.text).toBe('Weak')
   })
 
   it('8位以上包含大小写应返回中等强度', () => {
     const result = getPasswordStrength('Abcdefgh')
     expect(result.level).toBe(2)
-    expect(result.text).toBe('中等')
+    expect(result.text).toBe('Fair')
   })
 
   it('包含数字应增加强度', () => {
     const result = getPasswordStrength('Abcdefgh1')
     expect(result.level).toBe(3)
-    expect(result.text).toBe('强')
+    expect(result.text).toBe('Strong')
   })
 
   it('包含特殊字符应返回非常强', () => {
     const result = getPasswordStrength('Abcdefgh1!')
     expect(result.level).toBe(4)
-    expect(result.text).toBe('非常强')
+    expect(result.text).toBe('Very Strong')
   })
 
   it('12位以上应额外增加强度', () => {

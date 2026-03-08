@@ -1,13 +1,13 @@
-import { Link } from '@/i18n/routing'
-import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import { useTranslation } from '@/hooks/useTranslation'
 import { siteConfig } from '@/lib/config'
 import type { NavItem } from '@/types'
 
 export default function AppFooter() {
-  const t = useTranslations('footer')
+  const { t } = useTranslation('footer')
   const { social } = siteConfig
 
-  // 使用相对路径，next-intl Link 会自动处理 locale
+  // 使用相对路径
   const quickLinks: NavItem[] = [
     { name: t('about'), path: '/about' },
     { name: t('products'), path: '/products/tierflow' },

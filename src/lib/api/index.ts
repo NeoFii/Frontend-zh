@@ -109,7 +109,6 @@ async function getValidToken(): Promise<string | null> {
 
 // 判断是否为认证接口（不需要 Token）
 function isAuthEndpoint(url: string | undefined): boolean {
-  console.log('[API] isAuthEndpoint 检查:', url)
   if (!url) return false
   return (
     url.includes('/auth/login') ||
@@ -135,17 +134,14 @@ function handleLogout(): void {
 apiClient.interceptors.request.use(
   async (config) => {
     const fullUrl = (config.baseURL || '') + (config.url || '')
-    console.log('[API Request] fullUrl:', fullUrl, 'config.url:', config.url, 'baseURL:', config.baseURL)
     // 排除认证相关接口
     const isAuth = isAuthEndpoint(fullUrl)
-    console.log('[API Request] isAuthEndpoint result:', isAuth, 'for url:', fullUrl)
     if (isAuth) {
       return config
     }
 
     // 获取有效 Token（自动处理刷新）
     const token = await getValidToken()
-    console.log('[API Request] Token:', token ? 'exists' : 'null')
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
@@ -192,7 +188,6 @@ apiClient.interceptors.response.use(
     // 如果是登出接口，直接抛出错误让调用方处理
     // 登出接口即使返回 401，也应该继续执行 finally 清除本地状态
     if (originalRequest?.url?.includes('/auth/logout')) {
-      console.log('[API Response] /auth/logout 返回 401，直接抛出错误')
       return Promise.reject(error)
     }
 

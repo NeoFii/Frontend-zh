@@ -3,8 +3,8 @@
  * 用户协议和隐私政策链接
  */
 
-import { Link } from '@/i18n/routing'
-import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface AgreementLinksProps {
   checked: boolean
@@ -12,7 +12,7 @@ interface AgreementLinksProps {
 }
 
 export function AgreementLinks({ checked, onChange }: AgreementLinksProps) {
-  const t = useTranslations('auth.register')
+  const { t } = useTranslation('auth.register')
 
   return (
     <div className="flex items-start">

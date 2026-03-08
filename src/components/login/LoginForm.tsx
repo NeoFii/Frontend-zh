@@ -4,8 +4,8 @@
  */
 
 import { useState } from 'react'
-import { Link } from '@/i18n/routing'
-import { useTranslations } from 'next-intl'
+import Link from 'next/link'
+import { useTranslation } from '@/hooks/useTranslation'
 import { useAuthStore } from '@/stores/auth'
 import { setAccessToken } from '@/lib/token'
 import { LoginTypeSwitcher } from './LoginTypeSwitcher'
@@ -26,9 +26,9 @@ interface FormData {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const t = useTranslations('auth.login')
-  const tValidation = useTranslations('auth.validation')
-  const tErrors = useTranslations('auth.errors')
+  const { t } = useTranslation('auth.login')
+  const { t: tValidation } = useTranslation('auth.validation')
+  const { t: tErrors } = useTranslation('auth.errors')
   const { login: saveUser } = useAuthStore()
   const [loginType, setLoginType] = useState<'password' | 'code'>('password')
   const [form, setForm] = useState<FormData>({

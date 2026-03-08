@@ -1,23 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useLocale } from 'next-intl'
-import { Link } from '@/i18n/routing'
+import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from '@/hooks/useTranslation'
 import type { NavItem } from '@/types'
-import LanguageSwitcher from './LanguageSwitcher'
 
 const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'Eucal AI'
 
 export default function AppHeader() {
-  const t = useTranslations('nav')
+  const { t } = useTranslation('nav')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
 
-  // 动态导航项 - 使用相对路径，next-intl Link 会自动处理 locale
+  // 动态导航项
   const navItems: NavItem[] = [
     {
       name: t('products'),
@@ -37,13 +35,10 @@ export default function AppHeader() {
     { name: t('about'), path: '/about' },
   ]
 
-  const locale = useLocale()
-
   // 处理登录按钮点击
   const handleAuthClick = (e: React.MouseEvent) => {
     e.preventDefault()
-    const targetUrl = `/${locale}/login`
-    window.open(targetUrl, '_blank')
+    window.open('/login', '_blank')
   }
 
   // 滚动处理
@@ -90,12 +85,9 @@ export default function AppHeader() {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
-  // 移除 locale 前缀用于路径比较
-  const pathnameWithoutLocale = pathname.replace(/^\/(zh|en)/, '') || '/'
-
-  const isActive = (path: string) => pathnameWithoutLocale === path
+  const isActive = (path: string) => pathname === path
   const isChildActive = (children?: NavItem[]) =>
-    children?.some((child) => pathnameWithoutLocale === child.path)
+    children?.some((child) => pathname === child.path)
 
   return (
     <header
@@ -124,7 +116,7 @@ export default function AppHeader() {
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
+            {/* Desktop navigation */}
             <div className="hidden md:flex items-center ml-12">
               {navItems.map((item) =>
                 item.children && item.children.length > 0 ? (
@@ -197,7 +189,6 @@ export default function AppHeader() {
 
           {/* CTA Button */}
           <div className="hidden md:flex items-center gap-4">
-            <LanguageSwitcher />
             <button
               onClick={handleAuthClick}
               className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 hover:shadow-lg hover:shadow-gray-900/20 hover:scale-105 transition-all duration-300"

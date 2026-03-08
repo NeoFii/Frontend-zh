@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Link } from '@/i18n/routing'
+import Link from 'next/link'
 import { useAuthStore } from '@/stores/auth'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from '@/hooks/useTranslation'
 
 export default function ConsoleHeader() {
-  const t = useTranslations('console.header')
+  const { t } = useTranslation('console.header')
   // 使用选择器精确订阅，避免不必要的重渲染
   const user = useAuthStore(state => state.user)
   const logoutAsync = useAuthStore(state => state.logoutAsync)
@@ -47,11 +47,8 @@ export default function ConsoleHeader() {
   }, [])
 
   const handleLogout = async () => {
-    console.log('[Logout] Step 1: 按钮点击，开始执行 handleLogout')
     try {
-      console.log('[Logout] Step 2: 准备调用 logoutAsync')
       await logoutAsync()
-      console.log('[Logout] Step 3: logoutAsync 完成，准备跳转')
       window.location.href = '/login'
     } catch (error) {
       console.error('[Logout] ERROR:', error)

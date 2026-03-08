@@ -22,8 +22,9 @@
 
 /* 组件样式 */
 @layer components {
+  /* 响应式容器 - 所有屏幕使用相同页边距 */
   .container-custom {
-    @apply max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8;
+    @apply max-w-[1920px] mx-auto px-[60px];
   }
 
   .btn-primary {

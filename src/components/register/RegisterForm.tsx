@@ -4,8 +4,8 @@
  */
 
 import { useState } from 'react'
-import { useRouter } from '@/i18n/routing'
-import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
+import { useTranslation } from '@/hooks/useTranslation'
 import { PasswordStrength } from './PasswordStrength'
 import { PasswordRequirements } from './PasswordRequirements'
 import { AgreementLinks } from './AgreementLinks'
@@ -32,9 +32,9 @@ interface FormData {
 
 export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const router = useRouter()
-  const t = useTranslations('auth.register')
-  const tValidation = useTranslations('auth.validation')
-  const tErrors = useTranslations('auth.errors')
+  const { t } = useTranslation('auth.register')
+  const { t: tValidation } = useTranslation('auth.validation')
+  const { t: tErrors } = useTranslation('auth.errors')
   const { login: saveUser } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [codeLoading, setCodeLoading] = useState(false)

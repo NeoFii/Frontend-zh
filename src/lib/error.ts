@@ -3,6 +3,21 @@
  * 提供错误提取、格式化、用户提示等功能
  */
 
+import messages from '@/messages/zh.json'
+
+function getNestedValue(obj: unknown, keys: string[]): string | undefined {
+  let result = obj
+  for (const k of keys) {
+    if (result == null || typeof result !== 'object') return undefined
+    result = (result as Record<string, unknown>)[k]
+  }
+  return typeof result === 'string' ? result : undefined
+}
+
+function t(key: string): string {
+  return getNestedValue(messages, key.split('.')) || key
+}
+
 /**
  * 从错误对象中提取用户友好的错误消息
  */
@@ -18,12 +33,12 @@ export function extractErrorMessage(error: unknown): string {
 
     // 网络错误
     if (err.message?.includes('Network Error')) {
-      return '网络请求失败，请检查网络连接'
+      return t('errors.networkError')
     }
 
     // 超时错误
     if (err.message?.includes('timeout')) {
-      return '请求超时，请稍后重试'
+      return t('errors.timeoutError')
     }
 
     // 其他错误消息
@@ -33,7 +48,7 @@ export function extractErrorMessage(error: unknown): string {
   }
 
   // 默认错误消息
-  return '操作失败，请稍后重试'
+  return t('errors.operationFailed')
 }
 
 /**
@@ -41,27 +56,27 @@ export function extractErrorMessage(error: unknown): string {
  */
 const ERROR_MESSAGES: Record<string, string> = {
   // 认证相关
-  401: '登录已过期，请重新登录',
-  403: '没有权限执行此操作',
+  401: t('errors.unauthorized'),
+  403: t('errors.forbidden'),
 
   // 客户端错误
-  400: '请求参数错误',
-  404: '请求的资源不存在',
-  422: '提交的数据验证失败',
+  400: t('errors.badRequest'),
+  404: t('errors.notFound'),
+  422: t('errors.validationFailed'),
 
   // 服务端错误
-  500: '服务器内部错误',
-  502: '服务暂时不可用',
-  503: '服务暂时不可用，请稍后重试',
+  500: t('errors.serverError'),
+  502: t('errors.badGateway'),
+  503: t('errors.serviceUnavailable'),
 }
 
 /**
  * 根据 HTTP 状态码获取错误消息
  */
 export function getErrorMessageByStatus(status: number | undefined): string {
-  if (!status) return '网络请求失败'
+  if (!status) return t('errors.networkError')
 
-  return ERROR_MESSAGES[String(status)] || '操作失败，请稍后重试'
+  return ERROR_MESSAGES[String(status)] || t('errors.operationFailed')
 }
 
 /**

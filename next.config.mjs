@@ -1,11 +1,7 @@
 import path from 'path'
 import { fileURLToPath } from 'url'
-import createNextIntlPlugin from 'next-intl/plugin';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-// next-intl 插件配置
-const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 /** @type {import('next').NextConfig} */
 // 通过环境变量控制 standalone 模式（用于 Docker 构建）
@@ -50,12 +46,6 @@ const nextConfig = {
         source: '/api/:path*',
         destination: `${apiUrl}/api/:path*`,
       },
-      // 处理英文 locale 的 model 路由（localePrefix: 'as-needed' 配置下）
-      // /model/:id -> /en/model/:id (内部重写，不改变 URL)
-      {
-        source: '/model/:path*',
-        destination: '/en/model/:path*',
-      },
     ];
   },
 
@@ -74,4 +64,4 @@ const nextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+export default nextConfig;

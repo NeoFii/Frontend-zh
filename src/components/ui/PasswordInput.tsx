@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface PasswordInputProps {
   id?: string
@@ -29,7 +29,7 @@ export function PasswordInput({
 }: PasswordInputProps) {
   // 如果没有提供 id，使用 name 作为 id
   const inputId = id || name
-  const t = useTranslations('auth.common')
+  const { t } = useTranslation('auth.common')
   const [showPassword, setShowPassword] = useState(false)
 
   return (

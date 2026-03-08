@@ -3,7 +3,7 @@
  * 支持密码登录和邮箱验证码登录切换
  */
 
-import { useTranslations } from 'next-intl'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface LoginTypeSwitcherProps {
   loginType: 'password' | 'code'
@@ -11,7 +11,7 @@ interface LoginTypeSwitcherProps {
 }
 
 export function LoginTypeSwitcher({ loginType, onChange }: LoginTypeSwitcherProps) {
-  const t = useTranslations('auth.loginType')
+  const { t } = useTranslation('auth.loginType')
 
   return (
     <div className="flex border-b border-gray-200 mb-6">

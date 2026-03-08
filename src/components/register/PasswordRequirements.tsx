@@ -3,14 +3,14 @@
  * 显示密码必须满足的要求列表
  */
 
-import { useTranslations } from 'next-intl'
+import { useTranslation } from '@/hooks/useTranslation'
 
 interface PasswordRequirementsProps {
   password: string
 }
 
 export function PasswordRequirements({ password }: PasswordRequirementsProps) {
-  const t = useTranslations('auth.common')
+  const { t } = useTranslation('auth.common')
 
   // 密码要求检查
   const requirements = [
