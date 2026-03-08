@@ -6,6 +6,7 @@
  */
 
 import React from 'react'
+import { useTranslation } from '@/hooks/useTranslation'
 import { modelVendors } from '@/data/models'
 import Image from 'next/image'
 
@@ -20,19 +21,20 @@ interface VendorFilterProps {
   }
 }
 
-const defaultLabels = {
-  vendorFilter: '厂商筛选',
-  clearFilter: '清除筛选',
-  selectAll: '全选',
-  selectedVendors: '已选择 {count} 个厂商',
-}
-
 export const VendorFilter: React.FC<VendorFilterProps> = ({
   selectedVendors,
   onChange,
   labels,
 }) => {
-  const t = labels || defaultLabels
+  const { t } = useTranslation('model')
+  // 使用翻译作为默认值，支持外部传入 labels 覆盖
+  const defaultLabels = {
+    vendorFilter: t('vendorFilter'),
+    clearFilter: t('clearVendorFilter'),
+    selectAll: t('selectAll'),
+    selectedVendors: t('selectedVendors'),
+  }
+  const mergedLabels = labels || defaultLabels
 
   const toggleVendor = (vendorId: string) => {
     if (selectedVendors.includes(vendorId)) {
@@ -53,21 +55,21 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[14px] font-medium text-[#181E25]">{t.vendorFilter}</span>
+        <span className="text-[14px] font-medium text-[#181E25]">{mergedLabels.vendorFilter}</span>
         <div className="flex gap-2">
           {selectedVendors.length > 0 && (
             <button
               onClick={clearAll}
               className="text-[13px] text-[#666666] hover:text-[#181E25] transition-colors"
             >
-              {t.clearFilter}
+              {mergedLabels.clearFilter}
             </button>
           )}
           <button
             onClick={selectAll}
             className="text-[13px] text-[#2563EB] hover:text-[#1D4ED8] transition-colors"
           >
-            {t.selectAll}
+            {mergedLabels.selectAll}
           </button>
         </div>
       </div>
@@ -123,7 +125,7 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
       {/* 已选数量提示 */}
       {selectedVendors.length > 0 && (
         <div className="mt-3 text-[13px] text-[#666666]">
-          {t.selectedVendors.replace('{count}', String(selectedVendors.length))}
+          {mergedLabels.selectedVendors.replace('{count}', String(selectedVendors.length))}
         </div>
       )}
     </div>

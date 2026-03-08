@@ -8,6 +8,7 @@
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useTranslation } from '@/hooks/useTranslation'
 import { Model, ModelVendor } from '@/data/models'
 
 interface ModelCardProps {
@@ -53,8 +54,9 @@ const formatDate = (dateStr: string): string => {
 }
 
 export const ModelCard: React.FC<ModelCardProps> = ({ model, vendor, labels }) => {
+  const { t } = useTranslation('model')
   const [imgError, setImgError] = React.useState(false)
-  const t = labels || { input: '输入', output: '输出' }
+  const tLabels = labels || { input: t('input'), output: t('output') }
 
   return (
     <Link href={`/model/${model.id}`} className="block">
@@ -126,11 +128,11 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model, vendor, labels }) =
         <div className="mt-auto pt-3 border-t border-gray-100">
           <div className="flex justify-between text-[13px]">
             <div>
-              <span className="text-[#9CA3AF]">{t.input}:</span>
+              <span className="text-[#9CA3AF]">{tLabels.input}:</span>
               <span className="text-[#666666] ml-1">{model.pricing.input}</span>
             </div>
             <div>
-              <span className="text-[#9CA3AF]">{t.output}:</span>
+              <span className="text-[#9CA3AF]">{tLabels.output}:</span>
               <span className="text-[#666666] ml-1">{model.pricing.output}</span>
             </div>
           </div>

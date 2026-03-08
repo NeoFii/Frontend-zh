@@ -383,7 +383,7 @@ export default function ThirdPartyApiPage() {
                     type="button"
                     onClick={() => setShowApiKey(!showApiKey)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
-                    title={showApiKey ? '隐藏 API Key' : '显示 API Key'}
+                    title={showApiKey ? t('hideApiKey') : t('showApiKey')}
                   >
                     {showApiKey ? (
                       // 眼睛睁开图标 - 当前显示，点击隐藏

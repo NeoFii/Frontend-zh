@@ -201,7 +201,7 @@ export default function AppHeader() {
           <button
             onClick={toggleMenu}
             className="md:hidden p-2.5 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
-            aria-label={isMenuOpen ? '关闭菜单' : '打开菜单'}
+            aria-label={isMenuOpen ? t('closeMenu') : t('openMenu')}
           >
             {!isMenuOpen ? (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

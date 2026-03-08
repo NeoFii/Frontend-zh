@@ -6,7 +6,7 @@ import { getTranslation } from '@/lib/translations'
 
 // 生成所有静态路径
 export async function generateStaticParams() {
-  const products = getAllProducts('en')
+  const products = getAllProducts()
   const slugs = products.map((product) => product.slug)
   return slugs.map((slug) => ({ slug }))
 }
@@ -14,7 +14,7 @@ export async function generateStaticParams() {
 // 生成页面元数据
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const { t } = getTranslation('errors')
-  const product = getProductBySlug(params.slug, 'en')
+  const product = getProductBySlug(params.slug)
 
   if (!product) {
     return {
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 // 页面组件（服务端组件）
 export default function ProductDetailPage({ params }: { params: { slug: string } }) {
-  const product = getProductBySlug(params.slug, 'en')
+  const product = getProductBySlug(params.slug)
 
   if (!product) {
     notFound()

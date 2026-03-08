@@ -8,7 +8,9 @@
     "about": "关于我们",
     "login": "登录",
     "console": "控制台",
-    "logout": "退出登录"
+    "logout": "退出登录",
+    "closeMenu": "关闭菜单",
+    "openMenu": "打开菜单"
   },
   "hero": {
     "tagline": "智能分层推理引擎",
@@ -250,7 +252,8 @@
       "privacyPolicy": "隐私政策",
       "invitationCode": "邀请码",
       "invitationCodePlaceholder": "请输入邀请码",
-      "invitationOnlyTip": "本平台仅限受邀用户注册"
+      "invitationOnlyTip": "本平台仅限受邀用户注册",
+      "passwordStrength": "密码强度："
     },
     "loginType": {
       "password": "密码登录",

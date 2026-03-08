@@ -1,4 +1,8 @@
+import { useTranslation } from '@/hooks/useTranslation'
+
 export default function Loading() {
+  const { t } = useTranslation('common')
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-white" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <div className="flex flex-col items-center">
@@ -14,7 +18,7 @@ export default function Loading() {
           <div className="w-3 h-3 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
         </div>
 
-        <p className="mt-6 text-gray-500 text-sm">加载中...</p>
+        <p className="mt-6 text-gray-500 text-sm">{t('loading')}</p>
       </div>
     </div>
   )

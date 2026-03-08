@@ -49,15 +49,11 @@ export const useAuthStore = create<AuthState>()(
 
       // 异步登出（调用后端接口 + 清除 Token）
       logoutAsync: async () => {
-        console.log('[Logout] Step 2a: 进入 logoutAsync')
         try {
-          console.log('[Logout] Step 2b: 准备调用后端 /auth/logout API')
           await apiLogout()
-          console.log('[Logout] Step 2c: API 调用完成')
         } catch (error) {
           console.error('[Logout] API 调用失败:', error)
         } finally {
-          console.log('[Logout] Step 2d: 执行 clearAllTokens 和 logout')
           // 清除所有 Token
           clearAllTokens()
           // 清除本地状态

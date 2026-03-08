@@ -86,7 +86,6 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
       icon: <AccountIcon />,
       items: [
         { id: 'basic-information', name: t('accountInfo') },
-        { id: 'interface-key', name: t('interfaceKey') },
         { id: 'request-limits', name: t('requestLimits') },
         { id: 'child-account', name: t('childAccount') },
       ],
