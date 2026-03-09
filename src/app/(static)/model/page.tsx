@@ -3,130 +3,103 @@
 /**
  * 模型页面
  * 展示所有支持的 AI 模型，以网格卡片形式呈现
+ * 对接后端 Testing 服务 API
  */
 
 import React, { useState, useMemo } from 'react'
-import { useTranslation } from '@/hooks/useTranslation'
-import { modelVendors, ModelVendor, Model } from '@/data/models'
+import useSWR from 'swr'
+import { getModels, getCategories } from '@/lib/api/model'
+import type { ModelListItem, Category } from '@/types/model'
+import CategoryTabs from '@/components/model/CategoryTabs'
 import ModelSearch from '@/components/model/ModelSearch'
-import ModelSort, { SortOrder } from '@/components/model/ModelSort'
-import ModelCard from '@/components/model/ModelCard'
-import VendorFilter from '@/components/model/VendorFilter'
+import ModelCardV2 from '@/components/model/ModelCardV2'
+
+// 搜索过滤
+function useModelSearch(models: ModelListItem[], query: string): ModelListItem[] {
+  return useMemo(() => {
+    if (!query.trim()) return models
+
+    const q = query.toLowerCase().trim()
+    return models.filter(
+      (model) =>
+        model.name.toLowerCase().includes(q) ||
+        model.model_id.toLowerCase().includes(q) ||
+        model.description?.toLowerCase().includes(q)
+    )
+  }, [models, query])
+}
 
 export default function ModelPage() {
-  const { t } = useTranslation('model')
   // 状态管理
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('default')
-  const [selectedVendors, setSelectedVendors] = useState<string[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
-  // 获取所有模型并关联供应商
-  const allModels = useMemo(() => {
-    const models: { model: Model; vendor: ModelVendor }[] = []
-    modelVendors.forEach((vendor) => {
-      vendor.models.forEach((model) => {
-        models.push({ model, vendor })
+  // 获取分类列表
+  const { data: categories = [] } = useSWR<Category[]>(
+    'categories',
+    () => getCategories()
+  )
+
+  // 获取模型列表
+  const { data: modelsData, isLoading } = useSWR(
+    selectedCategory ? ['models', selectedCategory] : 'models',
+    () =>
+      getModels({
+        category: selectedCategory || undefined,
+        page: 1,
+        page_size: 100,
       })
-    })
-    return models
-  }, [])
+  )
 
-  // 过滤和排序模型
-  const filteredModels = useMemo(() => {
-    let result = [...allModels]
+  const models = modelsData?.items || []
 
-    // 厂商筛选
-    if (selectedVendors.length > 0) {
-      result = result.filter(({ vendor }) =>
-        selectedVendors.includes(vendor.id)
-      )
-    }
+  // 搜索过滤
+  const filteredModels = useModelSearch(models, searchQuery)
 
-    // 搜索过滤
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim()
-      result = result.filter(
-        ({ model, vendor }) =>
-          model.name.toLowerCase().includes(query) ||
-          model.description?.['en']?.toLowerCase().includes(query) ||
-          vendor.name.toLowerCase().includes(query)
-      )
-    }
-
-    // 排序
-    if (sortOrder === 'desc') {
-      result.sort((a, b) => {
-        const dateA = a.model.publishedAt ? new Date(a.model.publishedAt).getTime() : 0
-        const dateB = b.model.publishedAt ? new Date(b.model.publishedAt).getTime() : 0
-        return dateB - dateA
-      })
-    } else if (sortOrder === 'asc') {
-      result.sort((a, b) => {
-        const dateA = a.model.publishedAt ? new Date(a.model.publishedAt).getTime() : 0
-        const dateB = b.model.publishedAt ? new Date(b.model.publishedAt).getTime() : 0
-        return dateA - dateB
-      })
-    }
-
-    return result
-  }, [allModels, searchQuery, sortOrder, selectedVendors])
-
-  // 清除所有筛选
+  // 清除筛选
   const clearAllFilters = () => {
     setSearchQuery('')
-    setSelectedVendors([])
+    setSelectedCategory(null)
   }
 
-  // 是否有活跃筛选
-  const hasActiveFilters = searchQuery || selectedVendors.length > 0
+  const hasActiveFilters = searchQuery || selectedCategory
 
   return (
     <main className="min-h-screen bg-white">
       <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8 lg:py-12">
         {/* 标题区域 */}
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
-          <div>
-            <h1 className="text-[24px] lg:text-[28px] font-semibold text-[#181E25] mb-2">
-              {t('title')}
-            </h1>
-            <p className="text-[14px] text-[#666666]">
-              {t('description')}
-            </p>
-          </div>
-
-          {/* 排序控件 */}
-          <ModelSort value={sortOrder} onChange={setSortOrder}
-            labels={{
-              default: t('sortDefault'),
-              newestDesc: t('sortNewestDesc'),
-              newestAsc: t('sortNewestAsc'),
-            }}
-          />
+        <div className="mb-8">
+          <h1 className="text-[24px] lg:text-[28px] font-semibold text-[#181E25] mb-2">
+            AI 模型
+          </h1>
+          <p className="text-[14px] text-[#666666]">
+            探索我们支持的所有 AI 模型，按分类筛选找到最适合您需求的模型
+          </p>
         </div>
 
-        {/* 厂商筛选 */}
-        <VendorFilter
-          selectedVendors={selectedVendors}
-          onChange={setSelectedVendors}
-          labels={{
-            vendorFilter: t('vendorFilter'),
-            clearFilter: t('clearVendorFilter'),
-            selectAll: t('selectAll'),
-            selectedVendors: t('selectedVendors', { count: selectedVendors.length }),
-          }}
+        {/* 分类标签 */}
+        <CategoryTabs
+          categories={categories}
+          selectedSlug={selectedCategory}
+          onChange={setSelectedCategory}
+          labels={{ all: '全部' }}
         />
 
         {/* 搜索栏 */}
         <div className="mb-6">
           <div className="max-w-md">
-            <ModelSearch value={searchQuery} onChange={setSearchQuery} placeholder={t('searchPlaceholder')} />
+            <ModelSearch
+              value={searchQuery}
+              onChange={setSearchQuery}
+              placeholder="搜索模型名称或描述..."
+            />
           </div>
         </div>
 
         {/* 结果统计 */}
         <div className="mb-6 flex items-center justify-between">
           <span className="text-[14px] text-[#666666]">
-            {`${filteredModels.length} models`}
+            {isLoading ? '加载中...' : `${filteredModels.length} 个模型`}
           </span>
           {hasActiveFilters && (
             <button
@@ -148,18 +121,20 @@ export default function ModelPage() {
                   strokeLinejoin="round"
                 />
               </svg>
-              {t('clearFilters')}
+              清除筛选
             </button>
           )}
         </div>
 
         {/* 模型网格 */}
-        {filteredModels.length > 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#181E25]" />
+          </div>
+        ) : filteredModels.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
-            {filteredModels.map(({ model, vendor }) => (
-              <ModelCard key={model.id} model={model} vendor={vendor}
-                labels={{ input: t('input'), output: t('output') }}
-              />
+            {filteredModels.map((model) => (
+              <ModelCardV2 key={model.id} model={model} />
             ))}
           </div>
         ) : (
@@ -188,15 +163,13 @@ export default function ModelPage() {
               />
               <circle cx="36" cy="36" r="4" fill="currentColor" />
             </svg>
-            <p className="text-[16px] text-[#666666]">{t('noResults')}</p>
-            <p className="text-[14px] text-[#9CA3AF] mt-1">
-              {t('tryAdjust')}
-            </p>
+            <p className="text-[16px] text-[#666666]">没有找到匹配的模型</p>
+            <p className="text-[14px] text-[#9CA3AF] mt-1">试试调整筛选条件</p>
             <button
               onClick={clearAllFilters}
               className="mt-4 px-4 py-2 bg-[#181E25] text-white text-[14px] rounded-lg hover:opacity-90 transition-opacity"
             >
-              {t('clearFilters')}
+              清除筛选
             </button>
           </div>
         )}

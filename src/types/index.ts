@@ -2,7 +2,7 @@
 
 // 通用类型
 export interface ApiResponse<T = unknown> {
-  code: string
+  code: number
   message: string
   data: T
 }
@@ -95,3 +95,21 @@ export type {
   UsageStats,
   PlatformData,
 } from '@/lib/api/platform'
+
+// 从 Testing 模块导出类型
+export type {
+  Category,
+  CategoryCreate,
+  ModelListItem,
+  ModelDetail,
+  ModelCategoryInfo,
+  ModelCreate,
+  Provider,
+  ProviderCreate,
+  ModelProviderInfo,
+  BenchmarkStats,
+  BenchmarkStatsSummaryItem,
+  BenchmarkRunRequest,
+  BenchmarkRunResponse,
+  PagedResponse,
+} from '@/types/model'

@@ -1,14 +1,5 @@
 /* MiSans 字体定义 - 使用完整字体文件 */
 
-/* ========== ExtraLight (200) ========== */
-@font-face {
-  font-family: 'MiSans';
-  font-style: normal;
-  font-weight: 200;
-  font-display: swap;
-  src: url('misans/MiSans/woff2/MiSans-ExtraLight.woff2') format('woff2');
-}
-
 /* ========== Light (300) ========== */
 @font-face {
   font-family: 'MiSans';
@@ -54,20 +45,3 @@
   src: url('misans/MiSans/woff2/MiSans-Bold.woff2') format('woff2');
 }
 
-/* ========== Heavy (800) ========== */
-@font-face {
-  font-family: 'MiSans';
-  font-style: normal;
-  font-weight: 800;
-  font-display: swap;
-  src: url('misans/MiSans/woff2/MiSans-Heavy.woff2') format('woff2');
-}
-
-/* ========== Thin (100) ========== */
-@font-face {
-  font-family: 'MiSans';
-  font-style: normal;
-  font-weight: 100;
-  font-display: swap;
-  src: url('misans/MiSans/woff2/MiSans-Thin.woff2') format('woff2');
-}

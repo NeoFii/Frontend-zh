@@ -1,13 +1,13 @@
 'use client'
 
 import { useTranslation } from '@/hooks/useTranslation'
+import messages from '@/messages/zh.json'
 
 export default function PricePage() {
   const { t } = useTranslation('price')
-  // 价格页面需要的特性数组 - 硬编码以避免类型问题
-  const freeFeatures = ['1,000 API calls per month', 'Basic models supported', 'Standard response speed', 'Community support']
-  const proFeatures = ['100,000 API calls per month', 'All models supported', 'Priority response speed', 'Email support']
-  const enterpriseFeatures = ['Unlimited API calls', 'Custom model training', 'Ultra-low latency response', '7×24 dedicated support']
+  const freeFeatures = messages.price.free.features
+  const proFeatures = messages.price.pro.features
+  const enterpriseFeatures = messages.price.enterprise.features
 
   return (
     <main className="flex flex-col items-center w-full overflow-y-auto flex-1 pb-[160px] min-h-screen">
@@ -111,7 +111,7 @@ export default function PricePage() {
               ))}
             </ul>
             <a
-              href="/contact"
+              href="mailto:contact@eucal.ai"
               className="block w-full text-center py-3 bg-[#181E25] text-white rounded-full text-[16px] font-[400] hover:opacity-90 transition-all duration-300"
             >
               {t('enterprise.cta')}

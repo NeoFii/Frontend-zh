@@ -40,7 +40,13 @@ const nextConfig = {
   // Docker: 自动使用 http://backend:8000
   async rewrites() {
     const apiUrl = process.env.API_URL || 'http://127.0.0.1:8000';
+    const testingApiUrl = process.env.TESTING_API_URL || 'http://127.0.0.1:8002';
     return [
+      // Testing API 代理（必须在通用 /api 规则之前，否则会被覆盖）
+      {
+        source: '/testing-api/:path*',
+        destination: `${testingApiUrl}/api/:path*`,
+      },
       // API 代理
       {
         source: '/api/:path*',

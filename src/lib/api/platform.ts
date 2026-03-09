@@ -1,4 +1,5 @@
 import { http } from './index'
+import type { ApiResponse } from '@/types'
 
 export interface ApiKey {
   id: number
@@ -22,12 +23,6 @@ export interface PlatformData {
   totalRequests: number
   totalTokens: number
   totalCost: number
-}
-
-export interface ApiResponse<T> {
-  code: string
-  message: string
-  data: T
 }
 
 /**

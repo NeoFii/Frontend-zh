@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTranslation } from '@/hooks/useTranslation'
 import type { NavItem } from '@/types'
 
@@ -10,6 +10,7 @@ const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'Eucal AI'
 
 export default function AppHeader() {
   const { t } = useTranslation('nav')
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -36,9 +37,8 @@ export default function AppHeader() {
   ]
 
   // 处理登录按钮点击
-  const handleAuthClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    window.open('/login', '_blank')
+  const handleAuthClick = () => {
+    router.push('/login')
   }
 
   // 滚动处理

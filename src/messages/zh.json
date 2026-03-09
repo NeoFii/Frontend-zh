@@ -169,7 +169,23 @@
     "clearVendorFilter": "清除筛选",
     "selectAll": "全选",
     "selectedVendors": "已选择 {count} 个厂商",
-    "publishedAt": "发布时间"
+    "publishedAt": "发布时间",
+    "modelNotFound": "模型不存在",
+    "defaultTag": "默认",
+    "openSourceTag": "开源",
+    "rateLimit": "限速",
+    "performanceStats": "性能统计",
+    "ttft": "首字延迟",
+    "totalLatency": "总延迟",
+    "throughput": "吞吐量",
+    "successRate": "成功率",
+    "noPerformanceData": "暂无性能测试数据",
+    "modelSize": "模型大小",
+    "availableProviders": "可用供应商",
+    "modelDescription": "模型介绍",
+    "tags": "标签",
+    "providerList": "供应商列表",
+    "noProviderData": "暂无供应商数据"
   },
   "product": {
     "tryNow": "立即体验",
@@ -215,6 +231,10 @@
     "contactDesc": "欢迎有意向的合作伙伴与我们联系，共同探索合作机会"
   },
   "auth": {
+    "hero": {
+      "title": "当你调用 AI，",
+      "highlight": "就是在调用我们。"
+    },
     "login": {
       "pageTitle": "Eucal AI | 登录",
       "title": "登录",
@@ -230,7 +250,9 @@
       "noAccount": "还没有账号？",
       "registerNow": "立即注册",
       "getCode": "获取验证码",
-      "sending": "发送中..."
+      "sending": "发送中...",
+      "registeredSuccess": "注册成功，请登录",
+      "resetSuccess": "密码重置成功，请使用新密码登录"
     },
     "register": {
       "pageTitle": "Eucal AI | 注册",
@@ -270,7 +292,11 @@
       "passwordMinLength": "至少8个字符",
       "passwordHasNumber": "包含数字",
       "passwordHasLetter": "包含字母",
-      "passwordHasSpecial": "包含特殊字符"
+      "passwordHasSpecial": "包含特殊字符",
+      "passwordWeak": "弱",
+      "passwordFair": "一般",
+      "passwordStrong": "强",
+      "passwordVeryStrong": "非常强"
     },
     "validation": {
       "enterEmail": "请先输入邮箱",
@@ -554,7 +580,18 @@
     "backPrevious": "返回上一页",
     "INVALID_API_KEY": "API Key 无效，请检查后重试",
     "RATE_LIMIT_EXCEEDED": "请求频率超限，请稍后再试",
-    "UNAUTHORIZED": "请先登录"
+    "UNAUTHORIZED": "请先登录",
+    "networkError": "网络请求失败，请检查网络连接",
+    "timeoutError": "请求超时，请稍后重试",
+    "operationFailed": "操作失败，请稍后重试",
+    "unauthorized": "登录已过期，请重新登录",
+    "forbidden": "没有权限执行此操作",
+    "badRequest": "请求参数错误",
+    "notFoundApi": "请求的资源不存在",
+    "validationFailed": "数据验证失败，请检查输入",
+    "serverError": "服务器内部错误",
+    "badGateway": "网关错误，请稍后重试",
+    "serviceUnavailable": "服务暂时不可用，请稍后重试"
   },
   "common": {
     "loading": "加载中...",

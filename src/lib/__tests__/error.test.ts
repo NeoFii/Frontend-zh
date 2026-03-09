@@ -69,7 +69,7 @@ describe('getErrorMessageByStatus', () => {
   })
 
   it('undefined 应返回网络请求失败', () => {
-    expect(getErrorMessageByStatus(undefined)).toBe('网络请求失败')
+    expect(getErrorMessageByStatus(undefined)).toBe('网络请求失败，请检查网络连接')
   })
 })
 

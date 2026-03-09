@@ -1,3 +1,5 @@
+// TODO: [SECURITY] 第三方 API Key 应通过后端加密存储，当前 localStorage 方案为临时实现
+// 后续需对接: POST /api/v1/platform/third-party-keys (存储), GET (列表), DELETE (删除)
 'use client'
 
 import { useState, useEffect } from 'react'

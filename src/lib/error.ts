@@ -3,20 +3,9 @@
  * 提供错误提取、格式化、用户提示等功能
  */
 
-import messages from '@/messages/zh.json'
+import { createTranslator } from '@/lib/messages'
 
-function getNestedValue(obj: unknown, keys: string[]): string | undefined {
-  let result = obj
-  for (const k of keys) {
-    if (result == null || typeof result !== 'object') return undefined
-    result = (result as Record<string, unknown>)[k]
-  }
-  return typeof result === 'string' ? result : undefined
-}
-
-function t(key: string): string {
-  return getNestedValue(messages, key.split('.')) || key
-}
+const { t } = createTranslator()
 
 /**
  * 从错误对象中提取用户友好的错误消息
@@ -61,7 +50,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 
   // 客户端错误
   400: t('errors.badRequest'),
-  404: t('errors.notFound'),
+  404: t('errors.notFoundApi'),
   422: t('errors.validationFailed'),
 
   // 服务端错误

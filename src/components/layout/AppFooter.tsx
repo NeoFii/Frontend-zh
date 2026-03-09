@@ -118,8 +118,8 @@ export default function AppFooter() {
             {t('copyright')}
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0 text-sm text-gray-400">
-            <a href="#" className="hover:text-white transition-colors">{t('privacy')}</a>
-            <a href="#" className="hover:text-white transition-colors">{t('terms')}</a>
+            <Link href="/privacy" className="hover:text-white transition-colors">{t('privacy')}</Link>
+            <Link href="/agreement" className="hover:text-white transition-colors">{t('terms')}</Link>
           </div>
         </div>
       </div>

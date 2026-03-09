@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/hooks/useTranslation'
 import Reveal from '@/components/Reveal'
 import { useAuthStore } from '@/stores/auth'
@@ -26,15 +27,15 @@ const providers = [
 
 export default function Home() {
   const { t } = useTranslation('home')
+  const router = useRouter()
   const { isAuthenticated, hydrated } = useAuthStore()
   const isLoggedIn = hydrated && isAuthenticated
   const [copied, setCopied] = useState(false)
 
   // 处理 CTA 按钮点击
-  const handleCtaClick = (e: React.MouseEvent) => {
-    e.preventDefault()
+  const handleCtaClick = () => {
     const targetUrl = isLoggedIn ? '/console/account/basic-information' : '/login'
-    window.open(targetUrl, '_blank')
+    router.push(targetUrl)
   }
 
   // 复制 BASE URL

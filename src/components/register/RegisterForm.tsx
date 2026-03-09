@@ -9,8 +9,8 @@ import { useTranslation } from '@/hooks/useTranslation'
 import { PasswordStrength } from './PasswordStrength'
 import { PasswordRequirements } from './PasswordRequirements'
 import { AgreementLinks } from './AgreementLinks'
-import { RegisterError } from './RegisterError'
-import { CodeCountdown } from './CodeCountdown'
+import { FormAlert } from '@/components/ui/FormAlert'
+import { CodeCountdown } from '@/components/ui/CodeCountdown'
 import { useAuthStore } from '@/stores/auth'
 import { setAccessToken } from '@/lib/token'
 import { sendVerificationCode, register } from '@/lib/api/auth'
@@ -35,6 +35,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
   const { t } = useTranslation('auth.register')
   const { t: tValidation } = useTranslation('auth.validation')
   const { t: tErrors } = useTranslation('auth.errors')
+  const { t: tLogin } = useTranslation('auth.login')
   const { login: saveUser } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [codeLoading, setCodeLoading] = useState(false)
@@ -159,7 +160,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
 
   return (
     <form onSubmit={handleRegister} className="space-y-5">
-      <RegisterError error={error} />
+      <FormAlert error={error} />
 
       <div>
         <label htmlFor="invitationCode" className="block text-sm font-medium text-gray-700 mb-2">{t('invitationCode')}</label>
@@ -204,7 +205,7 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
             placeholder={t('codePlaceholder')}
           />
-          <CodeCountdown onSendCode={handleSendCode} disabled={codeLoading} />
+          <CodeCountdown onSendCode={handleSendCode} disabled={codeLoading} sendingText={tLogin('sending')} getCodeText={tLogin('getCode')} />
         </div>
       </div>
 

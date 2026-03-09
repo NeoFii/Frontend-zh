@@ -29,9 +29,9 @@ export function getPasswordStrength(password: string): PasswordStrengthResult {
   if (/[0-9]/.test(password)) score++
   if (/[^a-zA-Z0-9]/.test(password)) score++
 
-  // 根据分数返回强度等级
-  if (score <= 2) return { level: 1, text: 'Weak', color: 'bg-red-500' }
-  if (score <= 3) return { level: 2, text: 'Fair', color: 'bg-yellow-500' }
-  if (score <= 4) return { level: 3, text: 'Strong', color: 'bg-green-500' }
-  return { level: 4, text: 'Very Strong', color: 'bg-green-600' }
+  // 根据分数返回强度等级（text 为 i18n key，由调用方翻译）
+  if (score <= 2) return { level: 1, text: 'weak', color: 'bg-red-500' }
+  if (score <= 3) return { level: 2, text: 'fair', color: 'bg-yellow-500' }
+  if (score <= 4) return { level: 3, text: 'strong', color: 'bg-green-500' }
+  return { level: 4, text: 'veryStrong', color: 'bg-green-600' }
 }

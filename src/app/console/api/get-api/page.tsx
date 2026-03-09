@@ -1,3 +1,5 @@
+// TODO: [SECURITY] API Key 应通过后端 API 管理，当前 localStorage 方案为临时 Mock 实现
+// 后续需对接: POST /api/v1/platform/api-keys (创建), GET (列表, 返回脱敏值), DELETE (删除)
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -12,6 +14,7 @@ interface ApiKey {
   enabled: boolean
 }
 
+// TODO: [SECURITY] 密钥应由后端生成，此为临时 Mock 实现
 // 生成随机 API 密钥
 function generateApiKey(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'

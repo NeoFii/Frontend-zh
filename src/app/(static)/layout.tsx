@@ -1,7 +1,6 @@
 import { getTranslation } from '@/lib/translations'
 import type { Metadata } from 'next'
-import AppHeader from "@/components/layout/AppHeader";
-import AppFooter from "@/components/layout/AppFooter";
+import SiteLayout from "@/components/layout/SiteLayout";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = getTranslation('home')
@@ -17,11 +16,5 @@ export default function StaticLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <AppHeader />
-      <main className="flex-1 pt-20">{children}</main>
-      <AppFooter />
-    </div>
-  );
+  return <SiteLayout>{children}</SiteLayout>;
 }

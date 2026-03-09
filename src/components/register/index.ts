@@ -4,6 +4,4 @@
 
 export { PasswordStrength } from './PasswordStrength'
 export { AgreementLinks } from './AgreementLinks'
-export { RegisterError } from './RegisterError'
-export { CodeCountdown } from './CodeCountdown'
 export { RegisterForm } from './RegisterForm'

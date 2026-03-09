@@ -46,14 +46,6 @@ export function isAccessTokenExpiringSoon(): boolean {
 }
 
 /**
- * 检查 Token 是否已过期
- */
-export function isTokenExpired(): boolean {
-  if (!tokenExpiry) return true
-  return Date.now() >= tokenExpiry
-}
-
-/**
  * 清除所有 Token（登录/登出时调用）
  * 注意：Refresh Token 存储在 httpOnly Cookie 中，由后端管理清除
  * Access Token 仅存内存，由前端清除
@@ -61,9 +53,3 @@ export function isTokenExpired(): boolean {
 export function clearAllTokens(): void {
   removeAccessToken()
 }
-
-/**
- * 兼容导出（已废弃，保留用于避免运行时错误）
- * @deprecated 请使用 setAccessToken / getAccessToken / clearAllTokens
- */
-export const clearAccessToken = removeAccessToken

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, Suspense } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams, useRouter as useNextRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -8,15 +8,20 @@ import { LoginForm } from '@/components/login'
 
 function LoginContent() {
   const { t } = useTranslation('auth.login')
+  const { t: tHero } = useTranslation('auth.hero')
   const router = useNextRouter()
   const searchParams = useSearchParams()
   const { isAuthenticated, hydrated } = useAuthStore()
+  const [successMessage, setSuccessMessage] = useState('')
 
-  // 解析 URL 参数
+  // 解析 URL 参数，显示注册成功/密码重置成功提示
   useEffect(() => {
-    searchParams.get('registered')
-    searchParams.get('reset')
-  }, [searchParams])
+    if (searchParams.get('registered') === 'true') {
+      setSuccessMessage(t('registeredSuccess'))
+    } else if (searchParams.get('reset') === 'true') {
+      setSuccessMessage(t('resetSuccess'))
+    }
+  }, [searchParams, t])
 
   // 检查是否已登录（仅在 hydration 完成后）
   useEffect(() => {
@@ -41,8 +46,8 @@ function LoginContent() {
 
         <div className="relative z-10 flex flex-col justify-center px-16 w-full">
           <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-            When you call AI,<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">you call us.</span>
+            {tHero('title')}<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">{tHero('highlight')}</span>
           </h1>
         </div>
       </div>
@@ -53,6 +58,12 @@ function LoginContent() {
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900">{t('pageTitle')}</h2>
           </div>
+
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm text-center">
+              {successMessage}
+            </div>
+          )}
 
           <LoginForm onSuccess={handleLoginSuccess} />
         </div>

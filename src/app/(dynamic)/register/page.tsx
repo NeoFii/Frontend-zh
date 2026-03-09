@@ -6,6 +6,7 @@ import { RegisterForm } from '@/components/register'
 
 export default function Register() {
   const { t } = useTranslation('auth.register')
+  const { t: tHero } = useTranslation('auth.hero')
 
   return (
     <div className="min-h-screen flex">
@@ -16,8 +17,8 @@ export default function Register() {
 
         <div className="relative z-10 flex flex-col justify-center px-16 w-full">
           <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-            When you call AI,<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">you call us.</span>
+            {tHero('title')}<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">{tHero('highlight')}</span>
           </h1>
         </div>
       </div>

@@ -9,8 +9,8 @@ import { useTranslation } from '@/hooks/useTranslation'
 import { useAuthStore } from '@/stores/auth'
 import { setAccessToken } from '@/lib/token'
 import { LoginTypeSwitcher } from './LoginTypeSwitcher'
-import { CodeCountdown } from './CodeCountdown'
-import { LoginError } from './LoginError'
+import { CodeCountdown } from '@/components/ui/CodeCountdown'
+import { FormAlert } from '@/components/ui/FormAlert'
 import { login, loginWithCode, sendLoginCode } from '@/lib/api/auth'
 import { validateEmail } from '@/lib/utils/validation'
 import { PasswordInput } from '@/components/ui/PasswordInput'
@@ -60,9 +60,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     }
 
     setError('')
-    const res = await sendLoginCode(form.email)
-    if (res.code !== 200) {
-      setError(res.message || tErrors('sendFailed'))
+    try {
+      const res = await sendLoginCode(form.email)
+      if (res.code !== 200) {
+        setError(res.message || tErrors('sendFailed'))
+      }
+    } catch {
+      setError(tErrors('sendFailed'))
     }
   }
 
@@ -133,7 +137,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       <LoginTypeSwitcher loginType={loginType} onChange={setLoginType} />
 
       <form onSubmit={handleLogin} className="space-y-5">
-        <LoginError error={error} />
+        <FormAlert error={error} />
 
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
@@ -175,7 +179,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                 className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
                 placeholder={t('codePlaceholder')}
               />
-              <CodeCountdown onSendCode={handleSendCode} />
+              <CodeCountdown onSendCode={handleSendCode} sendingText={t('sending')} getCodeText={t('getCode')} />
             </div>
           </div>
         )}
