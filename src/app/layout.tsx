@@ -80,8 +80,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
         {/* favicon */}
-        <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="shortcut icon" href="/favicon.svg" />
         {/* TODO: 添加 apple-touch-icon.png (180x180) 后取消注释 */}
         {/* <link rel="apple-touch-icon" href="/apple-touch-icon.png" /> */}
 

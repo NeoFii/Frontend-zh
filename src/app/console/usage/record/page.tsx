@@ -1,768 +1,570 @@
-'use client'
+﻿'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { useTranslation } from '@/hooks/useTranslation'
+import * as echarts from 'echarts/core'
+import { BarChart, LineChart, PieChart } from 'echarts/charts'
+import { CanvasRenderer } from 'echarts/renderers'
+import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
+import { useRouterUsageEvents, useRouterUsageSummary } from '@/hooks/useRouterUsage'
+import {
+  USAGE_REFERENCE_MODELS,
+  createUsageDashboardViewModel,
+  filterUsageEventsByRange,
+  formatCompactNumber,
+  formatCurrency,
+  formatDateTime,
+  type UsageRange,
+} from '@/lib/router-analytics'
 
-// ECharts tooltip 参数类型
-interface EChartsTooltipParams {
-  name: string
-  value: number
-  dataIndex: number
-  seriesIndex: number
-}
-
-// 动态导入 ECharts，添加加载状态
 const ReactECharts = dynamic(() => import('echarts-for-react'), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-full">
-      <div className="w-8 h-8 border-2 border-gray-200 border-t-primary-500 rounded-full animate-spin"></div>
+    <div className="flex h-full items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary-500"></div>
     </div>
   ),
 })
 
-// ECharts 按需加载配置
-import * as echarts from 'echarts/core'
-import { BarChart, PieChart, LineChart } from 'echarts/charts'
-import {
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
-  GridComponent,
-} from 'echarts/components'
-import { CanvasRenderer } from 'echarts/renderers'
+echarts.use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
 
-// 注册需要的组件
-echarts.use([
-  BarChart,
-  PieChart,
-  LineChart,
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
-  GridComponent,
-  CanvasRenderer,
-])
+const RANGES: UsageRange[] = ['24h', '7d', '30d', '90d']
+const MODEL_COLORS = ['#0f172a', '#f97316', '#10b981', '#8b5cf6', '#06b6d4', '#ef4444', '#eab308']
 
-// 模型颜色映射 - 相同模型在不同图表中使用相同颜色
-const MODEL_COLORS: Record<string, string> = {
-  'GPT-4o': '#f97316',      // 橙色
-  'Claude-3.5': '#8B5CF6',  // 紫色
-  'Gemini Pro': '#10B981',   // 绿色
-  'Llama-3': '#3B82F6',     // 蓝色
-  'GPT-4': '#F59E0B',       // 黄色
-  'DeepSeek': '#EC4899',     // 粉色
-  'Moonshot': '#06B6D4',    // 青色
+function MetricCard(props: { label: string; value: string; hint: string; accent?: string }) {
+  return (
+    <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_20px_45px_-32px_rgba(15,23,42,0.35)]">
+      <p className="text-sm text-gray-500">{props.label}</p>
+      <p className="mt-3 text-3xl tracking-tight text-gray-950">{props.value}</p>
+      <p className="mt-2 text-xs text-gray-400" style={props.accent ? { color: props.accent } : undefined}>
+        {props.hint}
+      </p>
+    </div>
+  )
 }
 
-// 可选的参考模型列表
-const REFERENCE_MODELS = [
-  { id: 'claude-3.5', name: 'Claude-3.5', color: '#8B5CF6' },
-  { id: 'gpt-4o', name: 'GPT-4o', color: '#f97316' },
-  { id: 'gpt-4', name: 'GPT-4', color: '#F59E0B' },
-  { id: 'gemini-pro', name: 'Gemini Pro', color: '#10B981' },
-]
-
-// 成本倍数：各模型换成参考模型需要乘以的倍数
-// 价格从高到低：Claude-3.5 > GPT-4 > GPT-4o > Gemini Pro > Llama-3 > DeepSeek > Moonshot
-const COST_MULTIPLIERS: Record<string, Record<string, number>> = {
-  // 参考 Claude-3.5：其他模型换成 Claude-3.5 需要多少钱
-  'claude-3.5': {
-    'Claude-3.5': 1,
-    'GPT-4o': 1.15,      // GPT-4o 换成 Claude-3.5 需要 1.15 倍
-    'GPT-4': 0.9,        // GPT-4 换成 Claude-3.5 只需 0.9 倍（Claude 更贵）
-    'Gemini Pro': 5.5,    // Gemini Pro 换成 Claude-3.5 需要 5.5 倍
-    'Llama-3': 9,        // Llama-3 换成 Claude-3.5 需要 9 倍
-    'DeepSeek': 12,      // DeepSeek 换成 Claude-3.5 需要 12 倍
-    'Moonshot': 3,       // Moonshot 换成 Claude-3.5 需要 3 倍
-  },
-  // 参考 GPT-4o
-  'gpt-4o': {
-    'Claude-3.5': 0.87,  // Claude-3.5 换成 GPT-4o 只需 0.87 倍（Claude 更贵）
-    'GPT-4o': 1,
-    'GPT-4': 0.78,       // GPT-4 换成 GPT-4o 只需 0.78 倍
-    'Gemini Pro': 4.8,    // Gemini Pro 换成 GPT-4o 需要 4.8 倍
-    'Llama-3': 7.8,      // Llama-3 换成 GPT-4o 需要 7.8 倍
-    'DeepSeek': 10.4,    // DeepSeek 换成 GPT-4o 需要 10.4 倍
-    'Moonshot': 2.6,     // Moonshot 换成 GPT-4o 需要 2.6 倍
-  },
-  // 参考 GPT-4
-  'gpt-4': {
-    'Claude-3.5': 1.1,   // Claude-3.5 换成 GPT-4 需要 1.1 倍
-    'GPT-4o': 1.28,      // GPT-4o 换成 GPT-4 需要 1.28 倍
-    'GPT-4': 1,
-    'Gemini Pro': 6,      // Gemini Pro 换成 GPT-4 需要 6 倍
-    'Llama-3': 10,       // Llama-3 换成 GPT-4 需要 10 倍
-    'DeepSeek': 13.3,   // DeepSeek 换成 GPT-4 需要 13.3 倍
-    'Moonshot': 3.3,     // Moonshot 换成 GPT-4 需要 3.3 倍
-  },
-  // 参考 Gemini Pro：显示相对于"更贵的商业模型方案"的节省
-  'gemini-pro': {
-    // 这里表示：相对于全用 GPT-4o 级别的高端商业模型，我们节省了多少
-    // 实际上是把其他模型换成高端商业模型的成本
-    'Claude-3.5': 0.5,   // 换成高端模型约 0.5 倍
-    'GPT-4o': 0.6,       // 换成高端模型约 0.6 倍
-    'GPT-4': 0.45,       // 换成高端模型约 0.45 倍
-    'Gemini Pro': 3,      // Gemini Pro 换成高端模型需要 3 倍（高端模型比 Gemini 贵 3 倍）
-    'Llama-3': 5,        // Llama-3 换成高端模型需要 5 倍
-    'DeepSeek': 6,       // DeepSeek 换成高端模型需要 6 倍
-    'Moonshot': 2,       // Moonshot 换成高端模型需要 2 倍
-  },
-}
-
-// 不同时间范围的数据集
-const timeRangeData = {
-  '24h': {
-    summary: { totalRequests: 1850, totalTokens: 680000, totalCost: 18.50, avgLatency: 1.1 },
-    modelData: [
-      { model: 'GPT-4o', cost: 6.5, requests: 520 },
-      { model: 'Claude-3.5', cost: 5.2, requests: 480 },
-      { model: 'Gemini Pro', cost: 3.8, requests: 420 },
-      { model: 'Llama-3', cost: 2.1, requests: 280 },
-      { model: 'GPT-4', cost: 0.9, requests: 150 },
-    ],
-    trendData: {
-      dates: ['02-26'],
-      requests: [1850],
-      tokens: [680000],
-      cost: [18.5],
-    },
-    tokenTrendData: {
-      dates: ['02-26'],
-      inputTokens: [420000],
-      outputTokens: [260000],
-    },
-  },
-  '7d': {
-    summary: { totalRequests: 12580, totalTokens: 4567280, totalCost: 128.45, avgLatency: 1.2 },
-    modelData: [
-      { model: 'Claude-3.5', cost: 45.8, requests: 3200 },
-      { model: 'GPT-4o', cost: 38.2, requests: 2800 },
-      { model: 'Gemini Pro', cost: 22.4, requests: 2400 },
-      { model: 'Llama-3', cost: 14.2, requests: 1800 },
-      { model: 'GPT-4', cost: 7.85, requests: 980 },
-    ],
-    trendData: {
-      dates: ['02-20', '02-21', '02-22', '02-23', '02-24', '02-25', '02-26'],
-      requests: [1200, 1350, 1280, 1450, 1320, 1580, 1250],
-      tokens: [450000, 520000, 480000, 550000, 490000, 620000, 510000],
-      cost: [12.5, 14.2, 13.8, 15.5, 14.0, 17.2, 15.0],
-    },
-    tokenTrendData: {
-      dates: ['02-20', '02-21', '02-22', '02-23', '02-24', '02-25', '02-26'],
-      inputTokens: [180000, 210000, 195000, 220000, 200000, 250000, 210000],
-      outputTokens: [120000, 150000, 135000, 170000, 140000, 190000, 150000],
-    },
-  },
-  '30d': {
-    summary: { totalRequests: 52800, totalTokens: 19200000, totalCost: 542.30, avgLatency: 1.3 },
-    modelData: [
-      { model: 'GPT-4o', cost: 185.5, requests: 12500 },
-      { model: 'Claude-3.5', cost: 168.2, requests: 11200 },
-      { model: 'Gemini Pro', cost: 98.6, requests: 9800 },
-      { model: 'Llama-3', cost: 62.8, requests: 7200 },
-      { model: 'GPT-4', cost: 27.2, requests: 2100 },
-    ],
-    trendData: {
-      dates: Array.from({ length: 30 }, (_, i) => `02-${String(i + 1).padStart(2, '0')}`).filter(d => d <= '02-26'),
-      requests: Array.from({ length: 22 }, () => Math.floor(1000 + Math.random() * 800)),
-      tokens: Array.from({ length: 22 }, () => Math.floor(400000 + Math.random() * 300000)),
-      cost: Array.from({ length: 22 }, () => Math.floor(10 + Math.random() * 10) + Math.random()),
-    },
-    tokenTrendData: {
-      dates: Array.from({ length: 22 }, (_, i) => `02-${String(i + 1).padStart(2, '0')}`).filter(d => d <= '02-26'),
-      inputTokens: Array.from({ length: 22 }, () => Math.floor(150000 + Math.random() * 150000)),
-      outputTokens: Array.from({ length: 22 }, () => Math.floor(100000 + Math.random() * 100000)),
-    },
-  },
-  '90d': {
-    summary: { totalRequests: 158400, totalTokens: 57600000, totalCost: 1628.50, avgLatency: 1.4 },
-    modelData: [
-      { model: 'Claude-3.5', cost: 585.2, requests: 38500 },
-      { model: 'GPT-4o', cost: 512.8, requests: 34200 },
-      { model: 'Gemini Pro', cost: 285.5, requests: 25800 },
-      { model: 'Llama-3', cost: 178.6, requests: 19200 },
-      { model: 'GPT-4', cost: 66.4, requests: 6700 },
-    ],
-    trendData: {
-      dates: Array.from({ length: 90 }, (_, i) => {
-        const d = new Date(2026, 1, 1)
-        d.setDate(d.getDate() - 89 + i)
-        return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-      }).filter((_, i) => i < 88),
-      requests: Array.from({ length: 88 }, () => Math.floor(1200 + Math.random() * 1000)),
-      tokens: Array.from({ length: 88 }, () => Math.floor(450000 + Math.random() * 350000)),
-      cost: Array.from({ length: 88 }, () => Math.floor(12 + Math.random() * 12) + Math.random()),
-    },
-    tokenTrendData: {
-      dates: Array.from({ length: 88 }, (_, i) => {
-        const d = new Date(2026, 1, 1)
-        d.setDate(d.getDate() - 89 + i)
-        return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-      }),
-      inputTokens: Array.from({ length: 88 }, () => Math.floor(180000 + Math.random() * 180000)),
-      outputTokens: Array.from({ length: 88 }, () => Math.floor(120000 + Math.random() * 120000)),
-    },
-  },
+function EmptyPanel(props: { title: string; description: string; compact?: boolean }) {
+  return (
+    <div className="rounded-3xl border border-dashed border-gray-200 bg-[linear-gradient(180deg,#fafaf9_0%,#ffffff_100%)] p-6">
+      <div className="flex h-full min-h-[260px] flex-col justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-900">{props.title}</p>
+          <p className="mt-2 max-w-md text-sm leading-6 text-gray-500">{props.description}</p>
+        </div>
+        <div className={`grid gap-3 ${props.compact ? 'grid-cols-2' : 'grid-cols-3'}`}>
+          {Array.from({ length: props.compact ? 4 : 6 }).map((_, index) => (
+            <div key={index} className="overflow-hidden rounded-2xl bg-white/80 p-3 ring-1 ring-inset ring-gray-100">
+              <div className="h-2 w-16 rounded-full bg-gray-100"></div>
+              <div className="mt-3 h-14 rounded-2xl bg-[linear-gradient(90deg,#f3f4f6_0%,#fafafa_50%,#f3f4f6_100%)]"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function UsageRecordPage() {
-  const { t } = useTranslation('console.usage')
-  const [timeRange, setTimeRange] = useState('7d')
-  const [referenceModel, setReferenceModel] = useState('claude-3.5')
+  const [timeRange, setTimeRange] = useState<UsageRange>('7d')
+  const [referenceModelId, setReferenceModelId] = useState('claude-sonnet-4.6')
+  const { events, isLoading, isError, mutate } = useRouterUsageEvents({ limit: 200, maxPages: 10 })
+  const { summary } = useRouterUsageSummary()
 
-  // 根据时间范围获取数据
-  const currentData = timeRangeData[timeRange as keyof typeof timeRangeData] || timeRangeData['7d']
-  const { summary, modelData, trendData, tokenTrendData } = currentData
+  const dashboard = useMemo(
+    () =>
+      createUsageDashboardViewModel({
+        events,
+        summary,
+        referenceModelId,
+        range: timeRange,
+      }),
+    [events, summary, referenceModelId, timeRange]
+  )
+  const recentEvents = useMemo(
+    () =>
+      [...filterUsageEventsByRange(events, timeRange)].sort(
+        (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+      ),
+    [events, timeRange]
+  )
 
-  // 模型调用次数排行数据（按调用次数排序）
-  const sortedByRequests = [...modelData].sort((a, b) => b.requests - a.requests)
+  const topModel = dashboard.modelStats[0]
+  const comparisonTone = dashboard.comparison.isSaving
+    ? 'text-emerald-600 bg-emerald-50 ring-emerald-100'
+    : 'text-amber-700 bg-amber-50 ring-amber-100'
+  const comparisonTitle = dashboard.comparison.isSaving ? '预计节省' : '预计溢价'
+  const comparisonDescription = dashboard.hasEvents
+    ? `与 ${dashboard.comparison.referenceModelName} 作为统一参考模型相比，当前 Router 组合更具成本优势。`
+    : '当前时间范围内暂无真实调用记录，图表区域会保留结构化占位。'
 
-  // 模型费用排行数据（按费用排序）
-  const sortedByCost = [...modelData].sort((a, b) => b.cost - a.cost)
-
-  // 模型调用次数排行图表配置
-  const modelRequestsRankingOption = useMemo(() => ({
-    echarts,
-    title: {
-      text: t('modelRanking'),
-      textStyle: {
-        fontSize: 14,
-        fontWeight: 400,
-        color: '#181E25',
-      },
-      left: 0,
-      top: 0,
-    },
+  const modelRequestsOption = {
+    color: MODEL_COLORS,
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
-      formatter: (params: EChartsTooltipParams[]) => {
-        const data = params[0]
-        return `${data.name}<br/>${t('callCount')}: ${data.value.toLocaleString()}`
-      },
     },
-    grid: {
-      left: '3%',
-      right: '15%',
-      bottom: '3%',
-      top: '20%',
-      containLabel: true,
-    },
+    grid: { left: '3%', right: '6%', top: '8%', bottom: '3%', containLabel: true },
     xAxis: {
       type: 'value',
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: {
-        color: '#9CA3AF',
-        fontSize: 12,
-      },
-      splitLine: {
-        lineStyle: { color: '#F3F4F6' },
-      },
+      splitLine: { lineStyle: { color: '#f1f5f9' } },
     },
     yAxis: {
       type: 'category',
-      data: sortedByRequests.map(d => d.model),
+      data: dashboard.modelStats.map((item) => item.model),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: {
-        color: '#5F5F5F',
-        fontSize: 12,
-      },
     },
     series: [
       {
-        name: t('callCount'),
         type: 'bar',
-        data: sortedByRequests.map(d => ({
-          value: d.requests,
+        barWidth: 16,
+        data: dashboard.modelStats.map((item, index) => ({
+          value: item.requests,
           itemStyle: {
-            color: MODEL_COLORS[d.model] || '#94A3B8',
-            borderRadius: [0, 4, 4, 0],
+            color: MODEL_COLORS[index % MODEL_COLORS.length],
+            borderRadius: [0, 6, 6, 0],
           },
         })),
-        barWidth: 16,
-        label: {
-          show: true,
-          position: 'right',
-          formatter: (params: EChartsTooltipParams) => params.value.toLocaleString(),
-          color: '#9CA3AF',
-          fontSize: 12,
-        },
       },
     ],
-  }), [sortedByRequests, t])
+  }
 
-  // 模型费用占比图表配置
-  const modelCostShareOption = useMemo(() => ({
-    echarts,
-    title: {
-      text: t('costShare'),
-      textStyle: {
-        fontSize: 14,
-        fontWeight: 400,
-        color: '#181E25',
-      },
-      left: 0,
-      top: 0,
-    },
+  const modelCostShareOption = {
+    color: MODEL_COLORS,
     tooltip: {
       trigger: 'item',
-      formatter: '{b}: ${c} ({d}%)',
+      formatter: (params: { name: string; value: number; percent: number }) =>
+        `${params.name}<br/>${formatCurrency(params.value, dashboard.currency)} (${params.percent}%)`,
     },
     legend: {
       orient: 'vertical',
-      right: '5%',
+      right: 0,
       top: 'center',
-      textStyle: {
-        color: '#5F5F5F',
-        fontSize: 12,
-      },
-      itemWidth: 12,
-      itemHeight: 12,
+      textStyle: { color: '#64748b' },
     },
     series: [
       {
-        name: t('costShare'),
         type: 'pie',
-        radius: ['45%', '70%'],
+        radius: ['48%', '72%'],
         center: ['35%', '50%'],
-        avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 4,
-          borderColor: '#fff',
-          borderWidth: 2,
-        },
         label: { show: false },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: 14,
-            fontWeight: 'bold',
-          },
-        },
-        labelLine: { show: false },
-        data: sortedByCost.map((d) => ({
-          value: d.cost,
-          name: d.model,
-          itemStyle: {
-            color: MODEL_COLORS[d.model] || '#94A3B8',
-            borderRadius: 4,
-            borderColor: '#fff',
-            borderWidth: 2,
-          },
+        data: dashboard.modelStats.map((item, index) => ({
+          value: Number(item.totalCost.toFixed(6)),
+          name: item.model,
+          itemStyle: { color: MODEL_COLORS[index % MODEL_COLORS.length] },
         })),
       },
     ],
-  }), [sortedByCost, t])
+  }
 
-  // 调用趋势图表配置
-  const trendOption = useMemo(() => ({
-    echarts,
-    title: {
-      text: t('trend'),
-      textStyle: {
-        fontSize: 14,
-        fontWeight: 400,
-        color: '#181E25',
-      },
-      left: 0,
-      top: 0,
-    },
+  const trendOption = {
+    color: ['#0f172a', '#f97316'],
     tooltip: { trigger: 'axis' },
-    legend: {
-      data: [t('requests'), t('tokens'), t('cost')],
-      right: 0,
-      top: 0,
-      textStyle: { color: '#9CA3AF', fontSize: 12 },
-      itemWidth: 12,
-      itemHeight: 12,
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      top: '25%',
-      containLabel: true,
-    },
+    legend: { data: ['请求数', '费用'], top: 0, right: 0 },
+    grid: { left: '3%', right: '4%', top: '18%', bottom: '3%', containLabel: true },
     xAxis: {
       type: 'category',
-      boundaryGap: false,
-      data: trendData.dates,
+      data: dashboard.dailyTrend.map((item) => item.date),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: '#9CA3AF', fontSize: 12 },
     },
     yAxis: [
       {
         type: 'value',
-        name: t('requests'),
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: '#9CA3AF', fontSize: 12 },
-        splitLine: { lineStyle: { color: '#F3F4F6' } },
+        splitLine: { lineStyle: { color: '#f1f5f9' } },
       },
       {
         type: 'value',
-        name: t('cost'),
         axisLine: { show: false },
         axisTick: { show: false },
-        axisLabel: { color: '#9CA3AF', fontSize: 12, formatter: '${value}' },
         splitLine: { show: false },
       },
     ],
     series: [
       {
-        name: t('requests'),
+        name: '请求数',
         type: 'line',
         smooth: true,
-        data: trendData.requests,
-        itemStyle: { color: '#f97316' },
+        data: dashboard.dailyTrend.map((item) => item.requests),
         areaStyle: {
           color: {
-            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(249, 115, 22, 0.2)' },
-              { offset: 1, color: 'rgba(249, 115, 22, 0)' },
+              { offset: 0, color: 'rgba(15,23,42,0.18)' },
+              { offset: 1, color: 'rgba(15,23,42,0)' },
             ],
           },
         },
       },
       {
-        name: t('tokens'),
+        name: '费用',
         type: 'line',
         smooth: true,
-        data: trendData.tokens,
-        itemStyle: { color: '#8B5CF6' },
-      },
-      {
-        name: t('cost'),
-        type: 'line',
         yAxisIndex: 1,
-        smooth: true,
-        data: trendData.cost,
-        itemStyle: { color: '#10B981' },
+        data: dashboard.dailyTrend.map((item) => Number(item.totalCost.toFixed(6))),
       },
     ],
-  }), [trendData, t])
+  }
 
-  // Token 消耗趋势图表配置
-  const tokenTrendOption = useMemo(() => ({
-    echarts,
-    title: {
-      text: t('tokenTrend'),
-      textStyle: {
-        fontSize: 14,
-        fontWeight: 400,
-        color: '#181E25',
-      },
-      left: 0,
-      top: 0,
-    },
+  const tokenTrendOption = {
+    color: ['#8b5cf6', '#10b981'],
     tooltip: { trigger: 'axis' },
-    legend: {
-      data: [t('inputTokens'), t('outputTokens')],
-      right: 0,
-      top: 0,
-      textStyle: { color: '#9CA3AF', fontSize: 12 },
-      itemWidth: 12,
-      itemHeight: 12,
-    },
-    grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      top: '25%',
-      containLabel: true,
-    },
+    legend: { data: ['输入 Tokens', '输出 Tokens'], top: 0, right: 0 },
+    grid: { left: '3%', right: '4%', top: '18%', bottom: '3%', containLabel: true },
     xAxis: {
       type: 'category',
-      boundaryGap: false,
-      data: tokenTrendData.dates,
+      data: dashboard.dailyTrend.map((item) => item.date),
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: { color: '#9CA3AF', fontSize: 12 },
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
       axisTick: { show: false },
-      axisLabel: {
-        color: '#9CA3AF',
-        fontSize: 12,
-        formatter: (value: number) => (value / 1000).toFixed(0) + 'k',
-      },
-      splitLine: { lineStyle: { color: '#F3F4F6' } },
+      splitLine: { lineStyle: { color: '#f1f5f9' } },
     },
     series: [
       {
-        name: t('inputTokens'),
+        name: '输入 Tokens',
         type: 'line',
         smooth: true,
-        stack: 'Total',
-        data: tokenTrendData.inputTokens,
-        itemStyle: { color: '#8B5CF6' },
+        stack: 'tokens',
+        data: dashboard.dailyTrend.map((item) => item.promptTokens),
         areaStyle: {
           color: {
-            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(139, 92, 246, 0.3)' },
-              { offset: 1, color: 'rgba(139, 92, 246, 0.05)' },
+              { offset: 0, color: 'rgba(139,92,246,0.28)' },
+              { offset: 1, color: 'rgba(139,92,246,0.05)' },
             ],
           },
         },
       },
       {
-        name: t('outputTokens'),
+        name: '输出 Tokens',
         type: 'line',
         smooth: true,
-        stack: 'Total',
-        data: tokenTrendData.outputTokens,
-        itemStyle: { color: '#10B981' },
+        stack: 'tokens',
+        data: dashboard.dailyTrend.map((item) => item.completionTokens),
         areaStyle: {
           color: {
-            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
             colorStops: [
-              { offset: 0, color: 'rgba(16, 185, 129, 0.3)' },
-              { offset: 1, color: 'rgba(16, 185, 129, 0.05)' },
+              { offset: 0, color: 'rgba(16,185,129,0.28)' },
+              { offset: 1, color: 'rgba(16,185,129,0.05)' },
             ],
           },
         },
       },
     ],
-  }), [tokenTrendData, t])
-
-  const formatNumber = (num: number): string => {
-    return new Intl.NumberFormat('zh-CN').format(num)
   }
 
-  // 计算相对于参考模型的节省成本
-  const savingsData = useMemo(() => {
-    const multipliers = COST_MULTIPLIERS[referenceModel] || COST_MULTIPLIERS['claude-3.5']
-
-    // 计算如果全部使用参考模型的成本
-    let theoreticalCost = 0
-    modelData.forEach((model) => {
-      const multiplier = multipliers[model.model] || 1
-      theoreticalCost += model.cost * multiplier
-    })
-
-    const savedAmount = theoreticalCost - summary.totalCost
-    const savingsPercentage = theoreticalCost > 0
-      ? ((savedAmount / theoreticalCost) * 100)
-      : 0
-
-    return {
-      actualCost: summary.totalCost,
-      theoreticalCost: theoreticalCost,
-      savedAmount: savedAmount,
-      savingsPercentage: savingsPercentage,
-      referenceModelName: REFERENCE_MODELS.find(m => m.id === referenceModel)?.name || 'Claude-3.5',
-    }
-  }, [modelData, summary.totalCost, referenceModel])
-
-  return (
-    <div style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-normal text-gray-900">{t('title')}</h2>
-          <p className="text-sm text-gray-500 mt-1">{t('subtitle')}</p>
-        </div>
-        <div className="flex items-center space-x-2">
-          {['24h', '7d', '30d', '90d'].map((range) => (
-            <button
-              key={range}
-              onClick={() => setTimeRange(range)}
-              className={`px-3 py-1.5 text-sm font-normal rounded-lg transition-colors ${
-                timeRange === range
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {range}
-            </button>
+  if (isLoading) {
+    return (
+      <div className="space-y-4" style={{ fontFamily: 'MiSans, sans-serif' }}>
+        <div className="h-40 animate-pulse rounded-[28px] bg-gray-100"></div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="h-28 animate-pulse rounded-3xl bg-gray-100"></div>
           ))}
         </div>
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <div className="h-80 animate-pulse rounded-3xl bg-gray-100"></div>
+          <div className="h-80 animate-pulse rounded-3xl bg-gray-100"></div>
+        </div>
       </div>
+    )
+  }
 
-      {/* 成本节省面板 */}
-      <div className={`mb-6 p-6 rounded-xl border transition-all duration-300 ${
-        savingsData.savedAmount >= 0
-          ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-100'
-          : 'bg-gradient-to-r from-red-50 to-orange-50 border-red-100'
-      }`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className={`w-14 h-14 rounded-xl flex items-center justify-center shadow-sm ${
-              savingsData.savedAmount >= 0 ? 'bg-green-500' : 'bg-red-500'
-            }`}>
-              {savingsData.savedAmount >= 0 ? (
-                <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              ) : (
-                <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-              )}
+  if (isError) {
+    return (
+      <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-600" style={{ fontFamily: 'MiSans, sans-serif' }}>
+        用量数据加载失败。
+        <button onClick={() => mutate()} className="ml-2 font-medium text-red-700 hover:text-red-900">
+          重试
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
+      <section className="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.18),_transparent_32%),linear-gradient(145deg,#0f172a_0%,#111827_45%,#1f2937_100%)] text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.75)]">
+        <div className="grid gap-8 px-6 py-7 lg:grid-cols-[1.6fr_1fr] lg:px-8">
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="rounded-full bg-white/12 px-3 py-1 text-xs tracking-[0.24em] text-white/80">ROUTER USAGE</span>
+              <span className={`rounded-full px-3 py-1 text-xs ring-1 ${comparisonTone}`}>
+                {comparisonTitle} {formatCurrency(Math.abs(dashboard.comparison.savedAmount), dashboard.currency)}
+              </span>
             </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900">{t('costComparison')}</h3>
-              <div className="flex items-center mt-1">
-                <span className="text-sm text-gray-500">{t('compareModel')}</span>
-                <div className="relative ml-2">
-                  <select
-                    value={referenceModel}
-                    onChange={(e) => setReferenceModel(e.target.value)}
-                    className="appearance-none bg-white border border-gray-200 text-gray-700 py-1.5 pl-3 pr-8 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 cursor-pointer"
+            <h2 className="mt-5 text-3xl tracking-tight text-white">真实 Router 用量仪表盘</h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
+              {comparisonDescription}
+            </p>
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">当前费用</p>
+                <p className="mt-3 text-2xl text-white">{formatCurrency(dashboard.comparison.actualCost, dashboard.currency)}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">参考费用</p>
+                <p className="mt-3 text-2xl text-white">
+                  {formatCurrency(dashboard.comparison.theoreticalCost, dashboard.currency)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">成功率</p>
+                <p className="mt-3 text-2xl text-white">{dashboard.successRate.toFixed(1)}%</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-white/10 bg-white/[0.08] p-5 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-300">参考模型对比</p>
+                <p className="mt-1 text-xs text-slate-400">用于估算统一落在单一参考模型时的理论费用。</p>
+              </div>
+            </div>
+            <div className="mt-5 space-y-2">
+              {USAGE_REFERENCE_MODELS.map((model) => {
+                const active = model.id === referenceModelId
+                return (
+                  <button
+                    key={model.id}
+                    onClick={() => setReferenceModelId(model.id)}
+                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
+                      active
+                        ? 'border-white/20 bg-white text-slate-900'
+                        : 'border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.10]'
+                    }`}
                   >
-                    {REFERENCE_MODELS.map((model) => (
-                      <option key={model.id} value={model.id}>
-                        {model.name}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: model.color }}></span>
+                      <span className="text-sm font-medium">{model.name}</span>
+                    </div>
+                    <span className={`text-xs ${active ? 'text-slate-500' : 'text-slate-400'}`}>
+                      {active ? '当前参考' : '切换'}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/[0.15] p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">范围</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {RANGES.map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setTimeRange(range)}
+                    className={`rounded-full px-3 py-1.5 text-sm transition ${
+                      timeRange === range ? 'bg-white text-slate-950' : 'bg-white/[0.08] text-slate-200 hover:bg-white/[0.14]'
+                    }`}
+                  >
+                    {range}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="flex items-center space-x-8">
-            <div className="text-right">
-              <p className={`text-3xl font-semibold ${savingsData.savedAmount >= 0 ? 'text-green-600' : 'text-red-500'}`}>
-                ${Math.abs(savingsData.savedAmount).toFixed(2)}
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <MetricCard
+          label="总请求数"
+          value={formatCompactNumber(dashboard.aggregate.totalRequests)}
+          hint={`${timeRange} 内累计请求`}
+        />
+        <MetricCard
+          label="总 Tokens"
+          value={formatCompactNumber(dashboard.aggregate.totalTokens)}
+          hint={`${formatCompactNumber(dashboard.aggregate.promptTokens)} 输入 / ${formatCompactNumber(dashboard.aggregate.completionTokens)} 输出`}
+        />
+        <MetricCard
+          label="总费用"
+          value={formatCurrency(dashboard.aggregate.totalCost, dashboard.currency)}
+          hint="按后端实时计费结果聚合"
+        />
+        <MetricCard
+          label="节省比例"
+          value={`${Math.abs(dashboard.comparison.savingsPercentage).toFixed(1)}%`}
+          hint={dashboard.comparison.isSaving ? '相对参考模型的成本优势' : '当前策略高于参考模型'}
+          accent={dashboard.comparison.isSaving ? '#059669' : '#b45309'}
+        />
+        <MetricCard
+          label="主力模型"
+          value={topModel?.model ?? '-'}
+          hint={topModel ? `${formatCompactNumber(topModel.requests)} 次请求 / ${formatCurrency(topModel.totalCost, dashboard.currency)}` : '等待调用记录'}
+        />
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <div className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-gray-900">成本对比总览</p>
+              <p className="mt-1 text-sm text-gray-500">基于真实 usage events 聚合，并按参考模型估算对比。</p>
+            </div>
+            <span className={`rounded-full px-3 py-1 text-xs ring-1 ${comparisonTone}`}>
+              {dashboard.comparison.isSaving ? '成本更低' : '成本更高'}
+            </span>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl bg-slate-950 p-5 text-white">
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Router 当前</p>
+              <p className="mt-3 text-3xl">{formatCurrency(dashboard.comparison.actualCost, dashboard.currency)}</p>
+              <p className="mt-2 text-xs text-slate-400">来自 {timeRange} 内真实成功与失败请求。</p>
+            </div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-gray-400">参考模型</p>
+              <p className="mt-3 text-3xl text-gray-950">{formatCurrency(dashboard.comparison.theoreticalCost, dashboard.currency)}</p>
+              <p className="mt-2 text-xs text-gray-500">以 {dashboard.comparison.referenceModelName} 统一承载的理论值。</p>
+            </div>
+            <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-5">
+              <p className="text-xs uppercase tracking-[0.24em] text-gray-400">差额</p>
+              <p className={`mt-3 text-3xl ${dashboard.comparison.isSaving ? 'text-emerald-600' : 'text-amber-700'}`}>
+                {dashboard.comparison.isSaving ? '-' : '+'}
+                {formatCurrency(Math.abs(dashboard.comparison.savedAmount), dashboard.currency)}
               </p>
-              <p className={`text-sm mt-1 ${savingsData.savedAmount >= 0 ? 'text-green-500' : 'text-red-400'}`}>
-                {savingsData.savedAmount >= 0 ? t('saved') : t('premium')} {Math.abs(savingsData.savingsPercentage).toFixed(1)}%
-              </p>
-            </div>
-
-            <div className={`h-12 w-px ${savingsData.savedAmount >= 0 ? 'bg-green-200' : 'bg-red-200'}`}></div>
-
-            <div className="text-right">
-              <div className="flex items-center space-x-4 text-sm">
-                <div>
-                  <span className="text-gray-400">{t('currentSpend')}</span>
-                  <p className="text-lg font-medium text-gray-700">${savingsData.actualCost.toFixed(2)}</p>
-                </div>
-                <div className="text-gray-300">
-                  {savingsData.savedAmount >= 0 ? '↓' : '↑'}
-                </div>
-                <div>
-                  <span className="text-gray-400">{t('referencePlan')}</span>
-                  <p className={`text-lg font-medium ${savingsData.savedAmount >= 0 ? 'text-gray-400 line-through' : 'text-red-500'}`}>
-                    ${savingsData.theoreticalCost.toFixed(2)}
-                  </p>
-                </div>
-              </div>
+              <p className="mt-2 text-xs text-gray-500">用于观察智能路由在成本上的整体收益。</p>
             </div>
           </div>
         </div>
 
-        {/* 进度条展示节省比例 */}
-        <div className="mt-4">
-          <div className="flex justify-between text-xs text-gray-500 mb-1.5">
-            <span>{t('currentSpend')}</span>
-            <span>{t('referencePlan')}</span>
-          </div>
-          <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-            {savingsData.savedAmount >= 0 ? (
-              <div
-                className="h-full bg-gradient-to-r from-green-400 to-green-500 rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(95, (savingsData.actualCost / savingsData.theoreticalCost) * 100)}%` }}
-              ></div>
-            ) : (
-              <div className="flex h-full">
-                <div
-                  className="h-full bg-gradient-to-r from-red-400 to-red-500 rounded-l-full transition-all duration-500"
-                  style={{ width: `${Math.min(95, (savingsData.theoreticalCost / savingsData.actualCost) * 100)}%` }}
-                ></div>
-              </div>
-            )}
-          </div>
-          <div className="flex justify-between text-xs text-gray-400 mt-1.5">
-            <span>{t('mixedPlan')}</span>
-            <span>{t('referencePlan')}</span>
+        <div className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+          <p className="text-sm font-medium text-gray-900">观测重点</p>
+          <div className="mt-5 space-y-4">
+            <div className="rounded-2xl bg-gray-50 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">最近窗口</p>
+              <p className="mt-2 text-lg text-gray-900">{timeRange}</p>
+              <p className="mt-2 text-sm text-gray-500">当前页面所有统计和图表都基于选中的时间范围重新聚合。</p>
+            </div>
+            <div className="rounded-2xl bg-gray-50 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">模型覆盖</p>
+              <p className="mt-2 text-lg text-gray-900">{dashboard.modelStats.length || 0} 个模型</p>
+              <p className="mt-2 text-sm text-gray-500">会把不同厂商的同族模型名称标准化后再参与排行与成本测算。</p>
+            </div>
+            <div className="rounded-2xl bg-gray-50 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">数据状态</p>
+              <p className="mt-2 text-lg text-gray-900">{dashboard.hasEvents ? '已有真实调用' : '暂无窗口数据'}</p>
+              <p className="mt-2 text-sm text-gray-500">即使没有记录，也会保留完整面板结构，方便继续联调与截图验收。</p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 统计卡片 */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="p-4 bg-white border border-gray-100 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-500">{t('totalRequests')}</span>
-            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="rounded-[30px] border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+          <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">模型请求排行</div>
+          {dashboard.hasEvents ? (
+            <ReactECharts option={modelRequestsOption} style={{ height: '320px' }} />
+          ) : (
+            <EmptyPanel title="模型请求排行" description="接入真实请求后，这里会展示不同模型的调用次数分布。" compact />
+          )}
+        </div>
+        <div className="rounded-[30px] border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+          <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">模型费用占比</div>
+          {dashboard.hasEvents ? (
+            <ReactECharts option={modelCostShareOption} style={{ height: '320px' }} />
+          ) : (
+            <EmptyPanel title="模型费用占比" description="当 Router 写入真实账单后，这里会呈现费用结构，帮助判断高成本模型来源。" compact />
+          )}
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <div className="rounded-[30px] border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+          <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">请求与费用趋势</div>
+          {dashboard.hasEvents ? (
+            <ReactECharts option={trendOption} style={{ height: '320px' }} />
+          ) : (
+            <EmptyPanel title="请求与费用趋势" description="趋势图会在有真实 usage events 后按天聚合请求量与费用。" />
+          )}
+        </div>
+        <div className="rounded-[30px] border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+          <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">Token 趋势</div>
+          {dashboard.hasEvents ? (
+            <ReactECharts option={tokenTrendOption} style={{ height: '320px' }} />
+          ) : (
+            <EmptyPanel title="Token 趋势" description="这里会拆分输入与输出 token 的变化，用于识别上下文长度和输出长度的波动。" />
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h3 className="text-lg text-gray-900">最近请求</h3>
+            <p className="mt-1 text-sm text-gray-500">保留最近 20 条明细，便于核对模型、厂商、费用和状态码。</p>
           </div>
-          <p className="text-2xl font-normal text-gray-900">{formatNumber(summary.totalRequests)}</p>
-          <p className="text-xs text-green-600 mt-1">+12.5% {t('vsYesterday')}</p>
+          <span className="text-sm text-gray-400">{dashboard.hasEvents ? `${Math.min(recentEvents.length, 20)} 条可见` : '等待真实记录'}</span>
         </div>
-
-        <div className="p-4 bg-white border border-gray-100 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-500">{t('totalTokens')}</span>
-            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+        {dashboard.hasEvents ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-gray-400">
+                  <th className="px-3 py-3 font-normal">时间</th>
+                  <th className="px-3 py-3 font-normal">模型</th>
+                  <th className="px-3 py-3 font-normal">厂商</th>
+                  <th className="px-3 py-3 font-normal">Tokens</th>
+                  <th className="px-3 py-3 font-normal">费用</th>
+                  <th className="px-3 py-3 font-normal">状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentEvents
+                  .slice(0, 20)
+                  .map((event) => (
+                    <tr key={event.id} className="border-b border-gray-50 text-gray-700">
+                      <td className="px-3 py-3">{formatDateTime(event.created_at)}</td>
+                      <td className="px-3 py-3">{event.resolved_model || event.requested_model}</td>
+                      <td className="px-3 py-3">{event.provider_slug || '-'}</td>
+                      <td className="px-3 py-3">{formatCompactNumber(event.total_tokens)}</td>
+                      <td className="px-3 py-3">{formatCurrency(event.cost_total, event.currency || dashboard.currency)}</td>
+                      <td className="px-3 py-3">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-xs ${
+                            event.status_code >= 200 && event.status_code < 300
+                              ? 'bg-green-50 text-green-700'
+                              : 'bg-red-50 text-red-600'
+                          }`}
+                        >
+                          {event.status_code}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
           </div>
-          <p className="text-2xl font-normal text-gray-900">{formatNumber(summary.totalTokens)}</p>
-          <p className="text-xs text-green-600 mt-1">+8.3% {t('vsYesterday')}</p>
-        </div>
-
-        <div className="p-4 bg-white border border-gray-100 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-500">{t('totalCost')}</span>
-            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+        ) : (
+          <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-14 text-center">
+            <p className="text-base text-gray-900">当前范围内还没有可展示的真实请求</p>
+            <p className="mt-2 text-sm text-gray-500">
+              完成一次 Router 调用后，这里会自动显示模型、厂商、token 和账单结果。
+            </p>
           </div>
-          <p className="text-2xl font-normal text-gray-900">${summary.totalCost.toFixed(2)}</p>
-          <p className="text-xs text-green-600 mt-1">+5.2% {t('vsYesterday')}</p>
-        </div>
-
-        <div className="p-4 bg-white border border-gray-100 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-500">{t('avgLatency')}</span>
-            <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <p className="text-2xl font-normal text-gray-900">{summary.avgLatency}s</p>
-          <p className="text-xs text-gray-500 mt-1">{t('responseTime')}</p>
-        </div>
-      </div>
-
-      {/* 图表区域 */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        {/* 模型调用次数排行 */}
-        <div className="p-4 bg-white border border-gray-100 rounded-lg">
-          <ReactECharts option={modelRequestsRankingOption} style={{ height: '280px' }} />
-        </div>
-
-        {/* 模型费用占比 */}
-        <div className="p-4 bg-white border border-gray-100 rounded-lg">
-          <ReactECharts option={modelCostShareOption} style={{ height: '280px' }} />
-        </div>
-      </div>
-
-      {/* 调用趋势 */}
-      <div className="p-4 bg-white border border-gray-100 rounded-lg mb-6">
-        <ReactECharts option={trendOption} style={{ height: '300px' }} />
-      </div>
-
-      {/* Token 消耗趋势 */}
-      <div className="p-4 bg-white border border-gray-100 rounded-lg">
-        <ReactECharts option={tokenTrendOption} style={{ height: '280px' }} />
-      </div>
+        )}
+      </section>
     </div>
   )
 }

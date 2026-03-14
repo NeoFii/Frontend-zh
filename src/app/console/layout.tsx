@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import ConsoleHeader from '@/components/console/ConsoleHeader'
 import ConsoleSidebar from '@/components/console/ConsoleSidebar'
+import { useUser } from '@/hooks/useUser'
 import { useAuthStore } from '@/stores/auth'
 
 // 统一的菜单路径映射常量
@@ -38,23 +39,20 @@ export default function ConsoleLayout({
   const router = useRouter()
   const pathname = usePathname()
   // 使用选择器精确订阅
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
-  const hydrated = useAuthStore(state => state.hydrated)
-  const [loading, setLoading] = useState(true)
+  const sessionStatus = useAuthStore((state) => state.sessionStatus)
+  const isHydrated = useAuthStore((state) => state.isHydrated)
+  const { isError, mutate } = useUser({ enabled: true, restoreSession: true })
 
   // 等待状态从 localStorage 恢复完成
   useEffect(() => {
-    if (!hydrated) {
+    if (!isHydrated) {
       return
     }
 
-    if (!isAuthenticated) {
+    if (sessionStatus === 'anonymous') {
       router.push('/login')
-      return
     }
-
-    setLoading(false)
-  }, [isAuthenticated, hydrated, router])
+  }, [isHydrated, router, sessionStatus])
 
   // 根据当前路径确定活动菜单
   const getActiveMenuFromPath = (path: string): string => {
@@ -78,12 +76,31 @@ export default function ConsoleLayout({
     }
   }
 
-  if (loading) {
+  if (isError && sessionStatus !== 'authenticated') {
     return (
       <div className="min-h-screen bg-gray-50">
         <ConsoleHeader />
         <ConsoleSidebar activeMenu="basic-information" onMenuChange={() => {}} />
-        <main className="ml-64 pt-16 min-h-screen">
+        <main className="ml-72 pt-16 min-h-screen">
+          <div className="w-full p-8">
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+              当前会话校验失败。
+              <button onClick={() => mutate()} className="ml-2 font-medium text-red-700 hover:text-red-900">
+                重试
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <ConsoleHeader />
+        <ConsoleSidebar activeMenu="basic-information" onMenuChange={() => {}} />
+        <main className="ml-72 pt-16 min-h-screen">
           <div className="w-full p-8">
             {/* 骨架屏效果，减少感知延迟 */}
             <div className="animate-pulse">
@@ -104,7 +121,7 @@ export default function ConsoleLayout({
     <div className="min-h-screen bg-gray-50">
       <ConsoleHeader />
       <ConsoleSidebar activeMenu={activeMenu} onMenuChange={handleMenuChange} />
-      <main className="ml-64 pt-16 min-h-screen">
+      <main className="ml-72 pt-16 min-h-screen">
         <div className="w-full p-8">
           {children}
         </div>

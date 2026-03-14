@@ -1,15 +1,16 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const protectedPaths = ['/console']
-const AUTH_COOKIE_NAME = 'access_token'
+const ACCESS_COOKIE_NAME = 'access_token'
+const REFRESH_COOKIE_NAME = 'refresh_token'
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // 跳过静态资源和 API 路由
   if (
     pathname.startsWith('/api') ||
+    pathname.startsWith('/router-api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
     pathname.includes('.')
@@ -17,19 +18,13 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 移除路径中的 locale 前缀（如果存在）
   const pathnameWithoutLocale = pathname.replace(/^\/(zh|en)/, '') || '/'
-  const isProtectedPath = protectedPaths.some((p) => pathnameWithoutLocale.startsWith(p))
-  const authCookie = request.cookies.get(AUTH_COOKIE_NAME)
-  const hasValidAuthCookie = authCookie && authCookie.value.trim().length > 0
+  const isProtectedPath = protectedPaths.some((item) => pathnameWithoutLocale.startsWith(item))
+  const accessCookie = request.cookies.get(ACCESS_COOKIE_NAME)
+  const refreshCookie = request.cookies.get(REFRESH_COOKIE_NAME)
+  const hasSessionCookie = Boolean(accessCookie?.value.trim() || refreshCookie?.value.trim())
 
-  // 已登录用户访问登录页，重定向到控制台
-  if (pathnameWithoutLocale === '/login' && hasValidAuthCookie) {
-    return NextResponse.redirect(new URL('/console/usage/record', request.url))
-  }
-
-  // 未登录用户访问受保护路径，重定向到登录页
-  if (isProtectedPath && !hasValidAuthCookie) {
+  if (isProtectedPath && !hasSessionCookie) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', pathnameWithoutLocale)
     return NextResponse.redirect(loginUrl)
@@ -39,5 +34,5 @@ export default function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*$).*)']
+  matcher: ['/((?!api|router-api|_next/static|_next/image|favicon.ico|.*\\..*$).*)'],
 }

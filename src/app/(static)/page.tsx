@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useUser } from '@/hooks/useUser'
 import Reveal from '@/components/Reveal'
 import { useAuthStore } from '@/stores/auth'
 import Image from 'next/image'
@@ -28,8 +29,9 @@ const providers = [
 export default function Home() {
   const { t } = useTranslation('home')
   const router = useRouter()
-  const { isAuthenticated, hydrated } = useAuthStore()
-  const isLoggedIn = hydrated && isAuthenticated
+  useUser({ enabled: true })
+  const sessionStatus = useAuthStore((state) => state.sessionStatus)
+  const isLoggedIn = sessionStatus === 'authenticated'
   const [copied, setCopied] = useState(false)
 
   // 处理 CTA 按钮点击

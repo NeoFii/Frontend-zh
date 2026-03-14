@@ -4,32 +4,81 @@
  * SWR 作为唯一数据源，避免重复调用 /auth/me
  */
 
+import { useEffect } from 'react'
 import useSWR from 'swr'
-import { http } from '@/lib/api'
-import { UserInfo } from '@/lib/api/auth'
+import { getCurrentUser, refreshSession, type UserInfoResponse } from '@/lib/api/auth'
 import { useAuthStore } from '@/stores/auth'
 
-interface UserInfoResponse {
-  code: number
-  message: string
-  data: UserInfo
+interface UseUserOptions {
+  enabled?: boolean
+  restoreSession?: boolean
 }
 
-const fetcher = (url: string) => http.get<UserInfoResponse>(url)
+type ErrorWithStatus = {
+  response?: {
+    status?: number
+  }
+}
 
-export function useUser() {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+export function getResponseStatus(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null || !('response' in error)) {
+    return undefined
+  }
+
+  return Number((error as ErrorWithStatus).response?.status)
+}
+
+export async function fetchCurrentUser(restoreSession = false): Promise<UserInfoResponse> {
+  try {
+    return await getCurrentUser()
+  } catch (error) {
+    if (!restoreSession || getResponseStatus(error) !== 401) {
+      throw error
+    }
+
+    await refreshSession()
+    return getCurrentUser()
+  }
+}
+
+export function useUser(options: UseUserOptions = {}) {
+  const enabled = options.enabled ?? true
+  const restoreSession = options.restoreSession ?? false
+  const isHydrated = useAuthStore((state) => state.isHydrated)
+  const setSession = useAuthStore((state) => state.setSession)
+  const setUser = useAuthStore((state) => state.setUser)
 
   const { data, error, isLoading, mutate } = useSWR<UserInfoResponse>(
     // 未登录时不发请求（isAuthenticated 为 false 时 key 为 null）
-    isAuthenticated ? '/auth/me' : null,
-    fetcher,
+    enabled && isHydrated ? '/auth/me' : null,
+    () => fetchCurrentUser(restoreSession),
     {
       revalidateOnFocus: false,
       dedupingInterval: 60000,
       shouldRetryOnError: false,
     }
   )
+
+  useEffect(() => {
+    if (!enabled || !isHydrated) {
+      return
+    }
+
+    if (data?.data) {
+      setSession('authenticated', data.data)
+      return
+    }
+
+    if (error) {
+      const status = getResponseStatus(error)
+
+      if (status === 401 || status === 403) {
+        setSession('anonymous', null)
+      } else {
+        setUser(null)
+      }
+    }
+  }, [data, enabled, error, isHydrated, setSession, setUser])
 
   return {
     user: data?.data ?? null,

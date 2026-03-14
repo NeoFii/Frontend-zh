@@ -1,16 +1,19 @@
-// Testing 模块 API 封装
-// 对接后端 testing 服务的模型、研发商、分类和提供商接口
-
 import axios from 'axios'
 import type {
-  ModelVendor,
-  ModelCategory,
-  ModelListItem,
-  ModelDetail,
-  PagedResponse,
   BenchmarkModelSummary,
   BenchmarkTrendResponse,
+  ModelCategory,
+  ModelDetail,
+  ModelListItem,
+  ModelVendor,
+  PagedResponse,
 } from '@/types/model'
+import {
+  DEFAULT_MODEL_CATEGORIES,
+  normalizeModelCategories,
+  normalizeModelDetail,
+  normalizeModelListItem,
+} from '@/lib/model-categories'
 
 interface ApiResponse<T> {
   code: number
@@ -18,19 +21,17 @@ interface ApiResponse<T> {
   data: T
 }
 
-// Testing 服务通过 Next.js rewrite 代理转发，避免浏览器跨域问题
-// 代理规则: /testing-api/* → TESTING_API_URL/api/*（配置在 next.config.mjs）
-//
-// 注意：不能复用 apiClient（baseURL=/api/v1），否则 axios combineURLs 会把路径拼成
-// /api/v1/testing-api/...，导致 Next.js 代理规则无法命中，出现 404。
-// 此处使用独立实例，baseURL 为空，确保请求路径直接以 /testing-api 开头。
-const _testingAxios = axios.create({
+const TESTING_API_BASE =
+  process.env.NEXT_PUBLIC_TESTING_API_BASE_URL ||
+  `${(process.env.NEXT_PUBLIC_TESTING_API_URL || 'http://localhost:8002').replace(/\/$/, '')}/api`
+
+const testingAxios = axios.create({
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 })
-_testingAxios.interceptors.response.use((res) => res.data)
 
-const TESTING_API_BASE = '/testing-api'
+testingAxios.interceptors.response.use((res) => res.data)
+
 const EMPTY_BENCHMARK_TRENDS: BenchmarkTrendResponse = {
   model_slug: '',
   model_name: '',
@@ -40,50 +41,30 @@ const EMPTY_BENCHMARK_TRENDS: BenchmarkTrendResponse = {
 }
 
 const testingClient = {
-  get: <T>(url: string, config?: Parameters<typeof _testingAxios.get>[1]) =>
-    _testingAxios.get<T, T>(`${TESTING_API_BASE}${url}`, config),
+  get: <T>(url: string, config?: Parameters<typeof testingAxios.get>[1]) =>
+    testingAxios.get<T, T>(`${TESTING_API_BASE}${url}`, config),
 }
 
 function isProtectedBenchmarkError(error: unknown): boolean {
   return axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)
 }
 
-// ========== 研发商 API ==========
-
-/**
- * 获取研发商列表（供 VendorFilter 组件使用）
- * GET /v1/vendors
- */
 export async function getVendors(): Promise<ModelVendor[]> {
   const response = await testingClient.get<{ data: PagedResponse<ModelVendor> }>('/v1/vendors')
   return response.data.items
 }
 
-// ========== 分类 API ==========
-
-/**
- * 获取分类列表
- * GET /v1/models/categories
- */
 export async function getCategories(): Promise<ModelCategory[]> {
   const response = await testingClient.get<{ data: PagedResponse<ModelCategory> }>(
     '/v1/models/categories'
   )
-  return response.data.items
+  const categories = normalizeModelCategories(response.data.items)
+  return categories.length > 0 ? categories : DEFAULT_MODEL_CATEGORIES
 }
 
-// ========== 模型 API ==========
-
-/**
- * 获取模型列表
- * GET /v1/models?category=&vendors=anthropic,openai&q=&page=&page_size=
- */
 export async function getModels(params?: {
-  /** 分类键，如 reasoning / coding */
   category?: string
-  /** 研发商 slug 数组，传入时拼接为逗号分隔字符串 */
   vendors?: string[]
-  /** 关键词搜索 */
   q?: string
   page?: number
   page_size?: number
@@ -99,18 +80,17 @@ export async function getModels(params?: {
   const url = queryString ? `/v1/models/?${queryString}` : '/v1/models/'
 
   const response = await testingClient.get<{ data: PagedResponse<ModelListItem> }>(url)
-  return response.data
+  return {
+    ...response.data,
+    items: response.data.items.map((item) => normalizeModelListItem(item)),
+  }
 }
 
-/**
- * 获取性能统计汇总（供基准测试页使用）
- * GET /v1/benchmark/stats/summary?n=5
- */
 export async function getBenchmarkStatsSummary(n: number = 5): Promise<BenchmarkModelSummary[]> {
   try {
-    const response = await testingClient.get<ApiResponse<{ items: BenchmarkModelSummary[]; total: number }>>(
-      `/v1/benchmark/stats/summary?n=${n}`
-    )
+    const response = await testingClient.get<
+      ApiResponse<{ items: BenchmarkModelSummary[]; total: number }>
+    >(`/v1/benchmark/stats/summary?n=${n}`)
     return response.data.items
   } catch (error) {
     if (isProtectedBenchmarkError(error)) {
@@ -120,27 +100,14 @@ export async function getBenchmarkStatsSummary(n: number = 5): Promise<Benchmark
   }
 }
 
-/**
- * 获取模型详情（含报价和性能指标）
- * GET /v1/models/:slug?n=5
- */
-export async function getModelBySlug(
-  slug: string,
-  n: number = 5
-): Promise<ModelDetail> {
-  const response = await testingClient.get<{ data: ModelDetail }>(
-    `/v1/models/${slug}?n=${n}`
-  )
-  return response.data
+export async function getModelBySlug(slug: string, n: number = 5): Promise<ModelDetail> {
+  const response = await testingClient.get<{ data: ModelDetail }>(`/v1/models/${slug}?n=${n}`)
+  return normalizeModelDetail(response.data)
 }
 
-/**
- * 获取模型多日性能趋势数据（供模型详情页趋势图使用）
- * GET /v1/benchmark/trends?model_slug=xxx&days=7
- */
 export async function getBenchmarkTrends(
   modelSlug: string,
-  days: number = 7,
+  days: number = 7
 ): Promise<BenchmarkTrendResponse> {
   try {
     const response = await testingClient.get<ApiResponse<BenchmarkTrendResponse>>(

@@ -11,7 +11,8 @@ function LoginContent() {
   const { t: tHero } = useTranslation('auth.hero')
   const router = useNextRouter()
   const searchParams = useSearchParams()
-  const { isAuthenticated, hydrated } = useAuthStore()
+  const isHydrated = useAuthStore((state) => state.isHydrated)
+  const sessionStatus = useAuthStore((state) => state.sessionStatus)
   const [successMessage, setSuccessMessage] = useState('')
 
   // 解析 URL 参数，显示注册成功/密码重置成功提示
@@ -25,10 +26,10 @@ function LoginContent() {
 
   // 检查是否已登录（仅在 hydration 完成后）
   useEffect(() => {
-    if (hydrated && isAuthenticated) {
+    if (isHydrated && sessionStatus === 'authenticated') {
       router.replace('/console/usage/record')
     }
-  }, [hydrated, isAuthenticated, router])
+  }, [isHydrated, router, sessionStatus])
 
   const handleLoginSuccess = () => {
     // 登录成功，使用硬跳转到控制台使用记录页
@@ -75,10 +76,10 @@ function LoginContent() {
 // 使用 Suspense 包裹以支持 useSearchParams
 export default function Login() {
   const { t: tCommon } = useTranslation('common')
-  const { hydrated } = useAuthStore()
+  const isHydrated = useAuthStore((state) => state.isHydrated)
 
   // hydration 未完成时显示加载状态
-  if (!hydrated) {
+  if (!isHydrated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-500">{tCommon('loading')}</div>

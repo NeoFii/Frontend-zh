@@ -10,6 +10,16 @@ let accessToken: string | null = null
 
 // 过期时间存内存变量（避免 XSS 读取）
 let tokenExpiry: number | null = null
+const EXPIRY_BUFFER_MS = 30 * 1000
+
+export function getTokenExpiryTimestamp(expiresIn: number, now = Date.now()): number {
+  return now + Math.max(expiresIn * 1000 - EXPIRY_BUFFER_MS, 0)
+}
+
+export function isTokenExpiringSoonAt(expiry: number | null, now = Date.now()): boolean {
+  if (!expiry) return true
+  return now >= expiry
+}
 
 /**
  * 获取 Access Token（从内存）
@@ -26,7 +36,7 @@ export function getAccessToken(): string | null {
 export function setAccessToken(token: string, expiresIn: number): void {
   accessToken = token
   // 提前 30 秒判定过期，避免边界条件
-  tokenExpiry = Date.now() + (expiresIn - 30) * 1000
+  tokenExpiry = getTokenExpiryTimestamp(expiresIn)
 }
 
 /**
@@ -41,8 +51,7 @@ export function removeAccessToken(): void {
  * 检查 Access Token 是否即将过期（提前 30 秒）
  */
 export function isAccessTokenExpiringSoon(): boolean {
-  if (!tokenExpiry) return true
-  return Date.now() >= tokenExpiry
+  return isTokenExpiringSoonAt(tokenExpiry)
 }
 
 /**

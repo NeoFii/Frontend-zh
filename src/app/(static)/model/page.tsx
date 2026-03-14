@@ -3,66 +3,58 @@
 /**
  * 模型页面
  * 展示所有支持的 AI 模型，以网格卡片形式呈现
- * 对接后端 Testing 服务 API
+ * 支持分类 Tab、研发商多选、关键词搜索（均通过后端 API 过滤）
  */
 
-import React, { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import useSWR from 'swr'
-import { getModels, getCategories } from '@/lib/api/model'
-import type { ModelListItem, Category } from '@/types/model'
+import { getModels, getCategories, getVendors } from '@/lib/api/testing-model'
+import type { ModelCategory, ModelVendor } from '@/types/model'
 import CategoryTabs from '@/components/model/CategoryTabs'
 import ModelSearch from '@/components/model/ModelSearch'
 import ModelCardV2 from '@/components/model/ModelCardV2'
-
-// 搜索过滤
-function useModelSearch(models: ModelListItem[], query: string): ModelListItem[] {
-  return useMemo(() => {
-    if (!query.trim()) return models
-
-    const q = query.toLowerCase().trim()
-    return models.filter(
-      (model) =>
-        model.name.toLowerCase().includes(q) ||
-        model.model_id.toLowerCase().includes(q) ||
-        model.description?.toLowerCase().includes(q)
-    )
-  }, [models, query])
-}
+import VendorFilter from '@/components/model/VendorFilter'
 
 export default function ModelPage() {
-  // 状态管理
+  // 筛选状态
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedVendors, setSelectedVendors] = useState<string[]>([])
 
-  // 获取分类列表
-  const { data: categories = [] } = useSWR<Category[]>(
+  // 获取分类列表（静态数据，不受筛选影响）
+  const { data: categories = [] } = useSWR<ModelCategory[]>(
     'categories',
     () => getCategories()
   )
 
-  // 获取模型列表
+  // 获取研发商列表（静态数据，不受筛选影响）
+  const { data: vendors = [] } = useSWR<ModelVendor[]>(
+    'vendors',
+    () => getVendors()
+  )
+
+  // 获取模型列表（随所有筛选条件变化而重新请求）
+  const swrKey = ['models', selectedCategory, selectedVendors.join(','), searchQuery]
   const { data: modelsData, isLoading } = useSWR(
-    selectedCategory ? ['models', selectedCategory] : 'models',
+    swrKey,
     () =>
       getModels({
         category: selectedCategory || undefined,
+        vendors: selectedVendors.length > 0 ? selectedVendors : undefined,
+        q: searchQuery || undefined,
         page: 1,
         page_size: 100,
       })
   )
 
   const models = modelsData?.items || []
+  const hasActiveFilters = searchQuery || selectedCategory || selectedVendors.length > 0
 
-  // 搜索过滤
-  const filteredModels = useModelSearch(models, searchQuery)
-
-  // 清除筛选
   const clearAllFilters = () => {
     setSearchQuery('')
     setSelectedCategory(null)
+    setSelectedVendors([])
   }
-
-  const hasActiveFilters = searchQuery || selectedCategory
 
   return (
     <main className="min-h-screen bg-white">
@@ -80,9 +72,16 @@ export default function ModelPage() {
         {/* 分类标签 */}
         <CategoryTabs
           categories={categories}
-          selectedSlug={selectedCategory}
+          selectedKey={selectedCategory}
           onChange={setSelectedCategory}
           labels={{ all: '全部' }}
+        />
+
+        {/* 研发商筛选 */}
+        <VendorFilter
+          vendors={vendors}
+          selectedVendors={selectedVendors}
+          onChange={setSelectedVendors}
         />
 
         {/* 搜索栏 */}
@@ -99,7 +98,7 @@ export default function ModelPage() {
         {/* 结果统计 */}
         <div className="mb-6 flex items-center justify-between">
           <span className="text-[14px] text-[#666666]">
-            {isLoading ? '加载中...' : `${filteredModels.length} 个模型`}
+            {isLoading ? '加载中...' : `${models.length} 个模型`}
           </span>
           {hasActiveFilters && (
             <button
@@ -131,10 +130,10 @@ export default function ModelPage() {
           <div className="flex items-center justify-center py-16">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#181E25]" />
           </div>
-        ) : filteredModels.length > 0 ? (
+        ) : models.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
-            {filteredModels.map((model) => (
-              <ModelCardV2 key={model.id} model={model} />
+            {models.map((model) => (
+              <ModelCardV2 key={model.slug} model={model} />
             ))}
           </div>
         ) : (

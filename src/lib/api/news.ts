@@ -39,23 +39,20 @@ function getBaseUrl() {
   }
   // 客户端：使用相对路径（通过 Next.js 反向代理或直接访问）
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
-  if (baseUrl && !baseUrl.startsWith('http')) {
+  if (baseUrl) {
     // 相对路径如 /api/v1
     return baseUrl
   }
-  return '/api/v1'
+  return 'http://localhost:8000/api/v1'
 }
 
 // 获取新闻列表（从后端 API）
-export async function fetchNewsListFromApi(page = 1, pageSize = 20, language?: string) {
+export async function fetchNewsListFromApi(page = 1, pageSize = 20) {
   const baseUrl = getBaseUrl()
   const params = new URLSearchParams({
     page: String(page),
     page_size: String(pageSize),
   })
-  if (language) {
-    params.append('language', language)
-  }
   const res = await fetch(`${baseUrl}/news?${params}`, {
     next: { revalidate: 3600 },
   })
@@ -72,11 +69,10 @@ export async function fetchNewsListFromApi(page = 1, pageSize = 20, language?: s
 }
 
 // 获取新闻详情（从后端 API）
-export async function fetchNewsDetailFromApi(slug: string, language?: string) {
+export async function fetchNewsDetailFromApi(slug: string) {
   const baseUrl = getBaseUrl()
   try {
-    const params = language ? `?language=${language}` : ''
-    const res = await fetch(`${baseUrl}/news/${slug}${params}`, {
+    const res = await fetch(`${baseUrl}/news/${slug}`, {
       next: { revalidate: 3600 },
     })
     const json = await res.json()

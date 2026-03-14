@@ -3,15 +3,16 @@
 /**
  * 分类标签组件
  * 以标签栏形式展示分类，支持点击切换筛选
+ * 使用 ModelCategory.key 作为筛选标识（适配新后端 API）
  */
 
 import React from 'react'
-import type { Category } from '@/types/model'
+import type { ModelCategory } from '@/types/model'
 
 interface CategoryTabsProps {
-  categories: Category[]
-  selectedSlug: string | null
-  onChange: (slug: string | null) => void
+  categories: ModelCategory[]
+  selectedKey: string | null
+  onChange: (key: string | null) => void
   labels?: {
     all?: string
   }
@@ -19,23 +20,19 @@ interface CategoryTabsProps {
 
 export const CategoryTabs: React.FC<CategoryTabsProps> = ({
   categories,
-  selectedSlug,
+  selectedKey,
   onChange,
   labels,
 }) => {
-  const handleClick = (slug: string | null) => {
-    onChange(slug)
-  }
-
   return (
     <div className="flex flex-wrap gap-2 mb-6">
       {/* 全部标签 */}
       <button
-        onClick={() => handleClick(null)}
+        onClick={() => onChange(null)}
         className={`
           px-4 py-2 text-[14px] rounded-full transition-all duration-200
           ${
-            selectedSlug === null
+            selectedKey === null
               ? 'bg-[#181E25] text-white'
               : 'bg-[#F3F4F6] text-[#666666] hover:bg-[#E5E7EB]'
           }
@@ -48,11 +45,11 @@ export const CategoryTabs: React.FC<CategoryTabsProps> = ({
       {categories.map((category) => (
         <button
           key={category.id}
-          onClick={() => handleClick(category.slug)}
+          onClick={() => onChange(category.key)}
           className={`
             px-4 py-2 text-[14px] rounded-full transition-all duration-200
             ${
-              selectedSlug === category.slug
+              selectedKey === category.key
                 ? 'bg-[#181E25] text-white'
                 : 'bg-[#F3F4F6] text-[#666666] hover:bg-[#E5E7EB]'
             }

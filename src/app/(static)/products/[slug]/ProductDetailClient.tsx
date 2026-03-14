@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useUser } from '@/hooks/useUser'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { useState } from 'react'
 import type { ProductItem } from '@/types/cms'
@@ -14,10 +15,12 @@ interface ProductDetailClientProps {
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
   const { t } = useTranslation('product')
   const [expandedFaqs, setExpandedFaqs] = useState<string[]>([])
-  const { isAuthenticated, hydrated } = useAuthStore()
+  useUser({ enabled: true })
+  const sessionStatus = useAuthStore((state) => state.sessionStatus)
+  const isHydrated = useAuthStore((state) => state.isHydrated)
 
   // 判断是否已登录
-  const isLoggedIn = hydrated && isAuthenticated
+  const isLoggedIn = sessionStatus === 'authenticated'
 
   // 处理立即体验按钮点击 - 使用相对路径
   const handleExperienceClick = (e: React.MouseEvent) => {
@@ -50,7 +53,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
         {/* CTA 按钮 */}
         <div className="flex items-center justify-center py-[16px]">
-          {!hydrated ? (
+          {!isHydrated ? (
             // hydration 未完成时显示占位按钮
             <div className="w-[140px] h-[48px] bg-gray-100 rounded-full animate-pulse mr-[16px]"></div>
           ) : (

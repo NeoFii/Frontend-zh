@@ -1,3 +1,4 @@
+import { setAccessToken } from '@/lib/token'
 import { http } from './index'
 
 export interface LoginParams {
@@ -28,25 +29,23 @@ export interface UserInfo {
   created_at: string
 }
 
+export interface AuthSessionData {
+  access_token: string
+  expires_in: number
+}
+
 export interface LoginResponse {
   code: number
   message: string
   data: {
     user: UserInfo
-    access_token: string
-    refresh_token: string
-    expires_in: number
-  }
+  } & AuthSessionData
 }
 
 export interface RefreshResponse {
   code: number
   message: string
-  data: {
-    access_token: string
-    refresh_token?: string
-    expires_in: number
-  }
+  data: AuthSessionData
 }
 
 export interface RegisterResponse {
@@ -57,7 +56,6 @@ export interface RegisterResponse {
     email: string
     created_at: string
     access_token?: string
-    refresh_token?: string
     expires_in?: number
   }
 }
@@ -85,7 +83,7 @@ export function register(params: RegisterParams): Promise<RegisterResponse> {
  * 发送验证码
  */
 export function sendVerificationCode(email: string): Promise<SendCodeResponse> {
-  return http.post('/auth/send-code', { email, purpose: 'register' })
+  return http.post('/auth/send-email-code', { email, purpose: 'register' })
 }
 
 export interface LogoutResponse {
@@ -107,6 +105,16 @@ export function getCurrentUser(): Promise<UserInfoResponse> {
 }
 
 /**
+ * Refresh the current session using the httpOnly refresh cookie.
+ */
+export function refreshSession(): Promise<RefreshResponse> {
+  return http.post<RefreshResponse>('/auth/refresh').then((response) => {
+    setAccessToken(response.data.access_token, response.data.expires_in)
+    return response
+  })
+}
+
+/**
  * 退出登录
  */
 export function logout(): Promise<LogoutResponse> {
@@ -117,7 +125,7 @@ export function logout(): Promise<LogoutResponse> {
  * 登录专用发送验证码
  */
 export function sendLoginCode(email: string): Promise<SendCodeResponse> {
-  return http.post('/auth/send-code', { email, purpose: 'login' })
+  return http.post('/auth/send-email-code', { email, purpose: 'login' })
 }
 
 /**
@@ -136,7 +144,7 @@ export function loginWithCode(params: LoginWithCodeParams): Promise<LoginRespons
  * 忘记密码发送验证码
  */
 export function sendResetPasswordCode(email: string): Promise<SendCodeResponse> {
-  return http.post('/auth/send-code', { email, purpose: 'reset_password' })
+  return http.post('/auth/send-email-code', { email, purpose: 'reset_password' })
 }
 
 /**
@@ -155,4 +163,19 @@ export interface ResetPasswordResponse {
 
 export function resetPassword(params: ResetPasswordParams): Promise<ResetPasswordResponse> {
   return http.post('/auth/reset-password', params)
+}
+
+export interface ChangePasswordParams {
+  old_password: string
+  new_password: string
+  lang?: string
+}
+
+export interface ChangePasswordResponse {
+  code: number
+  message: string
+}
+
+export function changePassword(params: ChangePasswordParams): Promise<ChangePasswordResponse> {
+  return http.post('/auth/change-password', params)
 }

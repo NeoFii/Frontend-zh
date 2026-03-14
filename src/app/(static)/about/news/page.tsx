@@ -13,8 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function NewsPage() {
   const { t } = getTranslation('aboutNews')
-  const language = 'en'
-  const { items: newsList } = await fetchNewsListFromApi(1, 20, language)
+  const { items: newsList } = await fetchNewsListFromApi(1, 20)
 
   return (
     <div className="animate-fade-in">

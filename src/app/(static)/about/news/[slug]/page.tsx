@@ -19,7 +19,7 @@ export async function generateStaticParams() {
 // 生成页面元数据
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const { t } = getTranslation('errors')
-  const news = await fetchNewsDetailFromApi(params.slug, 'en')
+  const news = await fetchNewsDetailFromApi(params.slug)
 
   if (!news) {
     return {
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 // 页面组件（服务端组件）
 export default async function NewsDetailPage({ params }: { params: { slug: string } }) {
-  const news = await fetchNewsDetailFromApi(params.slug, 'en')
+  const news = await fetchNewsDetailFromApi(params.slug)
 
   if (!news) {
     notFound()

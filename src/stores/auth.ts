@@ -3,11 +3,14 @@ import { persist } from 'zustand/middleware'
 import { clearAllTokens } from '@/lib/token'
 import { logout as apiLogout, type UserInfo } from '@/lib/api/auth'
 
+export type SessionStatus = 'unknown' | 'authenticated' | 'anonymous'
+
 interface AuthState {
-  isAuthenticated: boolean
   user: UserInfo | null
-  hydrated: boolean
+  sessionStatus: SessionStatus
+  isHydrated: boolean
   login: (user: UserInfo) => void
+  setSession: (status: SessionStatus, user?: UserInfo | null) => void
   setUser: (user: UserInfo | null) => void
   logout: () => void
   logoutAsync: () => Promise<void>
@@ -16,21 +19,36 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      isAuthenticated: false,
       user: null,
-      hydrated: false,
+      sessionStatus: 'unknown',
+      isHydrated: false,
 
       // 登录时设置用户信息
       login: (user) => {
         set({
-          isAuthenticated: true,
           user,
+          sessionStatus: 'authenticated',
         })
       },
 
       // 设置用户信息（用于 SWR 数据同步）
+      setSession: (sessionStatus, user) => {
+        set((state) => ({
+          sessionStatus,
+          user:
+            user !== undefined
+              ? user
+              : sessionStatus === 'authenticated'
+                ? state.user
+                : null,
+        }))
+      },
+
       setUser: (user) => {
-        set({ user })
+        set((state) => ({
+          user,
+          sessionStatus: user ? 'authenticated' : state.sessionStatus === 'unknown' ? 'unknown' : 'anonymous',
+        }))
       },
 
       // 同步登出（仅清除本地状态）
@@ -42,8 +60,8 @@ export const useAuthStore = create<AuthState>()(
           // SSR 环境忽略
         }
         set({
-          isAuthenticated: false,
           user: null,
+          sessionStatus: 'anonymous',
         })
       },
 
@@ -64,13 +82,16 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       // 持久化 user 和 isAuthenticated，确保页面刷新后登录状态不丢失
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
-      onRehydrateStorage: () => async (state) => {
+      partialize: (state) => ({
+        user: state.user,
+        sessionStatus: state.sessionStatus === 'authenticated' ? 'unknown' : state.sessionStatus,
+      }),
+      onRehydrateStorage: () => (state) => {
         if (!state) return
         // 不在这里请求 /auth/me，避免重复调用
         // isAuthenticated 由登录/登出动作维护
         // 用户数据由 useUser 的 SWR 管理
-        state.hydrated = true
+        state.isHydrated = true
       },
     }
   )

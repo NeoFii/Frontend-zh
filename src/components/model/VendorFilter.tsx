@@ -2,86 +2,69 @@
 
 /**
  * 厂商筛选组件
- * 支持选择一个或多个厂商进行筛选
+ * 通过 vendors prop 接收研发商列表（由父组件通过 API 获取），支持多选筛选
  */
 
 import React from 'react'
-import { useTranslation } from '@/hooks/useTranslation'
-import { modelVendors } from '@/data/models'
 import Image from 'next/image'
+import type { ModelVendor } from '@/types/model'
 
 interface VendorFilterProps {
+  /** 研发商列表（由父组件 getVendors() 获取后传入） */
+  vendors: ModelVendor[]
+  /** 已选中的研发商 slug 列表 */
   selectedVendors: string[]
-  onChange: (vendorIds: string[]) => void
-  labels?: {
-    vendorFilter: string
-    clearFilter: string
-    selectAll: string
-    selectedVendors: string
-  }
+  onChange: (vendorSlugs: string[]) => void
 }
 
 export const VendorFilter: React.FC<VendorFilterProps> = ({
+  vendors,
   selectedVendors,
   onChange,
-  labels,
 }) => {
-  const { t } = useTranslation('model')
-  // 使用翻译作为默认值，支持外部传入 labels 覆盖
-  const defaultLabels = {
-    vendorFilter: t('vendorFilter'),
-    clearFilter: t('clearVendorFilter'),
-    selectAll: t('selectAll'),
-    selectedVendors: t('selectedVendors'),
-  }
-  const mergedLabels = labels || defaultLabels
-
-  const toggleVendor = (vendorId: string) => {
-    if (selectedVendors.includes(vendorId)) {
-      onChange(selectedVendors.filter((id) => id !== vendorId))
+  const toggleVendor = (slug: string) => {
+    if (selectedVendors.includes(slug)) {
+      onChange(selectedVendors.filter((s) => s !== slug))
     } else {
-      onChange([...selectedVendors, vendorId])
+      onChange([...selectedVendors, slug])
     }
   }
 
-  const clearAll = () => {
-    onChange([])
-  }
+  const clearAll = () => onChange([])
+  const selectAll = () => onChange(vendors.map((v) => v.slug))
 
-  const selectAll = () => {
-    onChange(modelVendors.map((v) => v.id))
-  }
+  if (vendors.length === 0) return null
 
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <span className="text-[14px] font-medium text-[#181E25]">{mergedLabels.vendorFilter}</span>
+        <span className="text-[14px] font-medium text-[#181E25]">研发商</span>
         <div className="flex gap-2">
           {selectedVendors.length > 0 && (
             <button
               onClick={clearAll}
               className="text-[13px] text-[#666666] hover:text-[#181E25] transition-colors"
             >
-              {mergedLabels.clearFilter}
+              清除
             </button>
           )}
           <button
             onClick={selectAll}
             className="text-[13px] text-[#2563EB] hover:text-[#1D4ED8] transition-colors"
           >
-            {mergedLabels.selectAll}
+            全选
           </button>
         </div>
       </div>
 
-      {/* 厂商标签列表 */}
+      {/* 研发商标签列表 */}
       <div className="flex flex-wrap gap-2">
-        {modelVendors.map((vendor) => {
-          const isSelected = selectedVendors.includes(vendor.id)
+        {vendors.map((vendor) => {
+          const isSelected = selectedVendors.includes(vendor.slug)
           return (
             <button
-              key={vendor.id}
-              onClick={() => toggleVendor(vendor.id)}
+              key={vendor.slug}
+              onClick={() => toggleVendor(vendor.slug)}
               className={`
                 flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200
                 ${
@@ -91,31 +74,17 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
                 }
               `}
             >
-              {/* 厂商图标 */}
-              <div className="relative w-5 h-5 flex-shrink-0">
-                <Image
-                  src={`/icons/providers/${vendor.providerId}.png`}
-                  alt={vendor.name}
-                  fill
-                  className="rounded object-cover"
-                  onError={(e) => {
-                    // 如果图片加载失败，显示首字母
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                  }}
-                />
-                <div
-                  className="absolute inset-0 flex items-center justify-center text-[10px] font-bold rounded"
-                  style={{
-                    backgroundColor: vendor.color,
-                    color: 'white',
-                    display: 'none',
-                  }}
-                  id={`fallback-${vendor.id}`}
-                >
-                  {vendor.name.charAt(0)}
+              {/* 研发商 Logo */}
+              {vendor.logo_url && (
+                <div className="relative w-5 h-5 flex-shrink-0">
+                  <Image
+                    src={vendor.logo_url}
+                    alt={vendor.name}
+                    fill
+                    className="object-contain"
+                  />
                 </div>
-              </div>
+              )}
               <span className="text-[13px]">{vendor.name}</span>
             </button>
           )
@@ -125,7 +94,7 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
       {/* 已选数量提示 */}
       {selectedVendors.length > 0 && (
         <div className="mt-3 text-[13px] text-[#666666]">
-          {mergedLabels.selectedVendors.replace('{count}', String(selectedVendors.length))}
+          已选 {selectedVendors.length} 个研发商
         </div>
       )}
     </div>

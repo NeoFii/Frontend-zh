@@ -1,263 +1,427 @@
-// TODO: [SECURITY] API Key 应通过后端 API 管理，当前 localStorage 方案为临时 Mock 实现
-// 后续需对接: POST /api/v1/platform/api-keys (创建), GET (列表, 返回脱敏值), DELETE (删除)
-'use client'
+﻿'use client'
 
-import { useState, useEffect } from 'react'
-import { useTranslation } from '@/hooks/useTranslation'
+import Link from 'next/link'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useRouterKeys } from '@/hooks/useRouterKeys'
+import { extractErrorMessage } from '@/lib/error'
+import {
+  formatDateTime,
+} from '@/lib/router-analytics'
 
-interface ApiKey {
-  id: string
+interface DialogState {
+  mode: 'create' | 'edit'
+  id?: number
   name: string
-  key: string
-  createdAt: string
-  lastUsedAt: string | null
-  enabled: boolean
 }
 
-// TODO: [SECURITY] 密钥应由后端生成，此为临时 Mock 实现
-// 生成随机 API 密钥
-function generateApiKey(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
-  let result = 'sk-'
-  for (let i = 0; i < 32; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
+function resolveRouterOpenAIBaseUrl() {
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL?.trim()
+  if (configuredBaseUrl) {
+    return configuredBaseUrl.replace(/\/+$/, '')
   }
-  return result
+
+  return 'http://localhost:8003/v1'
 }
 
-// 生成唯一 ID
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2)
+function IconButton(props: {
+  title: string
+  onClick: () => void
+  disabled?: boolean
+  children: ReactNode
+  tone?: 'default' | 'danger'
+}) {
+  return (
+    <button
+      type="button"
+      title={props.title}
+      onClick={props.onClick}
+      disabled={props.disabled}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-xl border transition ${
+        props.tone === 'danger'
+          ? 'border-red-200 text-red-600 hover:bg-red-50'
+          : 'border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800'
+      } disabled:cursor-not-allowed disabled:opacity-40`}
+    >
+      {props.children}
+    </button>
+  )
 }
 
-const STORAGE_KEY = 'api-keys-list'
+function NameDialog(props: {
+  title: string
+  actionLabel: string
+  initialName: string
+  submitting: boolean
+  onSubmit: (name: string) => void
+  onClose: () => void
+}) {
+  const [name, setName] = useState(props.initialName)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
+      <div className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-2xl">
+        <h3 className="text-xl text-gray-900">{props.title}</h3>
+        <p className="mt-2 text-sm text-gray-500">建议用备注区分使用场景，例如生产环境、联调环境、团队共享。</p>
+        <input
+          type="text"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && name.trim() && !props.submitting) {
+              props.onSubmit(name.trim())
+            }
+          }}
+          placeholder="例如：生产环境 / 团队联调"
+          className="mt-4 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm focus:border-gray-950 focus:outline-none"
+          autoFocus
+        />
+        <div className="mt-5 flex justify-end gap-2">
+          <button
+            onClick={props.onClose}
+            className="rounded-xl px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-100"
+          >
+            取消
+          </button>
+          <button
+            onClick={() => props.onSubmit(name.trim())}
+            disabled={!name.trim() || props.submitting}
+            className="rounded-xl bg-gray-950 px-4 py-2 text-sm text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {props.submitting ? '处理中...' : props.actionLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PlusIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7H5" />
+    </svg>
+  )
+}
+
+function CopyIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+  )
+}
+
+function EditIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M16.5 3.5a2.121 2.121 0 113 3L12 14l-4 1 1-4 7.5-7.5z" />
+    </svg>
+  )
+}
+
+function DeleteIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
+    </svg>
+  )
+}
+
+function PowerIcon(props: { active: boolean }) {
+  return props.active ? (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 3v9m6.364-5.364a9 9 0 11-12.728 0" />
+    </svg>
+  ) : (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 3v9m0 0l3-3m-3 3L9 9m9.364-2.364a9 9 0 11-12.728 0" />
+    </svg>
+  )
+}
 
 export default function GetApiPage() {
-  const { t } = useTranslation('console.api')
-  const [keys, setKeys] = useState<ApiKey[]>([])
-  const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [showNameDialog, setShowNameDialog] = useState(false)
-  const [newKeyName, setNewKeyName] = useState('')
+  const { keys, isLoading, isError, create, reveal: revealKey, update, remove, mutate } = useRouterKeys()
+  const [dialog, setDialog] = useState<DialogState | null>(null)
+  const [copiedKeyId, setCopiedKeyId] = useState<number | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [noticeMessage, setNoticeMessage] = useState<string | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [baseUrl, setBaseUrl] = useState('/router-api/v1')
 
-  // 从 localStorage 加载密钥
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      try {
-        setKeys(JSON.parse(stored))
-      } catch {
-        // 忽略解析错误
-      }
-    }
+    setBaseUrl(resolveRouterOpenAIBaseUrl())
   }, [])
 
-  // 保存密钥到 localStorage
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(keys))
-  }, [keys])
+  const visibleKeys = useMemo(() => [...keys].sort((left, right) => left.id - right.id), [keys])
 
-  // 创建新密钥
-  const handleCreateKey = () => {
-    if (!newKeyName.trim()) return
-
-    const newKey: ApiKey = {
-      id: generateId(),
-      name: newKeyName.trim(),
-      key: generateApiKey(),
-      createdAt: new Date().toISOString(),
-      lastUsedAt: null,
-      enabled: true,
-    }
-
-    setKeys([newKey, ...keys])
-    setNewKeyName('')
-    setShowNameDialog(false)
-  }
-
-  // 复制密钥
-  const handleCopy = async (key: ApiKey) => {
+  async function handleCreate(name: string) {
+    setSubmitting(true)
+    setErrorMessage(null)
+    setNoticeMessage(null)
     try {
-      await navigator.clipboard.writeText(key.key)
-      setCopiedId(key.id)
-      setTimeout(() => setCopiedId(null), 2000)
-
-      // 更新最后使用时间
-      setKeys(keys.map(k =>
-        k.id === key.id ? { ...k, lastUsedAt: new Date().toISOString() } : k
-      ))
-    } catch (err) {
-      console.error('Copy failed:', err)
+      const payload = await create(name)
+      await navigator.clipboard.writeText(payload.api_key)
+      setCopiedKeyId(payload.item.id)
+      setNoticeMessage('新创建的完整 Key 已复制到剪贴板。页面不会缓存完整密钥，请立即保管。')
+      window.setTimeout(() => setCopiedKeyId((current) => (current === payload.item.id ? null : current)), 1500)
+      setDialog(null)
+    } catch (error) {
+      setErrorMessage(extractErrorMessage(error))
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  // 删除密钥
-  const handleDelete = (id: string) => {
-    if (confirm(t('confirmDelete') || '确定要删除这个 API 密钥吗？')) {
-      setKeys(keys.filter(k => k.id !== id))
+  async function handleUpdate(name: string) {
+    if (!dialog?.id) {
+      return
+    }
+    setSubmitting(true)
+    setErrorMessage(null)
+    setNoticeMessage(null)
+    try {
+      await update(dialog.id, { name })
+      setDialog(null)
+    } catch (error) {
+      setErrorMessage(extractErrorMessage(error))
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  // 格式化日期
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '-'
-    return new Date(dateStr).toLocaleDateString()
+  async function handleToggle(id: number, isActive: boolean) {
+    setErrorMessage(null)
+    setNoticeMessage(null)
+    try {
+      await update(id, { is_active: !isActive })
+    } catch (error) {
+      setErrorMessage(extractErrorMessage(error))
+    }
   }
 
-  // 隐藏 API Key 中间部分
-  const maskedKey = (key: string) => {
-    if (key.length > 16) {
-      return `${key.substring(0, 8)}...${key.substring(key.length - 8)}`
+  async function handleDelete(id: number) {
+    if (!window.confirm('确定删除这个 API Key 吗？删除后它不会继续显示在列表中。')) {
+      return
     }
-    return key
+    setErrorMessage(null)
+    setNoticeMessage(null)
+    try {
+      await remove(id)
+    } catch (error) {
+      setErrorMessage(extractErrorMessage(error))
+    }
+  }
+
+  async function handleCopyKey(id: number) {
+    setErrorMessage(null)
+    setNoticeMessage(null)
+    try {
+      const payload = await revealKey(id)
+      await navigator.clipboard.writeText(payload.api_key)
+      setCopiedKeyId(id)
+      setNoticeMessage('完整 Key 已复制到剪贴板。前端不会保留明文缓存。')
+      window.setTimeout(() => setCopiedKeyId((current) => (current === id ? null : current)), 1500)
+    } catch (error) {
+      const status = typeof error === 'object' && error !== null && 'response' in error
+        ? Number((error as { response?: { status?: number } }).response?.status)
+        : undefined
+      if (status === 409) {
+        setErrorMessage('这个 Key 创建于“可再次复制”功能上线之前，无法直接复制完整 Key。请重新创建一个新 Key。')
+        return
+      }
+      setErrorMessage(extractErrorMessage(error))
+    }
+  }
+
+  async function handleCopyBaseUrl() {
+    await navigator.clipboard.writeText(baseUrl)
   }
 
   return (
-    <div style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-normal text-gray-900">{t('title')}</h2>
-          <p className="text-sm text-gray-500 mt-1">{t('getApiSubtitle') || 'Get your API key to start calling the interface'}</p>
+    <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
+      <section className="rounded-[32px] bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-3xl">
+            <h2 className="text-[1.75rem] tracking-tight text-gray-950">API</h2>
+            <p className="mt-4 text-xl leading-8 text-gray-900">
+              API Key 是你请求 Eucal Router 大模型服务的重要凭证。
+            </p>
+            <p className="mt-4 text-sm leading-7 text-gray-500">
+              API Key 长期有效。请勿把密钥公开到共享环境，妥善保管并定期轮换密钥，避免因未授权使用造成安全风险或资金损失。
+            </p>
+          </div>
         </div>
-        <button
-          onClick={() => setShowNameDialog(true)}
-          className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-sm font-normal rounded-lg transition-colors"
-        >
-          {t('createNewKey') || 'Create New Key'}
-        </button>
-      </div>
+      </section>
 
-      {keys.length === 0 ? (
-        <div className="p-6 border border-gray-100 rounded-lg bg-gray-50 text-center py-12">
-          <p className="text-gray-500">{t('noApiKeys') || 'No API keys yet'}</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {keys.map((item) => (
-            <div key={item.id} className="p-6 border border-gray-100 rounded-lg bg-gray-50">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">{item.name}</p>
-                  <code
-                    className="text-base text-gray-900 font-mono"
-                    style={{ fontFamily: 'MiSans, sans-serif', letterSpacing: '0.5px' }}
-                  >
-                    {maskedKey(item.key)}
-                  </code>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleCopy(item)}
-                    className="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex items-center"
-                  >
-                    {copiedId === item.id ? (
-                      <>
-                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        {t('copied') || 'Copied'}
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
-                        {t('copy') || 'Copy'}
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="px-3 py-1.5 text-sm text-red-600 border border-gray-200 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    {t('delete') || 'Delete'}
-                  </button>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-200 my-4"></div>
-
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-500">
-                  <p>{t('createdAt') || 'Created'}: {formatDate(item.createdAt)}</p>
-                  <p className="mt-1">{t('lastUsed') || 'Last used'}: {formatDate(item.lastUsedAt)}</p>
-                </div>
-                <div className="flex items-center">
-                  <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                  <span className="text-sm text-green-600">{t('enabled')}</span>
-                </div>
-              </div>
+      <section className="rounded-[32px] bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
+        <h3 className="text-[1.75rem] tracking-tight text-gray-950">BaseURL</h3>
+        <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
+          <p className="text-sm text-gray-900">OpenAI compatible baseURL:</p>
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 rounded-2xl border border-[#cbd5e1] bg-[#eef3fa] px-4 py-3 text-sm text-gray-900 shadow-inner lg:min-w-[380px]">
+              <span className="block truncate">{baseUrl}</span>
             </div>
-          ))}
+            <button
+              type="button"
+              onClick={handleCopyBaseUrl}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50"
+              title="复制 BaseURL"
+            >
+              <CopyIcon />
+            </button>
+          </div>
         </div>
-      )}
+      </section>
 
-      {/* 使用说明 */}
-      <div className="mt-8">
-        <h3 className="text-lg font-normal text-gray-900 mb-4">{t('usageGuide') || 'Usage Guide'}</h3>
-        <div className="space-y-4">
-          <div className="flex items-start">
-            <span className="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-sm font-normal mr-3">1</span>
-            <div>
-              <p className="text-sm font-normal text-gray-900">{t('addApiKey')}</p>
-              <p className="text-sm text-gray-500 mt-1">{t('addApiKeyDesc')}</p>
+      {errorMessage ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{errorMessage}</div>
+      ) : null}
+      {noticeMessage ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{noticeMessage}</div>
+      ) : null}
+
+      <section className="rounded-[32px] bg-[#f7f7f8] px-8 py-6 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
+        <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              href="https://neofii.github.io/TierFlow-Doc/"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-gray-950 px-7 text-sm font-medium text-white transition hover:bg-gray-800"
+            >
+              API 使用文档
+            </Link>
+            <button
+              onClick={() => setDialog({ mode: 'create', name: '' })}
+              className="inline-flex h-11 items-center gap-3 rounded-full bg-gray-950 px-6 text-sm font-medium text-white shadow-[0_20px_40px_-24px_rgba(15,23,42,0.7)] transition hover:bg-gray-800"
+            >
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/50">
+                <PlusIcon />
+              </span>
+              创建 API KEY
+            </button>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="rounded-[24px] bg-white p-6">
+            <div className="h-40 animate-pulse rounded-2xl bg-gray-100"></div>
+          </div>
+        ) : !isLoading && isError ? (
+          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+            加载 API Key 失败。
+            <button onClick={() => mutate()} className="ml-2 font-medium text-red-700 hover:text-red-900">
+              重试
+            </button>
+          </div>
+        ) : visibleKeys.length === 0 ? (
+          <div className="rounded-[24px] border border-dashed border-gray-200 bg-white px-6 py-16 text-center">
+            <p className="text-lg text-gray-900">你还没有创建任何 API Key</p>
+            <p className="mt-2 text-sm text-gray-500">点击右上角按钮创建第一个 Key。完整密钥只会即时复制，不会在页面中缓存。</p>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-inset ring-gray-100">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead className="bg-[#edf2f7] text-gray-500">
+                  <tr>
+                    <th className="px-6 py-4 font-medium">ID</th>
+                    <th className="px-6 py-4 font-medium">密钥</th>
+                    <th className="px-6 py-4 font-medium">备注</th>
+                    <th className="px-6 py-4 font-medium">创建时间</th>
+                    <th className="px-6 py-4 font-medium">权限</th>
+                    <th className="px-6 py-4 font-medium">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleKeys.map((item, index) => {
+                    return (
+                      <tr key={item.id} className="border-t border-gray-100 text-gray-700">
+                        <td className="px-6 py-5 align-middle text-sm text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-5 align-middle">
+                          <div className="flex items-center gap-3">
+                            <button
+                              type="button"
+                              title="复制完整 Key"
+                              onClick={() => handleCopyKey(item.id)}
+                              className="text-base text-[#5c6471] transition hover:text-gray-950"
+                            >
+                              {item.token_preview}
+                            </button>
+                            <span className={`text-xs ${copiedKeyId === item.id ? 'text-emerald-600' : 'text-gray-500'}`}>
+                              {copiedKeyId === item.id ? '已复制完整 Key' : '点击 Key 临时复制完整 Key'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">
+                          <div className="font-medium text-gray-700">{item.name}</div>
+                        </td>
+                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">{formatDateTime(item.created_at)}</td>
+                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">全部</td>
+                        <td className="px-6 py-5 align-middle">
+                          <div className="flex items-center gap-2">
+                            <IconButton
+                              title={item.is_active ? '将 Key 设为失效' : '重新启用 Key'}
+                              onClick={() => handleToggle(item.id, item.is_active)}
+                            >
+                              <PowerIcon active={item.is_active} />
+                            </IconButton>
+                            <IconButton
+                              title="修改备注"
+                              onClick={() => setDialog({ mode: 'edit', id: item.id, name: item.name })}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton title="删除 Key" onClick={() => handleDelete(item.id)} tone="danger">
+                              <DeleteIcon />
+                            </IconButton>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           </div>
-          <div className="flex items-start">
-            <span className="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-sm font-normal mr-3">2</span>
-            <div>
-              <p className="text-sm font-normal text-gray-900">{t('protectApiKey')}</p>
-              <p className="text-sm text-gray-500 mt-1">{t('protectApiKeyDesc')}</p>
-            </div>
+        )}
+      </section>
+
+      <section id="usage-guide" className="rounded-[32px] border border-gray-100 bg-white p-6 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)]">
+        <h3 className="text-xl text-gray-950">使用说明</h3>
+        <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+          <div className="rounded-2xl bg-gray-50 p-5">
+            <p className="text-sm font-medium text-gray-900">安全说明</p>
+            <p className="mt-3 text-sm leading-7 text-gray-600">
+              平台默认只展示脱敏预览。复制完整 Key 时会实时向后端请求，不会在页面中保留明文缓存；若怀疑泄露，直接失效或删除对应 Key。
+            </p>
           </div>
-          <div className="flex items-start">
-            <span className="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center text-sm font-normal mr-3">3</span>
-            <div>
-              <p className="text-sm font-normal text-gray-900">{t('exampleRequest')}</p>
-              <div className="mt-2 p-3 bg-gray-900 rounded-lg overflow-x-auto">
-                <pre className="text-sm text-gray-100 font-mono" style={{ fontFamily: 'MiSans, sans-serif' }}>
-{`curl -X POST https://api.example.com/v1/chat \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+          <div className="rounded-2xl bg-gray-950 p-5">
+            <p className="text-sm font-medium text-gray-100">curl 示例</p>
+            <pre className="mt-4 overflow-x-auto text-sm leading-7 text-gray-100">{`curl -X POST ${baseUrl}/chat/completions \\
+  -H "Authorization: Bearer YOUR_ROUTER_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{"messages": [{"role": "user", "content": "Hello"}]}'`}
-                </pre>
-              </div>
-            </div>
+  -d '{"model":"smart-router","messages":[{"role":"user","content":"Hello"}]}'`}</pre>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* 创建密钥弹窗 */}
-      {showNameDialog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-normal text-gray-900 mb-4">{t('enterKeyName') || 'Enter key name'}</h3>
-            <input
-              type="text"
-              value={newKeyName}
-              onChange={(e) => setNewKeyName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateKey()}
-              placeholder={t('keyNamePlaceholder') || 'e.g., Production, Testing'}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 mb-4"
-              autoFocus
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => { setShowNameDialog(false); setNewKeyName('') }}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                {t('cancel') || 'Cancel'}
-              </button>
-              <button
-                onClick={handleCreateKey}
-                disabled={!newKeyName.trim()}
-                className="px-4 py-2 text-sm bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {t('create') || 'Create'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {dialog ? (
+        <NameDialog
+          key={`${dialog.mode}-${dialog.id ?? 'new'}`}
+          title={dialog.mode === 'create' ? '创建新的 API Key' : '修改备注'}
+          actionLabel={dialog.mode === 'create' ? '创建' : '保存'}
+          initialName={dialog.name}
+          submitting={submitting}
+          onSubmit={dialog.mode === 'create' ? handleCreate : handleUpdate}
+          onClose={() => {
+            if (!submitting) {
+              setDialog(null)
+            }
+          }}
+        />
+      ) : null}
     </div>
   )
 }
