@@ -60,11 +60,88 @@ const TREND_COLORS = [
 ]
 
 type TrendMetric = 'throughput' | 'ttft' | 'e2e'
+type TrendPoint = BenchmarkTrendResponse['providers'][number]['data_points'][number]
+type MetricDataKey = 'avg_throughput_tps' | 'avg_ttft_ms' | 'avg_e2e_latency_ms'
+type TooltipParam = {
+  seriesName: string
+  value: number | [string, number] | null
+  color: string
+  axisValue?: string | number
+  axisValueLabel?: string
+}
 
-const METRIC_CONFIG: Record<TrendMetric, { label: string; unit: string; key: string }> = {
+const TOOLTIP_NEAREST_POINT_MAX_GAP_MS = 45 * 60 * 1000
+
+const METRIC_CONFIG: Record<TrendMetric, { label: string; unit: string; key: MetricDataKey }> = {
   throughput: { label: '吞吐', unit: 'tokens/s', key: 'avg_throughput_tps' },
   ttft: { label: '首字延迟', unit: 'ms', key: 'avg_ttft_ms' },
   e2e: { label: 'E2E 延迟', unit: 'ms', key: 'avg_e2e_latency_ms' },
+}
+
+const formatTooltipDateTime = (value: string | number) => {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return date.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  })
+}
+
+const getTooltipTimestamp = (item?: TooltipParam) => {
+  if (!item) return null
+  const rawValue = Array.isArray(item.value) ? item.value[0] : item.axisValue ?? item.axisValueLabel
+  if (rawValue == null) return null
+  const timestamp = typeof rawValue === 'number' ? rawValue : new Date(rawValue).getTime()
+  return Number.isFinite(timestamp) ? timestamp : null
+}
+
+const getPointMetricValue = (point: TrendPoint, metricKey: MetricDataKey) => point[metricKey]
+
+const buildTooltipRows = (
+  providers: BenchmarkTrendResponse['providers'],
+  metricKey: MetricDataKey,
+  hoveredTimestamp: number | null
+) => {
+  if (hoveredTimestamp == null) return []
+
+  return providers
+    .map((provider, idx) => {
+      let nearestPoint: TrendPoint | null = null
+      let nearestDistance = Number.POSITIVE_INFINITY
+
+      provider.data_points.forEach((point) => {
+        const metricValue = getPointMetricValue(point, metricKey)
+        if (metricValue == null) return
+
+        const pointTimestamp = new Date(point.date).getTime()
+        if (!Number.isFinite(pointTimestamp)) return
+
+        const distance = Math.abs(pointTimestamp - hoveredTimestamp)
+        if (distance < nearestDistance) {
+          nearestPoint = point
+          nearestDistance = distance
+        }
+      })
+
+      if (!nearestPoint || nearestDistance > TOOLTIP_NEAREST_POINT_MAX_GAP_MS) {
+        return null
+      }
+
+      const point = nearestPoint as TrendPoint
+      const metricValue = getPointMetricValue(point, metricKey)
+      if (metricValue == null) return null
+
+      return {
+        color: TREND_COLORS[idx % TREND_COLORS.length],
+        pointDate: point.date,
+        providerName: provider.provider_name,
+        value: metricValue,
+      }
+    })
+    .filter((row): row is { color: string; pointDate: string; providerName: string; value: number } => row !== null)
 }
 
 interface ModelDetailClientProps {
@@ -375,24 +452,44 @@ const PerformanceTrendSection = memo(function PerformanceTrendSection({
         borderColor: '#E5E7EB',
         borderWidth: 1,
         textStyle: { color: '#181E25', fontSize: 12 },
-        formatter: (params: Array<{ seriesName: string; value: number | [string, number] | null; color: string; axisValue: string }>) => {
-          const header = `<div style="font-weight:600;margin-bottom:6px">${params[0]?.axisValue}</div>`
-          const rows = params
-            .filter((p) => p.value != null)
-            .map(
-              (p) => {
-                const value = Array.isArray(p.value) ? p.value[1] : p.value
-                return (
+        formatter: (params: TooltipParam[]) => {
+          const hoveredTimestamp = getTooltipTimestamp(params[0])
+          const matchedRows = buildTooltipRows(trendData.providers, metricCfg.key, hoveredTimestamp)
+          const headerLabel = params[0]?.axisValueLabel ?? params[0]?.axisValue
+          const header = `<div style="font-weight:600;margin-bottom:4px">${
+            headerLabel != null
+              ? formatTooltipDateTime(headerLabel)
+              : hoveredTimestamp != null
+                ? formatTooltipDateTime(hoveredTimestamp)
+                : ''
+          }</div>`
+          const subtitle =
+            matchedRows.length > 1
+              ? `<div style="margin-bottom:8px;color:#6B7280;font-size:12px">按各服务商最近采样点匹配</div>`
+              : ''
+          const rows = (matchedRows.length > 0
+            ? matchedRows.map((item) =>
                 `<div style="display:flex;align-items:center;gap:6px;margin:2px 0">` +
-                `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color}"></span>` +
-                `<span>${p.seriesName}</span>` +
-                `<span style="margin-left:auto;font-weight:600">${value} ${metricCfg.unit}</span>` +
+                `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${item.color}"></span>` +
+                `<span>${item.providerName}</span>` +
+                `<span style="color:#6B7280;font-size:12px">${formatTooltipDateTime(item.pointDate)}</span>` +
+                `<span style="margin-left:auto;font-weight:600">${item.value} ${metricCfg.unit}</span>` +
                 `</div>`
-                )
-              }
-            )
+              )
+            : params
+                .filter((p) => p.value != null)
+                .map((p) => {
+                  const value = Array.isArray(p.value) ? p.value[1] : p.value
+                  return (
+                    `<div style="display:flex;align-items:center;gap:6px;margin:2px 0">` +
+                    `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${p.color}"></span>` +
+                    `<span>${p.seriesName}</span>` +
+                    `<span style="margin-left:auto;font-weight:600">${value} ${metricCfg.unit}</span>` +
+                    `</div>`
+                  )
+                }))
             .join('')
-          return header + rows
+          return header + subtitle + rows
         },
       },
       legend: {
