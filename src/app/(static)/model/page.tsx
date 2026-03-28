@@ -6,7 +6,7 @@
  * 支持分类 Tab、研发商多选、关键词搜索（均通过后端 API 过滤）
  */
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
 import { getModels, getCategories, getVendors } from '@/lib/api/testing-model'
 import type { ModelCategory, ModelVendor } from '@/types/model'
@@ -15,11 +15,26 @@ import ModelSearch from '@/components/model/ModelSearch'
 import ModelCardV2 from '@/components/model/ModelCardV2'
 import VendorFilter from '@/components/model/VendorFilter'
 
+// 定义进入动画的 Tailwind 类组合
+const animationClasses = {
+  container: 'transition-all duration-1000 ease-out',
+  hidden: 'opacity-0 translate-y-8',
+  visible: 'opacity-100 translate-y-0',
+}
+
 export default function ModelPage() {
   // 筛选状态
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedVendors, setSelectedVendors] = useState<string[]>([])
+
+  // 用于触发页面进入动画的状态
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // 页面加载后触发动画
+  useEffect(() => {
+    setIsLoaded(true)
+  }, [])
 
   // 获取分类列表（静态数据，不受筛选影响）
   const { data: categories = [] } = useSWR<ModelCategory[]>(
@@ -57,121 +72,150 @@ export default function ModelPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-8 lg:py-12">
-        {/* 标题区域 */}
-        <div className="mb-8">
-          <h1 className="text-[24px] lg:text-[28px] font-semibold text-[#181E25] mb-2">
-            AI 模型
+    <main className="relative min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 overflow-hidden pb-20">
+      {/* --- 背景光晕装饰 (Glow Background) --- */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] opacity-40 pointer-events-none -z-10 flex justify-center">
+        <div className="absolute top-[-10%] w-[600px] h-[600px] bg-blue-400/20 rounded-full blur-[100px] mix-blend-multiply" />
+        <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-violet-400/20 rounded-full blur-[120px] mix-blend-multiply" />
+      </div>
+
+      <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-8 pt-12 lg:pt-16 flex flex-col">
+
+        {/* --- 1. 标题区域 (Hero Section) --- */}
+        <div className={`flex flex-col items-center text-center mb-10 ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden}`}>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/50 border border-blue-200/50 text-blue-600 text-sm font-medium mb-6">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            Model Directory
+          </div>
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
+              探索 AI 模型矩阵
+            </span>
           </h1>
-          <p className="text-[14px] text-[#666666]">
-            探索我们支持的所有 AI 模型，按分类筛选找到最适合您需求的模型
+          <p className="text-base md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            发现并体验我们支持的全面 AI 模型。通过多维度的分类与组合筛选，快速定位最契合您业务场景的智能引擎。
           </p>
         </div>
 
-        {/* 分类标签 */}
-        <CategoryTabs
-          categories={categories}
-          selectedKey={selectedCategory}
-          onChange={setSelectedCategory}
-          labels={{ all: '全部' }}
-        />
+        {/* --- 2. 核心控制面板 (Filter Control Panel) --- */}
+        <div className={`w-full bg-white/70 backdrop-blur-xl border border-slate-200/80 rounded-[2rem] p-6 md:p-8 shadow-lg shadow-slate-200/40 mb-8 ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-200`}>
+          <div className="flex flex-col gap-6">
 
-        {/* 研发商筛选 */}
-        <VendorFilter
-          vendors={vendors}
-          selectedVendors={selectedVendors}
-          onChange={setSelectedVendors}
-        />
+            {/* 上半部分：分类 Tab 与 搜索框 */}
+            <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-slate-100 pb-6">
+              <div className="w-full xl:w-auto flex-1 overflow-x-auto pb-2 xl:pb-0">
+                <CategoryTabs
+                  categories={categories}
+                  selectedKey={selectedCategory}
+                  onChange={setSelectedCategory}
+                  labels={{ all: '全部模型' }}
+                />
+              </div>
+              <div className="w-full xl:w-80 shrink-0">
+                <ModelSearch
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  placeholder="搜索模型名称或能力..."
+                />
+              </div>
+            </div>
 
-        {/* 搜索栏 */}
-        <div className="mb-6">
-          <div className="max-w-md">
-            <ModelSearch
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="搜索模型名称或描述..."
-            />
+            {/* 下半部分：研发商筛选 */}
+            <div className="w-full">
+              <div className="text-sm font-bold tracking-widest uppercase text-slate-400 mb-3 ml-1">
+              </div>
+              <VendorFilter
+                vendors={vendors}
+                selectedVendors={selectedVendors}
+                onChange={setSelectedVendors}
+              />
+            </div>
+
           </div>
         </div>
 
-        {/* 结果统计 */}
-        <div className="mb-6 flex items-center justify-between">
-          <span className="text-[14px] text-[#666666]">
-            {isLoading ? '加载中...' : `${models.length} 个模型`}
-          </span>
-          {hasActiveFilters && (
+        {/* --- 3. 结果统计与操作 (Results Stats & Actions) --- */}
+        <div className={`flex items-center justify-between mb-6 px-2 ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-300`}>
+          <div className="text-sm font-medium text-slate-500 flex items-center gap-2">
+            {isLoading ? (
+              <span className="flex items-center gap-2 text-blue-600">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                正在检索模型...
+              </span>
+            ) : (
+              <>
+                共找到 <span className="text-slate-900 font-bold text-base px-0.5">{models.length}</span> 个可用模型
+              </>
+            )}
+          </div>
+
+          {/* 清除筛选按钮 */}
+          <div className={`transition-opacity duration-300 ${hasActiveFilters ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <button
               onClick={clearAllFilters}
-              className="text-[13px] text-[#666666] hover:text-[#181E25] transition-colors flex items-center gap-1"
+              className="group flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-semibold text-slate-500 bg-white/60 hover:bg-white border border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:shadow-sm rounded-full transition-all duration-300 active:scale-95"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 14 14"
-                fill="none"
-              >
-                <path
-                  d="M11 3.5L3 11.5M3 3.5L11 11.5"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none" className="group-hover:rotate-90 transition-transform duration-300">
+                <path d="M11 3.5L3 11.5M3 3.5L11 11.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               清除筛选
             </button>
+          </div>
+        </div>
+
+        {/* --- 4. 模型网格展示区 (Model Grid / Empty State) --- */}
+        <div className={`${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-500`}>
+          {isLoading ? (
+            // 加载中占位
+            <div className="flex flex-col items-center justify-center py-24">
+              <div className="relative flex justify-center items-center">
+                <div className="absolute animate-ping w-12 h-12 rounded-full bg-blue-400 opacity-20"></div>
+                <div className="w-10 h-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin"></div>
+              </div>
+              <p className="text-slate-400 text-sm mt-4 font-medium tracking-wide">模型数据加载中...</p>
+            </div>
+          ) : models.length > 0 ? (
+            // 网格列表
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
+              {models.map((model) => (
+                <ModelCardV2 key={model.slug} model={model} />
+              ))}
+            </div>
+          ) : (
+            // 无结果空状态 (Empty State)
+            <div className="relative overflow-hidden flex flex-col items-center justify-center py-24 text-center bg-white/50 backdrop-blur-sm border border-dashed border-slate-300 rounded-[2rem]">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-slate-200/40 rounded-full blur-3xl pointer-events-none"></div>
+
+              <div className="relative z-10 mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-gradient-to-br from-slate-100 to-slate-50 text-slate-400 shadow-inner border border-slate-200/80">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 64 64" fill="none">
+                  <path d="M56 56M8 8L28 28M36 28L56 8M28 36L8 56" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+                  <circle cx="28" cy="28" r="20" stroke="currentColor" strokeWidth="4" />
+                  <circle cx="36" cy="36" r="5" fill="currentColor" />
+                </svg>
+              </div>
+
+              <h3 className="relative z-10 text-xl font-bold text-slate-800 tracking-tight mb-2">没有找到匹配的模型</h3>
+              <p className="relative z-10 text-sm text-slate-500 max-w-sm mb-6 leading-relaxed">
+                当前筛选组合下未找到任何模型。您可以尝试减少筛选条件或更换搜索关键词。
+              </p>
+
+              <button
+                onClick={clearAllFilters}
+                className="relative z-10 px-6 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl shadow-md hover:bg-slate-800 hover:shadow-lg transition-all duration-200 active:scale-95"
+              >
+                重置所有筛选
+              </button>
+            </div>
           )}
         </div>
 
-        {/* 模型网格 */}
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#181E25]" />
-          </div>
-        ) : models.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
-            {models.map((model) => (
-              <ModelCardV2 key={model.slug} model={model} />
-            ))}
-          </div>
-        ) : (
-          /* 无结果提示 */
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="64"
-              height="64"
-              viewBox="0 0 64 64"
-              fill="none"
-              className="text-[#E5E7EB] mb-4"
-            >
-              <path
-                d="M56 56M8 8L28 28M36 28L56 8M28 36L8 56"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              <circle
-                cx="28"
-                cy="28"
-                r="20"
-                stroke="currentColor"
-                strokeWidth="3"
-              />
-              <circle cx="36" cy="36" r="4" fill="currentColor" />
-            </svg>
-            <p className="text-[16px] text-[#666666]">没有找到匹配的模型</p>
-            <p className="text-[14px] text-[#9CA3AF] mt-1">试试调整筛选条件</p>
-            <button
-              onClick={clearAllFilters}
-              className="mt-4 px-4 py-2 bg-[#181E25] text-white text-[14px] rounded-lg hover:opacity-90 transition-opacity"
-            >
-              清除筛选
-            </button>
-          </div>
-        )}
       </div>
     </main>
   )
