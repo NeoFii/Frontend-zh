@@ -1,5 +1,7 @@
-/* 字体引入 */
+/* 原有字体引入 */
 @import url('/fonts/misans.css');
+/* 新增：登录页赛博英文字体引入 */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700;800&family=Noto+Sans+SC:wght@300;400;500;700;900&family=Orbitron:wght@700;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -15,14 +17,20 @@
     @apply text-gray-800 antialiased font-sans;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-semibold tracking-tight;
   }
 }
 
 /* 组件样式 */
 @layer components {
-  /* 响应式容器 - 小屏收窄内边距 */
+
+  /* 原有响应式容器 */
   .container-custom {
     @apply max-w-[1920px] mx-auto px-4 sm:px-8 md:px-[60px];
   }
@@ -46,6 +54,42 @@
   .card {
     @apply bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200;
   }
+
+  /* ====== 新增：登录页组件样式 ====== */
+
+  .tech-panel {
+    @apply relative bg-white/60 backdrop-blur-3xl border border-white/90;
+    box-shadow: 0 10px 40px -10px rgba(11, 17, 33, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+  }
+
+  /* 修复：移除不存在的 duration-800，直接使用原生 transition 和 transform，100%不报错 */
+  .carousel-slide {
+    @apply absolute inset-0 opacity-0 pointer-events-none flex flex-col items-center justify-center p-8;
+    transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+    transform: scale(0.98);
+  }
+
+  .carousel-slide.active {
+    @apply opacity-100 pointer-events-auto;
+    transform: scale(1);
+  }
+
+  .custom-tooltip {
+    @apply absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 translate-y-1 scale-95 opacity-0 invisible transition-all duration-200 ease-in-out bg-[#0B1121] text-[#00D2FF] font-['JetBrains_Mono'] px-3 py-1.5 border border-[#00D2FF]/30 rounded text-xs whitespace-nowrap z-50 pointer-events-none;
+    box-shadow: 0 4px 12px rgba(0, 210, 255, 0.15);
+  }
+
+  .custom-tooltip::after {
+    content: '';
+    @apply absolute top-full left-1/2 -translate-x-1/2 border-4 border-solid border-transparent border-t-[#0B1121];
+  }
+
+  .group:hover .custom-tooltip,
+  .group\/path:hover .custom-tooltip,
+  .group\/bar:hover .custom-tooltip,
+  .group\/jiguang:hover .custom-tooltip {
+    @apply opacity-100 visible -translate-x-1/2 translate-y-0 scale-100;
+  }
 }
 
 /* 工具类 */
@@ -54,7 +98,7 @@
     text-wrap: balance;
   }
 
-  /* 基础淡入 */
+  /* 原有基础淡入 */
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out;
   }
@@ -64,13 +108,14 @@
       opacity: 0;
       transform: translateY(10px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
 
-  /* 入场动画 - 从下方淡入 */
+  /* 原有入场动画 - 从下方淡入 */
   .animate-slide-up {
     animation: slideUp 0.6s ease-out forwards;
     opacity: 0;
@@ -81,13 +126,14 @@
       opacity: 0;
       transform: translateY(40px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
 
-  /* 入场动画 - 缩放淡入 */
+  /* 原有入场动画 - 缩放淡入 */
   .animate-scale-in {
     animation: scaleIn 0.5s ease-out forwards;
     opacity: 0;
@@ -98,43 +144,50 @@
       opacity: 0;
       transform: scale(0.9);
     }
+
     to {
       opacity: 1;
       transform: scale(1);
     }
   }
 
-  /* 浮动动画 */
+  /* 原有浮动动画 */
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
 
   @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateY(0);
     }
+
     50% {
       transform: translateY(-20px);
     }
   }
 
-  /* 脉冲光环 */
+  /* 原有脉冲光环 */
   .animate-pulse-glow {
     animation: pulseGlow 3s ease-in-out infinite;
   }
 
   @keyframes pulseGlow {
-    0%, 100% {
+
+    0%,
+    100% {
       opacity: 0.3;
       transform: scale(1);
     }
+
     50% {
       opacity: 0.5;
       transform: scale(1.05);
     }
   }
 
-  /* 背景渐变动画 */
+  /* 原有背景渐变动画 */
   .animate-gradient {
     animation: gradient 8s ease infinite;
     background-size: 200% 200%;
@@ -144,30 +197,55 @@
     0% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
+
     100% {
       background-position: 0% 50%;
     }
   }
 
-  /* 旋转动画 */
+  /* 原有旋转动画 */
   .animate-spin-slow {
     animation: spin 20s linear infinite;
   }
 
-  /* 延迟动画类 */
-  .delay-100 { animation-delay: 100ms; }
-  .delay-200 { animation-delay: 200ms; }
-  .delay-300 { animation-delay: 300ms; }
-  .delay-400 { animation-delay: 400ms; }
-  .delay-500 { animation-delay: 500ms; }
-  .delay-600 { animation-delay: 600ms; }
-  .delay-700 { animation-delay: 700ms; }
-  .delay-800 { animation-delay: 800ms; }
+  /* 原有延迟动画类 */
+  .delay-100 {
+    animation-delay: 100ms;
+  }
 
-  /* 滚动显示动画 - 使用 JavaScript 触发 */
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .delay-600 {
+    animation-delay: 600ms;
+  }
+
+  .delay-700 {
+    animation-delay: 700ms;
+  }
+
+  .delay-800 {
+    animation-delay: 800ms;
+  }
+
+  /* 原有滚动显示动画 - 使用 JavaScript 触发 */
   .reveal {
     opacity: 0;
     transform: translateY(30px);
@@ -179,7 +257,7 @@
     transform: translateY(0);
   }
 
-  /* 渐变文字 */
+  /* 原有渐变文字 */
   .text-gradient {
     background: linear-gradient(135deg, #3b82f6 0%, #f97316 100%);
     -webkit-background-clip: text;
@@ -187,14 +265,14 @@
     background-clip: text;
   }
 
-  /* 玻璃拟态效果 */
+  /* 原有玻璃拟态效果 */
   .glass {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
 
-  /* 卡片悬浮效果 */
+  /* 原有卡片悬浮效果 */
   .card-hover {
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
@@ -204,7 +282,7 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   }
 
-  /* 按钮波纹效果 */
+  /* 原有按钮波纹效果 */
   .btn-ripple {
     position: relative;
     overflow: hidden;
@@ -228,7 +306,7 @@
     height: 300px;
   }
 
-  /* 滚动条美化 */
+  /* 原有滚动条美化 */
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
@@ -248,7 +326,7 @@
     border-radius: 3px;
   }
 
-  /* Marquee 无限滚动动画 */
+  /* 原有 Marquee 无限滚动动画 */
   .animate-marquee {
     animation: marquee 25s linear infinite;
   }
@@ -261,13 +339,97 @@
     0% {
       transform: translateX(0);
     }
+
     100% {
       transform: translateX(-33.33%);
     }
   }
 
-  /* 禁用动画（用于减少动画偏好）*/
+  /* ====== 补充：HELLO 开场动画 ====== */
+  @keyframes helloFadeIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.85);
+      letter-spacing: 0.2rem;
+    }
+
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      letter-spacing: 1.8rem;
+    }
+  }
+
+  @keyframes helloFlyOut {
+    0% {
+      opacity: 1;
+      transform: scale(1) translateZ(0);
+      filter: blur(0);
+    }
+
+    100% {
+      opacity: 0;
+      transform: scale(5) translateZ(100px);
+      filter: blur(12px);
+    }
+  }
+
+  @keyframes hideIntro {
+    0% {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    100% {
+      opacity: 0;
+      visibility: hidden;
+      z-index: -1;
+    }
+  }
+
+  .intro-screen {
+    @apply absolute inset-0 z-50 flex justify-center items-center;
+    background: rgba(244, 247, 251, 0.98);
+    backdrop-filter: blur(16px);
+    animation: hideIntro 0.5s cubic-bezier(0.8, 0, 0.2, 1) 2.6s forwards;
+  }
+
+  .hello-text {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: clamp(4rem, 8vw, 9rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #0B1121 20%, #00D2FF 80%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 15px 35px rgba(0, 210, 255, 0.3));
+    text-transform: uppercase;
+    opacity: 0;
+    /* 原生 CSS 完美支持多段动画组合 */
+    animation:
+      helloFadeIn 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards,
+      helloFlyOut 0.8s cubic-bezier(0.7, 0, 0.3, 1) 1.8s forwards;
+  }
+
+  /* ====== 新增：登录页专属背景和样式工具 ====== */
+  .grid-bg {
+    background-image:
+      linear-gradient(to right, rgba(100, 116, 139, 0.08) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(100, 116, 139, 0.08) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center center;
+  }
+
+  .stripe-bg {
+    background: repeating-linear-gradient(-45deg,
+        rgba(255, 255, 255, 0.1),
+        rgba(255, 255, 255, 0.1) 2px,
+        transparent 2px,
+        transparent 6px);
+  }
+
+  /* 原有禁用动画 */
   @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -278,7 +440,7 @@
   }
 }
 
-/* Markdown 样式 */
+/* 原有 Markdown 样式 (完整保留) */
 .markdown-content h1 {
   @apply text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200;
 }

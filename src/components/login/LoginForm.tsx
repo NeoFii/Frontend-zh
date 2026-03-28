@@ -3,7 +3,7 @@
  * 处理登录逻辑和表单输入
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useAuthStore } from '@/stores/auth'
@@ -30,6 +30,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   const { t: tValidation } = useTranslation('auth.validation')
   const { t: tErrors } = useTranslation('auth.errors')
   const { login: saveUser } = useAuthStore()
+
   const [loginType, setLoginType] = useState<'password' | 'code'>('password')
   const [form, setForm] = useState<FormData>({
     email: '',
@@ -38,6 +39,30 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // ================= 终端打字机特效逻辑 =================
+  const [targetText, setTargetText] = useState('等待建立加密连接...')
+  const [displayedText, setDisplayedText] = useState('')
+
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    let i = 0;
+
+    setDisplayedText('');
+
+    const typeWriter = () => {
+      if (i < targetText.length) {
+        setDisplayedText(targetText.slice(0, i + 1));
+        i++;
+        timeoutId = setTimeout(typeWriter, Math.random() * 30 + 20);
+      }
+    };
+
+    timeoutId = setTimeout(typeWriter, 50);
+
+    return () => clearTimeout(timeoutId);
+  }, [targetText]);
+  // =======================================================
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -96,6 +121,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
     setLoading(true)
     setError('')
+    setTargetText('正在验证安全密钥...')
 
     try {
       let res
@@ -112,35 +138,56 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       }
 
       if (res.code === 200) {
-        // 存储 Token（Refresh Token 由后端通过 httpOnly Cookie 管理）
+        setTargetText('认证通过，路由分配中...')
         const { access_token, expires_in } = res.data
         setAccessToken(access_token, expires_in)
-        // 保存用户信息到本地 store
         saveUser(res.data.user)
         onSuccess()
       } else {
-        // 业务逻辑错误，直接使用后端返回的 message
         setError(res.message || tErrors('loginFailed'))
+        setTargetText('>> 认证被拒绝')
       }
     } catch (err: unknown) {
-      // HTTP 错误，直接使用后端返回的 message
       const axiosError = err as { response?: { data?: { message?: string } } }
       const message = axiosError.response?.data?.message
       setError(message || tErrors('loginFailedRetry'))
+      setTargetText('>> 连接超时或网络异常')
     } finally {
       setLoading(false)
     }
   }
 
+  const handleTabChange = (type: 'password' | 'code') => {
+    setLoginType(type)
+    if (type === 'password') {
+      setTargetText('已切换至 [邮箱密码] 校验协议。')
+    } else {
+      setTargetText('已切换至 [邮箱验证码] 协议。')
+    }
+  }
+
+  const cyberInputClass = "w-full px-4 py-3.5 bg-white/70 border border-slate-300 border-l-slate-300 border-l-[3px] rounded transition-all focus:border-tech-accent/50 focus:border-l-tech-accent focus:bg-white focus:outline-none focus:shadow-[inset_0_0_15px_rgba(0,210,255,0.05),0_0_15px_rgba(0,210,255,0.1)] font-tech-mono text-sm tracking-widest text-tech-text placeholder-slate-400"
+
   return (
     <>
-      <LoginTypeSwitcher loginType={loginType} onChange={setLoginType} />
+      <div className="bg-slate-100/60 border border-slate-200/80 p-3 mb-8 rounded font-tech-mono text-xs shadow-inner relative overflow-hidden">
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-tech-accent/60"></div>
+        <div className="flex items-center text-tech-text h-4">
+          <span className="text-tech-accent font-bold mr-2 opacity-80 shrink-0">系统&gt;</span>
+          <span>{displayedText}</span>
+          <span className="inline-block w-[6px] h-[14px] bg-tech-accent align-middle ml-1 animate-[blink_1s_step-end_infinite] shrink-0"></span>
+        </div>
+      </div>
 
-      <form onSubmit={handleLogin} className="space-y-5">
+      <LoginTypeSwitcher loginType={loginType} onChange={handleTabChange} />
+
+      <form onSubmit={handleLogin} className="space-y-6">
         <FormAlert error={error} />
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
+        <div className="relative group">
+          <div className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-tech-mono text-tech-muted font-bold z-10 uppercase tracking-wider">
+            {t('email') || '邮箱地址'}
+          </div>
           <input
             id="email"
             name="email"
@@ -148,26 +195,36 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             required
             value={form.email}
             onChange={handleChange}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-            placeholder={t('emailPlaceholder')}
+            onFocus={() => setTargetText(loginType === 'code' ? '请输入邮箱以下发一次性秘钥。' : '请输入邮箱以校验身份。')}
+            onBlur={() => setTargetText('等待输入...')}
+            className={cyberInputClass}
+            placeholder={t('emailPlaceholder') || '请输入您的邮箱'}
           />
         </div>
 
-        {loginType === 'password' ? (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t('password')}</label>
-            <PasswordInput
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder={t('passwordPlaceholder')}
-              required
-            />
-          </div>
-        ) : (
-          <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">{t('code')}</label>
-            <div className="flex space-x-3">
+        {/* 核心动画：加入 key={loginType} 和 animate-fade-in 触发平滑切入 */}
+        <div key={loginType} className="animate-fade-in">
+          {loginType === 'password' ? (
+            <div className="relative group mt-6">
+              <div className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-tech-mono text-tech-muted font-bold z-10 uppercase tracking-wider">
+                {t('password') || '安全密钥'}
+              </div>
+              <div onFocus={() => setTargetText('请输入密码以完成登录。')} onBlur={() => setTargetText('等待输入...')}>
+                <PasswordInput
+                  name="password"
+                  value={form.password}
+                  onChange={handleChange}
+                  placeholder={t('passwordPlaceholder') || '请输入您的密码'}
+                  required
+                  className={cyberInputClass}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-3 relative mt-6">
+              <div className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-tech-mono text-tech-muted font-bold z-10 uppercase tracking-wider">
+                {t('code') || '临时令牌'}
+              </div>
               <input
                 id="code"
                 name="code"
@@ -176,27 +233,48 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                 maxLength={6}
                 value={form.code}
                 onChange={handleChange}
-                className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                placeholder={t('codePlaceholder')}
+                onFocus={() => setTargetText('请输入临时令牌。')}
+                onBlur={() => setTargetText('等待输入...')}
+                className={`${cyberInputClass} text-center tracking-[0.5em]`}
+                placeholder={t('codePlaceholder') || '请输入验证码'}
               />
-              <CodeCountdown onSendCode={handleSendCode} sendingText={t('sending')} getCodeText={t('getCode')} />
+              <div className="shrink-0 flex items-center">
+                <CodeCountdown
+                  onSendCode={handleSendCode}
+                  sendingText={t('sending')}
+                  getCodeText={t('getCode')}
+                />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="relative w-full mt-10 bg-tech-text text-white py-4 rounded font-tech-mono text-sm tracking-[0.3em] font-bold hover:bg-[#0B1121]/90 transition-all overflow-hidden group shadow-[0_5px_20px_rgba(11,17,33,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? t('submitting') : t('submit')}
+          <span className="relative z-10 flex items-center justify-center gap-2">
+            {loading ? t('submitting') : (t('submit') || '立即登录_享受智能路由')}
+            {!loading && (
+              <svg className="w-4 h-4 text-tech-accent group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            )}
+          </span>
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
         </button>
       </form>
 
-      <div className="mt-6 flex items-center justify-between text-sm">
-        <Link href="/forgot-password" className="text-gray-500 hover:text-gray-700">{t('forgotPassword')}</Link>
-        <Link href="/register" className="text-gray-900 font-medium hover:text-gray-700">
-          {t('noAccount')}{t('registerNow')}
+      <div className="mt-6 border-t border-slate-200/80 pt-4 flex items-center justify-between text-[10px] font-tech-mono text-tech-muted uppercase">
+        <Link href="/forgot-password" className="hover:text-tech-accent transition-colors flex items-center gap-1">
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          {t('forgotPassword') || '忘记密码'}
+        </Link>
+        <Link href="/register" className="hover:text-tech-accent font-bold transition-colors text-tech-text">
+          &gt; 申请_账号
         </Link>
       </div>
     </>
