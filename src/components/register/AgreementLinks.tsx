@@ -1,33 +1,14 @@
-/**
- * 协议链接组件
- * 用户协议和隐私政策链接
- */
-
 import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 
-interface AgreementLinksProps {
-  checked: boolean
-  onChange: (checked: boolean) => void
-}
-
-export function AgreementLinks({ checked, onChange }: AgreementLinksProps) {
+export function AgreementLinks({ checked, onChange }: { checked: boolean, onChange: (c: boolean) => void }) {
   const { t } = useTranslation('auth.register')
-
   return (
-    <div className="flex items-start">
-      <input
-        id="agreement"
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 mt-1 text-gray-900 border-gray-300 rounded focus:ring-gray-900"
-      />
-      <label htmlFor="agreement" className="ml-2 text-sm text-gray-600">
-        {t('agreementPrefix')}
-        <Link href="/agreement" className="text-gray-900 underline hover:text-gray-700">{t('userAgreement')}</Link>
-        和
-        <Link href="/privacy" className="text-gray-900 underline hover:text-gray-700">{t('privacyPolicy')}</Link>
+    <div className="flex items-center font-tech-mono text-[10px] text-tech-muted gap-2">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="accent-tech-accent w-3 h-3" />
+      <label>
+        {t('agreementPrefix') || 'AGREE TO '}
+        <Link href="/agreement" className="text-tech-text underline">[ TERMS ]</Link> AND <Link href="/privacy" className="text-tech-text underline">[ PRIVACY ]</Link>
       </label>
     </div>
   )

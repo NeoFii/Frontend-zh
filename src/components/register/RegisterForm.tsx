@@ -3,7 +3,7 @@
  * 处理注册逻辑和表单输入
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/hooks/useTranslation'
 import { PasswordStrength } from './PasswordStrength'
@@ -17,106 +17,107 @@ import { sendVerificationCode, register } from '@/lib/api/auth'
 import { validateEmail } from '@/lib/utils/validation'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 
-interface RegisterFormProps {
-  onSuccess?: () => void
-}
-
-interface FormData {
-  invitationCode: string
-  email: string
-  code: string
-  password: string
-  confirmPassword: string
-  agreement: boolean
-}
-
-export function RegisterForm({ onSuccess }: RegisterFormProps) {
+export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
   const router = useRouter()
   const { t } = useTranslation('auth.register')
   const { t: tValidation } = useTranslation('auth.validation')
   const { t: tErrors } = useTranslation('auth.errors')
   const { t: tLogin } = useTranslation('auth.login')
   const { login: saveUser } = useAuthStore()
+
   const [loading, setLoading] = useState(false)
   const [codeLoading, setCodeLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const [form, setForm] = useState<FormData>({
-    invitationCode: '',
-    email: '',
-    code: '',
-    password: '',
-    confirmPassword: '',
-    agreement: false,
+  // 视觉控制台状态
+  const [targetText, setTargetText] = useState('等待执行新用户注册协议...')
+  const [displayedText, setDisplayedText] = useState('')
+
+  const [form, setForm] = useState({
+    invitationCode: '', email: '', code: '', password: '', confirmPassword: '', agreement: false,
   })
 
-  const [error, setError] = useState('')
+  // 控制台打字机效果逻辑
+  useEffect(() => {
+    let i = 0;
+    setDisplayedText('');
+    const timer = setInterval(() => {
+      if (i < targetText.length) {
+        setDisplayedText(prev => prev + targetText.charAt(i));
+        i++;
+      } else clearInterval(timer);
+    }, 30);
+    return () => clearInterval(timer);
+  }, [targetText]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, checked, value } = e.target
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
+    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
     setError('')
   }
 
+  // 发送验证码逻辑（增强了错误捕获）
   const handleSendCode = async () => {
-    if (!form.email) {
-      setError(tValidation('enterEmail'))
-      return
-    }
-
     if (!validateEmail(form.email)) {
-      setError(tValidation('invalidEmail'))
-      return
+      setError(tValidation('invalidEmail'));
+      setTargetText('>> 协议终止：无效的邮件地址。');
+      return;
     }
 
-    setCodeLoading(true)
-    setError('')
+    setCodeLoading(true);
+    setTargetText('>> 正在请求邮箱验证码...');
 
     try {
       const res = await sendVerificationCode(form.email)
-      if (res.code !== 200) {
-        setError(res.message || tErrors('sendFailed'))
+      if (res.code === 200) {
+        setTargetText('>> 邮箱验证码下发成功。');
+      } else {
+        // 捕获后端返回的特定错误信息
+        setError(res.message || tErrors('sendFailed'));
+        setTargetText('>> 验证码下发失败：' + (res.message || '拒绝访问'));
       }
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || tErrors('sendFailed'))
+    } catch (err: any) {
+      // 增强型错误捕获
+      const errMsg = err.response?.data?.message || tErrors('sendFailed');
+      setError(errMsg);
+      setTargetText('>> 链路异常：' + errMsg);
     } finally {
-      setCodeLoading(false)
+      setCodeLoading(false);
     }
   }
 
+  // 严谨的本地表单验证
   const validateForm = (): boolean => {
     if (!form.invitationCode.trim()) {
-      setError(tValidation('enterInvitationCode'))
-      return false
+      setError(tValidation('enterInvitationCode'));
+      setTargetText('>> 拒绝执行：需要有效的受邀序列号。');
+      return false;
     }
     if (!form.agreement) {
-      setError(tValidation('agreeToTerms'))
-      return false
-    }
-    if (!form.email || !form.code || !form.password || !form.confirmPassword) {
-      setError(tValidation('fillAllRequired'))
-      return false
+      setError(tValidation('agreeToTerms'));
+      setTargetText('>> 拒绝执行：需接受合规性协议。');
+      return false;
     }
     if (form.password !== form.confirmPassword) {
-      setError(tValidation('passwordMismatch'))
-      return false
+      setError(tValidation('passwordMismatch'));
+      setTargetText('>> 错误：两次输入的密钥不一致。');
+      return false;
     }
     if (form.password.length < 8) {
-      setError(tValidation('passwordTooShort'))
-      return false
+      setError(tValidation('passwordTooShort'));
+      setTargetText('>> 错误：密钥强度不足（需8位以上）。');
+      return false;
     }
-    return true
+    return true;
   }
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    if (!validateForm()) return;
 
-    if (!validateForm()) return
+    setLoading(true);
+    setTargetText('>> 正在构建账户信息并尝试注册...');
 
-    setLoading(true)
     try {
       const res = await register({
         invitation_code: form.invitationCode.trim(),
@@ -127,11 +128,9 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
       })
 
       if (res.code === 201) {
-        // 检查是否有 Token（注册成功后自动登录）
+        setTargetText('>> 注册成功。正在分配路由权限...');
         if (res.data.access_token && res.data.expires_in) {
-          // 存储 Token（Refresh Token 由后端通过 httpOnly Cookie 管理）
           setAccessToken(res.data.access_token, res.data.expires_in)
-          // 保存用户信息到 store
           saveUser({
             uid: res.data.uid,
             email: res.data.email,
@@ -140,113 +139,80 @@ export function RegisterForm({ onSuccess }: RegisterFormProps) {
             last_login_at: null,
             created_at: res.data.created_at,
           })
-          // 跳转到控制台
           router.push('/console/account/basic-information')
         } else if (onSuccess) {
-          onSuccess()
-        } else {
-          router.push('/login?registered=true')
+          onSuccess();
         }
       } else {
-        setError(res.message || tErrors('registerFailed'))
+        setError(res.message || tErrors('registerFailed'));
+        setTargetText('>> 拒绝注册：' + (res.message || '后端拒绝'));
       }
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || tErrors('registerFailedRetry'))
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || tErrors('registerFailedRetry');
+      setError(errMsg);
+      setTargetText('>> 致命错误：' + errMsg);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
+  // 样式定义
+  const cyberInputClass = "w-full px-4 py-3 bg-white/70 border border-slate-300 border-l-[3px] rounded transition-all focus:border-tech-accent focus:bg-white focus:outline-none font-tech-mono text-xs tracking-wider text-tech-text placeholder-slate-400"
+  const cyberLabelClass = "absolute -top-2 left-3 bg-white px-1 text-[9px] font-tech-mono text-tech-muted font-bold z-10 uppercase tracking-widest"
+
   return (
-    <form onSubmit={handleRegister} className="space-y-5">
-      <FormAlert error={error} />
-
-      <div>
-        <label htmlFor="invitationCode" className="block text-sm font-medium text-gray-700 mb-2">{t('invitationCode')}</label>
-        <input
-          id="invitationCode"
-          name="invitationCode"
-          type="text"
-          required
-          value={form.invitationCode}
-          onChange={handleChange}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-          placeholder={t('invitationCodePlaceholder')}
-        />
-        <p className="mt-1 text-xs text-gray-500">{t('invitationOnlyTip')}</p>
-      </div>
-
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">{t('email')}</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          value={form.email}
-          onChange={handleChange}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-          placeholder={t('emailPlaceholder')}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">{t('code')}</label>
-        <div className="flex space-x-3">
-          <input
-            id="code"
-            name="code"
-            type="text"
-            required
-            maxLength={6}
-            value={form.code}
-            onChange={handleChange}
-            className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-            placeholder={t('codePlaceholder')}
-          />
-          <CodeCountdown onSendCode={handleSendCode} disabled={codeLoading} sendingText={tLogin('sending')} getCodeText={tLogin('getCode')} />
+    <form onSubmit={handleRegister} className="space-y-5 relative z-10">
+      {/* 视觉反馈控制台 */}
+      <div className="bg-slate-100/80 border border-slate-200 p-2.5 rounded font-tech-mono text-[10px] shadow-inner relative overflow-hidden">
+        <div className="flex items-center text-tech-text">
+          <span className="text-tech-accent font-bold mr-2">SYS&gt;</span>
+          <span>{displayedText}</span>
+          <span className="w-1 h-3 bg-tech-accent ml-1 animate-blink"></span>
         </div>
       </div>
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">{t('password')}</label>
-        <PasswordInput
-          id="password"
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          placeholder={t('passwordPlaceholder')}
-          required
-          minLength={8}
-        />
+      <FormAlert error={error} />
+
+      {/* 邀请码输入 */}
+      <div className="relative group">
+        <div className={cyberLabelClass}>{t('invitationCode')}</div>
+        <input name="invitationCode" type="text" required value={form.invitationCode} onChange={handleChange} onFocus={() => setTargetText('请输入受邀序列号...')} className={cyberInputClass} placeholder="ENTER INVITE CODE" />
+      </div>
+
+      {/* 邮箱输入 */}
+      <div className="relative group">
+        <div className={cyberLabelClass}>{t('email')}</div>
+        <input name="email" type="email" required value={form.email} onChange={handleChange} onFocus={() => setTargetText('请输入有效邮箱地址...')} className={cyberInputClass} placeholder="EMAIL@EXAMPLE.COM" />
+      </div>
+
+      {/* 验证码输入 */}
+      <div className="flex gap-3">
+        <div className="relative flex-1">
+          <div className={cyberLabelClass}>{t('code')}</div>
+          <input name="code" type="text" required maxLength={6} value={form.code} onChange={handleChange} onFocus={() => setTargetText('请输入邮箱验证码...')} className={`${cyberInputClass} text-center tracking-[0.4em]`} placeholder="000000" />
+        </div>
+        <CodeCountdown onSendCode={handleSendCode} disabled={codeLoading} sendingText={tLogin('sending')} getCodeText={tLogin('getCode')} />
+      </div>
+
+      {/* 密码输入 */}
+      <div className="relative">
+        <div className={cyberLabelClass}>{t('password')}</div>
+        <PasswordInput name="password" value={form.password} onChange={handleChange} onFocus={() => setTargetText('请输入高强度密钥...')} placeholder="PASSWORD" required minLength={8} className={cyberInputClass} />
         <PasswordStrength password={form.password} />
         <PasswordRequirements password={form.password} />
       </div>
 
-      <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">{t('confirmPassword')}</label>
-        <PasswordInput
-          id="confirmPassword"
-          name="confirmPassword"
-          value={form.confirmPassword}
-          onChange={handleChange}
-          placeholder={t('confirmPasswordPlaceholder')}
-          required
-        />
+      {/* 确认密码 */}
+      <div className="relative">
+        <div className={cyberLabelClass}>{t('confirmPassword')}</div>
+        <PasswordInput name="confirmPassword" value={form.confirmPassword} onChange={handleChange} onFocus={() => setTargetText('请再次核对密钥...')} placeholder="RE-ENTER PASSWORD" required className={cyberInputClass} />
       </div>
 
-      <AgreementLinks checked={form.agreement} onChange={(checked) => {
-        setForm(prev => ({ ...prev, agreement: checked }))
-        setError('')
-      }} />
+      <AgreementLinks checked={form.agreement} onChange={(c) => { setForm(f => ({ ...f, agreement: c })); setError(''); }} />
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? t('submitting') : t('submit')}
+      <button type="submit" disabled={loading} className="relative w-full mt-4 bg-tech-text text-white py-3.5 rounded font-tech-mono text-xs tracking-[0.4em] font-bold hover:bg-black transition-all group overflow-hidden disabled:opacity-50">
+        <span className="relative z-10">{loading ? t('submitting') : t('submit')}</span>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer"></div>
       </button>
     </form>
   )

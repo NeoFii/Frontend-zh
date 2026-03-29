@@ -22,7 +22,7 @@ const HUDCorners = () => (
 interface TooltipProps {
   children: React.ReactNode;
   text: string;
-  className?: string; // 修复：允许透传 className 以维持 Flex 布局
+  className?: string;
 }
 
 const WithTooltip = ({ children, text, className = '' }: TooltipProps) => (
@@ -42,10 +42,48 @@ function LoginContent() {
   const [successMessage, setSuccessMessage] = useState('')
 
   const [currentSlide, setCurrentSlide] = useState(0)
-  const [showHello, setShowHello] = useState(true)
   const [bgHex1, setBgHex1] = useState('0x8F9A')
   const [dynamicHex1, setDynamicHex1] = useState('0x0000')
   const [latencies, setLatencies] = useState({ gpt: 145, claude: 210, deepseek: 42 })
+
+  // ================= 动画跳转状态 =================
+  const [exitMode, setExitMode] = useState(false)
+  const isFromRegister = searchParams.get('dir') === 'ltr'
+
+  // 核心修改：去掉 !isFromRegister 的限制，永远初始化为 true
+  const [showHello, setShowHello] = useState(true)
+
+  const handleLinkCapture = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement
+    const link = target.closest('a')
+
+    if (link) {
+      const href = link.getAttribute('href')
+      if (href && href.includes('/register')) {
+        e.preventDefault()
+        e.stopPropagation()
+
+        setExitMode(true)
+
+        setTimeout(() => {
+          router.push('/register?dir=rtl')
+        }, 600)
+      }
+    }
+  }
+
+  const formAnimClass = exitMode
+    ? 'animate-[slideOutLeft_0.6s_cubic-bezier(0.16,1,0.3,1)_both]'
+    : isFromRegister
+      ? 'animate-[slideInFromLeft_0.6s_cubic-bezier(0.16,1,0.3,1)_0.15s_both]'
+      : 'animate-[fadeIn_0.8s_cubic-bezier(0.16,1,0.3,1)_both]'
+
+  const carouselAnimClass = exitMode
+    ? 'animate-[slideOutLeft_0.6s_cubic-bezier(0.16,1,0.3,1)_0.15s_both]'
+    : isFromRegister
+      ? 'animate-[slideInFromLeft_0.6s_cubic-bezier(0.16,1,0.3,1)_both]'
+      : 'animate-[fadeIn_0.8s_cubic-bezier(0.16,1,0.3,1)_both]'
+  // ===============================================
 
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
@@ -106,7 +144,10 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 md:p-8 lg:px-10 lg:py-6 relative bg-[#F4F7FB] text-[#0B1121] font-tech-sans antialiased overflow-hidden selection:bg-tech-accent/20">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 md:p-8 lg:px-10 lg:py-6 relative bg-[#F4F7FB] text-[#0B1121] font-tech-sans antialiased overflow-hidden selection:bg-tech-accent/20"
+      onClickCapture={handleLinkCapture}
+    >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,#FFFFFF_0%,transparent_80%)] pointer-events-none"></div>
 
       <Scanline />
@@ -127,8 +168,7 @@ function LoginContent() {
 
       <div className="relative z-10 w-[98%] max-w-[1600px] 2xl:max-w-[1720px] mx-auto grid grid-cols-1 lg:grid-cols-[420px_1fr] xl:grid-cols-[480px_1fr] gap-8 lg:gap-12 xl:gap-20 items-center lg:-translate-y-12 xl:-translate-y-16">
 
-        <div className="w-full max-w-md mx-auto lg:mx-0 flex flex-col animate-[fadeIn_0.8s_cubic-bezier(0.16,1,0.3,1)_forwards] shrink-0">
-
+        <div className={`w-full max-w-md mx-auto lg:mx-0 flex flex-col shrink-0 ${formAnimClass}`}>
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-tech-accent/10 border border-tech-accent/20 rounded-sm mb-4">
               <div className="w-2 h-2 bg-tech-accent shadow-[0_0_8px_#00d2ff]"></div>
@@ -161,7 +201,7 @@ function LoginContent() {
           </div>
         </div>
 
-        <div className="hidden lg:flex relative w-full h-[660px] xl:h-[740px] 2xl:h-[820px] max-h-[82vh] rounded-xl overflow-hidden border border-tech-border/80 bg-white/40 shadow-2xl items-center justify-center">
+        <div className={`hidden lg:flex relative w-full h-[660px] xl:h-[740px] 2xl:h-[820px] max-h-[82vh] rounded-xl overflow-hidden border border-tech-border/80 bg-white/40 shadow-2xl items-center justify-center ${carouselAnimClass}`}>
 
           <div className="absolute top-2 left-2 w-3 h-3 border-t-2 border-l-2 border-tech-muted/40"></div>
           <div className="absolute top-2 right-2 w-3 h-3 border-t-2 border-r-2 border-tech-muted/40"></div>
@@ -221,6 +261,7 @@ function LoginContent() {
               </div>
             </div>
 
+            {/* 剩余的 carousel-slide 保持不变，为了篇幅省略，请保留原本所有轮播内容 */}
             <div className={`carousel-slide ${currentSlide === 1 ? 'active' : ''}`}>
               <div className="tech-panel p-8 xl:p-12 rounded-lg w-[85%] max-w-[800px] bg-white/60 backdrop-blur-3xl border shadow-lg hover:scale-[1.03] transition-transform duration-300 relative cursor-default">
                 <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-tech-accent to-transparent opacity-50"></div>
@@ -271,7 +312,7 @@ function LoginContent() {
                 <div className="text-center mb-8">
                   <h3 className="text-3xl xl:text-4xl font-black text-tech-text font-tech-display flex justify-center items-center gap-3">
                     <svg className="w-8 h-8 text-tech-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08-.402-2.599-1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     API 价格对比 ($ / 1M Tokens)
                   </h3>
@@ -296,7 +337,6 @@ function LoginContent() {
                     </div>
                   </div>
 
-                  {/* 核心修复：给图表的每一列加上 className="flex-1 h-full z-10 cursor-pointer" 以维持 Flex 属性和高度 */}
                   {[
                     { name: 'GPT-4o', total: '$20.0', h: '85%', inH: '25%', tip: '入: $5.00/M | 出: $15.00/M' },
                     { name: 'Gemini 1.5', total: '$14.0', h: '60%', inH: '25%', tip: '入: $3.50/M | 出: $10.50/M' },
@@ -391,7 +431,6 @@ function LoginContent() {
                 </div>
 
                 <div className="flex gap-8 items-center justify-center">
-                  {/* 核心修复：透传 Flex 宽度设置 */}
                   <WithTooltip text="单一旗舰模型承接所有低价值请求，算力严重溢出" className="flex-1 max-w-[400px]">
                     <div className="bg-white/40 border border-slate-300 p-8 rounded-lg text-center opacity-80 backdrop-blur-md relative">
                       <div className="text-[10px] font-tech-mono text-slate-500 mb-4 font-bold tracking-widest uppercase">传统单一节点调度</div>
@@ -407,7 +446,6 @@ function LoginContent() {
                     </svg>
                   </div>
 
-                  {/* 核心修复：透传 Flex 宽度设置 */}
                   <WithTooltip text="精准分发大幅压降高昂 API 开支，确保核心体验无损" className="flex-[1.2] max-w-[480px]">
                     <div className="bg-white p-10 rounded-lg shadow-2xl border border-tech-accent/40 text-center relative overflow-hidden h-full z-10">
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#00d2ff_0%,transparent_30%)] opacity-10"></div>
@@ -440,7 +478,7 @@ export default function Login() {
       <div className="min-h-screen flex items-center justify-center bg-[#F4F7FB] font-tech-mono text-tech-muted selection:bg-tech-accent/20">
         <div className="flex items-center gap-3">
           <div className="w-4 h-4 border-2 border-tech-accent border-t-transparent rounded-full animate-spin"></div>
-          <span className="tracking-widest uppercase text-xs">{tCommon('loading') || '初始化核心重定向系统...'}</span>
+          <span className="tracking-widest uppercase text-xs">{tCommon('loading')}</span>
         </div>
       </div>
     )
@@ -451,7 +489,7 @@ export default function Login() {
       <div className="min-h-screen flex items-center justify-center bg-[#F4F7FB] font-tech-mono text-tech-muted selection:bg-tech-accent/20">
         <div className="flex items-center gap-3">
           <div className="w-4 h-4 border-2 border-tech-accent border-t-transparent rounded-full animate-spin"></div>
-          <span className="tracking-widest uppercase text-xs">{tCommon('loading') || '正在建立加密连接...'}</span>
+          <span className="tracking-widest uppercase text-xs">{tCommon('loading')}</span>
         </div>
       </div>
     }>

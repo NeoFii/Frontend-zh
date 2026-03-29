@@ -98,7 +98,7 @@
     text-wrap: balance;
   }
 
-  /* 原有基础淡入 */
+  /* 基础淡入 */
   .animate-fade-in {
     animation: fadeIn 0.5s ease-out;
   }
@@ -133,7 +133,7 @@
     }
   }
 
-  /* 原有入场动画 - 缩放淡入 */
+  /* 入场动画 - 缩放淡入 */
   .animate-scale-in {
     animation: scaleIn 0.5s ease-out forwards;
     opacity: 0;
@@ -168,7 +168,7 @@
     }
   }
 
-  /* 原有脉冲光环 */
+  /* 脉冲光环 */
   .animate-pulse-glow {
     animation: pulseGlow 3s ease-in-out infinite;
   }
@@ -187,7 +187,7 @@
     }
   }
 
-  /* 原有背景渐变动画 */
+  /* 背景渐变动画 */
   .animate-gradient {
     animation: gradient 8s ease infinite;
     background-size: 200% 200%;
@@ -207,12 +207,12 @@
     }
   }
 
-  /* 原有旋转动画 */
+  /* 旋转动画 */
   .animate-spin-slow {
     animation: spin 20s linear infinite;
   }
 
-  /* 原有延迟动画类 */
+  /* 延迟动画类 */
   .delay-100 {
     animation-delay: 100ms;
   }
@@ -245,7 +245,7 @@
     animation-delay: 800ms;
   }
 
-  /* 原有滚动显示动画 - 使用 JavaScript 触发 */
+  /* 滚动显示动画 - 使用 JavaScript 触发 */
   .reveal {
     opacity: 0;
     transform: translateY(30px);
@@ -257,7 +257,7 @@
     transform: translateY(0);
   }
 
-  /* 原有渐变文字 */
+  /* 渐变文字 */
   .text-gradient {
     background: linear-gradient(135deg, #3b82f6 0%, #f97316 100%);
     -webkit-background-clip: text;
@@ -265,14 +265,14 @@
     background-clip: text;
   }
 
-  /* 原有玻璃拟态效果 */
+  /* 玻璃拟态效果 */
   .glass {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
   }
 
-  /* 原有卡片悬浮效果 */
+  /* 卡片悬浮效果 */
   .card-hover {
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
@@ -282,7 +282,7 @@
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   }
 
-  /* 原有按钮波纹效果 */
+  /* 按钮波纹效果 */
   .btn-ripple {
     position: relative;
     overflow: hidden;
@@ -306,7 +306,7 @@
     height: 300px;
   }
 
-  /* 原有滚动条美化 */
+  /* 滚动条美化 */
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 transparent;
@@ -326,7 +326,7 @@
     border-radius: 3px;
   }
 
-  /* 原有 Marquee 无限滚动动画 */
+  /* Marquee 无限滚动动画 */
   .animate-marquee {
     animation: marquee 25s linear infinite;
   }
@@ -345,7 +345,7 @@
     }
   }
 
-  /* ====== 补充：HELLO 开场动画 ====== */
+  /* ====== HELLO 开场动画 ====== */
   @keyframes helloFadeIn {
     0% {
       opacity: 0;
@@ -410,7 +410,6 @@
       helloFlyOut 0.8s cubic-bezier(0.7, 0, 0.3, 1) 1.8s forwards;
   }
 
-  /* ====== 新增：登录页专属背景和样式工具 ====== */
   .grid-bg {
     background-image:
       linear-gradient(to right, rgba(100, 116, 139, 0.08) 1px, transparent 1px),
@@ -427,6 +426,54 @@
         transparent 6px);
   }
 
+  @keyframes slideOutLeft {
+    0% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateX(-100vw);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideInFromRight {
+    0% {
+      transform: translateX(100vw);
+      opacity: 0;
+    }
+
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutRight {
+    0% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateX(100vw);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    0% {
+      transform: translateX(-100vw);
+      opacity: 0;
+    }
+
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
   /* 原有禁用动画 */
   @media (prefers-reduced-motion: reduce) {
 
@@ -440,7 +487,6 @@
   }
 }
 
-/* 原有 Markdown 样式 (完整保留) */
 .markdown-content h1 {
   @apply text-3xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200;
 }

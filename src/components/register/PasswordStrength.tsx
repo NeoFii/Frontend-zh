@@ -32,9 +32,8 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
         {[1, 2, 3, 4].map((level) => (
           <div
             key={level}
-            className={`h-1 flex-1 rounded-full transition-colors ${
-              level <= strength.level ? strength.color : 'bg-gray-200'
-            }`}
+            className={`h-1 flex-1 rounded-full transition-colors ${level <= strength.level ? strength.color : 'bg-gray-200'
+              }`}
           />
         ))}
       </div>

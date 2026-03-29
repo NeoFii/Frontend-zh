@@ -29,11 +29,10 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps) {
         {requirements.map((req) => (
           <span
             key={req.key}
-            className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
-              req.met
+            className={`text-xs px-2 py-0.5 rounded-full transition-colors ${req.met
                 ? 'bg-green-100 text-green-700'
                 : 'bg-gray-100 text-gray-500'
-            }`}
+              }`}
           >
             {req.met ? '✓' : '○'} {req.label}
           </span>
