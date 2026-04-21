@@ -9,6 +9,12 @@ module.exports = {
   testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/', '<rootDir>/src/stores/__tests__/auth.test.ts'],
   testMatch: ['**/*.test.ts'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { useESM: false }],
+    '^.+\\.tsx?$': ['ts-jest', {
+      useESM: false,
+      tsconfig: {
+        module: 'commonjs',
+        jsx: 'react-jsx',
+      },
+    }],
   },
 }

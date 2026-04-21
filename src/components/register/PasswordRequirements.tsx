@@ -4,6 +4,7 @@
  */
 
 import { useTranslation } from '@/hooks/useTranslation'
+import { getPasswordRequirementState } from '@/lib/utils/validation'
 
 interface PasswordRequirementsProps {
   password: string
@@ -11,12 +12,15 @@ interface PasswordRequirementsProps {
 
 export function PasswordRequirements({ password }: PasswordRequirementsProps) {
   const { t } = useTranslation('auth.common')
+  const state = getPasswordRequirementState(password)
 
   // 密码要求检查
   const requirements = [
-    { key: 'minLength', label: t('passwordMinLength'), met: password.length >= 8 },
-    { key: 'hasNumber', label: t('passwordHasNumber'), met: /\d/.test(password) },
-    { key: 'hasLetter', label: t('passwordHasLetter'), met: /[a-zA-Z]/.test(password) },
+    { key: 'minLength', label: t('passwordMinLength'), met: state.minLength },
+    { key: 'hasUppercase', label: t('passwordHasUppercase'), met: state.hasUppercase },
+    { key: 'hasLowercase', label: t('passwordHasLowercase'), met: state.hasLowercase },
+    { key: 'hasNumber', label: t('passwordHasNumber'), met: state.hasNumber },
+    { key: 'hasSpecial', label: t('passwordHasSpecial'), met: state.hasSpecial },
   ]
 
   // 如果没有输入密码，不显示

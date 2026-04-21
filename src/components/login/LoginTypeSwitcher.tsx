@@ -12,38 +12,30 @@ interface LoginTypeSwitcherProps {
 
 export function LoginTypeSwitcher({ loginType, onChange }: LoginTypeSwitcherProps) {
   const { t } = useTranslation('auth.loginType')
+  const codeLabel = t('code').replace(/^邮箱/, '')
 
   return (
-    <div className="flex gap-2 mb-8 relative font-tech-mono text-xs tracking-widest">
-      {/* 核心动画：绝对定位的滑动高亮指示器 */}
-      <div
-        className="absolute bottom-0 h-[2px] bg-tech-accent shadow-[0_0_8px_#00d2ff] transition-transform duration-300 ease-out z-10"
-        style={{
-          width: 'calc(50% - 0.25rem)', // 50% 宽度减去 gap 间距的一半
-          transform: loginType === 'password' ? 'translateX(0)' : 'translateX(calc(100% + 0.5rem))'
-        }}
-      />
-
+    <div className="mb-8 flex border-b border-[#e5e7eb] text-sm font-medium">
       <button
         type="button"
         onClick={() => onChange('password')}
-        className={`flex-1 py-3 transition-colors duration-300 border-b-2 border-transparent ${loginType === 'password'
-            ? 'font-bold bg-white/80 text-tech-accent'
-            : 'font-semibold bg-transparent text-tech-muted hover:text-tech-text hover:bg-white/30'
+        className={`-mb-px flex-1 border-b-2 px-5 py-3 transition-colors ${loginType === 'password'
+            ? 'border-[#f97316] text-[#111827]'
+            : 'border-transparent text-[#6b7280] hover:text-[#374151]'
           }`}
       >
-        [ {t('password') || '邮箱_密码'} ]
+        {t('password') || '密码登录'}
       </button>
 
       <button
         type="button"
         onClick={() => onChange('code')}
-        className={`flex-1 py-3 transition-colors duration-300 border-b-2 border-transparent ${loginType === 'code'
-            ? 'font-bold bg-white/80 text-tech-accent'
-            : 'font-semibold bg-transparent text-tech-muted hover:text-tech-text hover:bg-white/30'
+        className={`-mb-px flex-1 border-b-2 px-5 py-3 transition-colors ${loginType === 'code'
+            ? 'border-[#f97316] text-[#111827]'
+            : 'border-transparent text-[#6b7280] hover:text-[#374151]'
           }`}
       >
-        [ {t('code') || '邮箱_验证码'} ]
+        {codeLabel || '验证码登录'}
       </button>
     </div>
   )

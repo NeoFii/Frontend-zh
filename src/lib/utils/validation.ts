@@ -19,8 +19,25 @@ export const validateEmail = (email: string): boolean => {
  * @returns 是否有效
  */
 export const validatePassword = (password: string): boolean => {
-  return password.length >= 8
+  const requirements = getPasswordRequirementState(password)
+  return Object.values(requirements).every(Boolean)
 }
+
+export interface PasswordRequirementState {
+  minLength: boolean
+  hasUppercase: boolean
+  hasLowercase: boolean
+  hasNumber: boolean
+  hasSpecial: boolean
+}
+
+export const getPasswordRequirementState = (password: string): PasswordRequirementState => ({
+  minLength: password.length >= 8,
+  hasUppercase: /[A-Z]/.test(password),
+  hasLowercase: /[a-z]/.test(password),
+  hasNumber: /\d/.test(password),
+  hasSpecial: /[^a-zA-Z0-9]/.test(password),
+})
 
 /**
  * 验证码验证

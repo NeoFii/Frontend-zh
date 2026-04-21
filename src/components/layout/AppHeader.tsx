@@ -191,7 +191,7 @@ export default function AppHeader() {
           <div className="hidden md:flex items-center gap-4">
             <button
               onClick={handleAuthClick}
-              className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 hover:shadow-lg hover:shadow-gray-900/20 hover:scale-105 transition-all duration-300"
+              className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 transition-colors duration-300"
             >
               {t('login')}
             </button>

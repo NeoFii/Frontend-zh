@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from '@/hooks/useTranslation'
-import NewsGrid from './news/NewsGrid'
 
 // --- 动画组件 1: 数字滚动效果 (Odometer/CountUp) ---
 function AnimatedNumber({ value, isLoaded }: { value: string, isLoaded: boolean }) {
@@ -72,66 +71,20 @@ function BouncingText({ text, delayOffset = 0, isLoaded }: { text: string, delay
 }
 
 
-// --- 页面主要组件 ---
-type NewsItem = {
-  slug: string
-  title: string
-  date: string
-  category: string
-  coverImage?: string
-  content: string
-}
-
-type TabType = 'about' | 'news'
-
-interface AboutClientProps {
-  newsList: NewsItem[]
-}
-
 const animationClasses = {
   container: 'transition-all duration-1000 ease-out',
   hidden: 'opacity-0 translate-y-12',
   visible: 'opacity-100 translate-y-0',
 }
 
-export default function AboutClient({ newsList }: AboutClientProps) {
+export default function AboutClient() {
   const { t } = useTranslation('about')
-  const [activeTab, setActiveTab] = useState<TabType>('about')
   const [isLoaded, setIsLoaded] = useState(false)
-
-  // 用于果冻效果的 Ref 和状态
-  const aboutTabRef = useRef<HTMLButtonElement>(null)
-  const newsTabRef = useRef<HTMLButtonElement>(null)
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 })
 
   // 页面加载后触发全局进场动画
   useEffect(() => {
     setIsLoaded(true)
   }, [])
-
-  // 计算滑块位置的逻辑
-  useEffect(() => {
-    const updateIndicator = () => {
-      const currentRef = activeTab === 'about' ? aboutTabRef.current : newsTabRef.current;
-      if (currentRef) {
-        setIndicatorStyle({
-          left: currentRef.offsetLeft,
-          width: currentRef.offsetWidth,
-          opacity: 1 // 计算完成后显示滑块，避免初始闪烁
-        });
-      }
-    };
-
-    // 使用 setTimeout 确保 DOM 已经完全渲染并分配了尺寸
-    const timeoutId = setTimeout(updateIndicator, 50);
-
-    // 监听窗口大小变化以保持滑块对齐
-    window.addEventListener('resize', updateIndicator);
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', updateIndicator);
-    };
-  }, [activeTab, isLoaded]);
 
   const coreValues = [
     { title: t('values.customerFirst'), description: t('values.customerFirstDesc'), colorTheme: 'blue' },
@@ -176,50 +129,13 @@ export default function AboutClient({ newsList }: AboutClientProps) {
         <p className="text-slate-500 text-lg md:text-xl font-medium text-center max-w-[700px] mb-10">
           {t('page.subtitle')}
         </p>
-
-        {/* --- 果冻滑动 Tab 切换器 --- */}
-        <div className="flex justify-center mt-4">
-          <div className="relative inline-flex bg-[#F1F3F5] p-1.5 rounded-[1.25rem] shadow-inner border border-slate-200/50">
-            {/* 动态滑块指示器 */}
-            <div
-              className="absolute top-[6px] bottom-[6px] rounded-xl bg-white shadow-md shadow-slate-200 pointer-events-none"
-              style={{
-                left: indicatorStyle.left,
-                width: indicatorStyle.width,
-                opacity: indicatorStyle.opacity,
-                transitionProperty: 'left, width',
-                transitionDuration: '500ms',
-                // 核心：带有回弹感（果冻感）的贝塞尔曲线
-                transitionTimingFunction: 'cubic-bezier(0.68, -0.6, 0.32, 1.6)'
-              }}
-            />
-
-            <button
-              ref={aboutTabRef}
-              onClick={() => setActiveTab('about')}
-              className={`relative z-10 px-8 py-2.5 rounded-xl text-base font-bold transition-colors duration-300 ${activeTab === 'about' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
-                }`}
-            >
-              {t('tabs.about')}
-            </button>
-            <button
-              ref={newsTabRef}
-              onClick={() => setActiveTab('news')}
-              className={`relative z-10 px-8 py-2.5 rounded-xl text-base font-bold transition-colors duration-300 ${activeTab === 'news' ? 'text-blue-600' : 'text-slate-500 hover:text-slate-700'
-                }`}
-            >
-              {t('tabs.news')}
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* 内容区域 */}
       <div className="w-full flex justify-center">
         <div className="w-full max-w-[1200px] px-6 lg:px-0">
 
-          {activeTab === 'about' ? (
-            <div className="flex flex-col gap-16 md:gap-24 w-full pt-8">
+          <div className="flex flex-col gap-16 md:gap-24 w-full pt-8">
 
               {/* --- 公司介绍 (Intro & Stats) --- */}
               <section className={`w-full ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-400`}>
@@ -352,13 +268,7 @@ export default function AboutClient({ newsList }: AboutClientProps) {
                 </div>
               </section>
 
-            </div>
-          ) : (
-            /* --- 新闻标签内容 --- */
-            <section className={`w-full pt-8 ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden}`}>
-              <NewsGrid newsList={newsList} />
-            </section>
-          )}
+          </div>
 
         </div>
       </div>

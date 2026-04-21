@@ -1,5 +1,5 @@
 import useSWR from 'swr'
-import { createRouterKey, deleteRouterKey, listRouterKeys, revealRouterKey, updateRouterKey } from '@/lib/api/router'
+import { createRouterKey, deleteRouterKey, disableRouterKey, listRouterKeys, updateRouterKey } from '@/lib/api/router'
 
 const ROUTER_KEYS_KEY = 'router-keys'
 
@@ -19,13 +19,14 @@ export function useRouterKeys() {
       await mutate()
       return response.data
     },
-    async update(keyId: number, payload: { name?: string; is_active?: boolean }) {
+    async update(keyId: number, payload: { name?: string }) {
       const response = await updateRouterKey(keyId, payload)
       await mutate()
       return response.data
     },
-    async reveal(keyId: number) {
-      const response = await revealRouterKey(keyId)
+    async disable(keyId: number) {
+      const response = await disableRouterKey(keyId)
+      await mutate()
       return response.data
     },
     async remove(keyId: number) {

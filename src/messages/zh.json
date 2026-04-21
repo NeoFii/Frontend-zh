@@ -101,18 +101,10 @@
       "a4": "企业版用户可享受专属客服、SLA 服务保障、定制化模型训练、优先技术支持等多项专属服务。"
     }
   },
-  "aboutNews": {
-    "title": "最新资讯",
-    "description": "了解公司最新动态与行业资讯"
-  },
   "about": {
     "page": {
       "title": "引领 AI 创新",
       "subtitle": "我们致力于将前沿人工智能技术转化为实际的商业价值，为企业智能化转型提供强劲动力"
-    },
-    "tabs": {
-      "about": "关于我们",
-      "news": "新闻动态"
     },
     "intro": {
       "title": "专注于 AI 技术创新",
@@ -146,8 +138,6 @@
     },
     "title": "引领 AI 创新",
     "subtitle": "我们致力于将前沿人工智能技术转化为实际的商业价值",
-    "tabAbout": "关于我们",
-    "tabNews": "新闻动态",
     "vision": "我们的愿景",
     "visionDesc": "成为全球领先的 AI 技术提供商，用人工智能赋能千行百业，让智能技术惠及每一个人",
     "mission": "我们的使命",
@@ -278,7 +268,7 @@
       "emailPlaceholder": "请输入邮箱",
       "codePlaceholder": "请输入验证码",
       "password": "密码",
-      "passwordPlaceholder": "请设置密码（至少8位）",
+      "passwordPlaceholder": "请设置密码（至少8位，含大小写字母、数字和特殊符号）",
       "confirmPassword": "确认密码",
       "confirmPasswordPlaceholder": "请再次输入密码",
       "submit": "立即注册",
@@ -306,9 +296,11 @@
       "registerFailed": "注册失败：{message}",
       "passwordRequirements": "密码要求",
       "passwordMinLength": "至少8个字符",
+      "passwordHasUppercase": "包含大写字母",
+      "passwordHasLowercase": "包含小写字母",
       "passwordHasNumber": "包含数字",
       "passwordHasLetter": "包含字母",
-      "passwordHasSpecial": "包含特殊字符",
+      "passwordHasSpecial": "包含特殊符号",
       "passwordWeak": "弱",
       "passwordFair": "一般",
       "passwordStrong": "强",
@@ -321,6 +313,7 @@
       "enterCode": "请填写验证码",
       "passwordMismatch": "两次输入的密码不一致",
       "passwordTooShort": "密码长度至少为8位",
+      "passwordComplexity": "密码需包含大写字母、小写字母、数字和特殊符号，且不少于8位",
       "agreeToTerms": "请阅读并同意用户协议和隐私政策",
       "fillAllRequired": "请填写所有必填项",
       "enterInvitationCode": "请输入邀请码"
@@ -379,7 +372,6 @@
     "terms": "服务条款",
     "about": "关于我们",
     "products": "产品服务",
-    "news": "新闻动态",
     "login": "登录",
     "tagline": "致力于为企业提供高性能 AI 推理优化方案，推动智能化转型。",
     "address": "北京市朝阳区科技园区88号",

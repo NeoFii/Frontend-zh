@@ -46,7 +46,7 @@ export default function BillingHistoryPage() {
             </div>
             <h2 className="mt-5 text-[1.75rem] tracking-tight text-gray-950">账单历史与账务流水</h2>
             <p className="mt-3 text-sm leading-7 text-gray-600">
-              这里按 Router billing ledger 实时渲染入账、调整和扣费记录，用于核对每次资金变化和调用来源。
+              这里按账户余额流水实时渲染入账、调整、冻结和扣费记录，用于核对每次资金变化和调用来源。
             </p>
           </div>
           <div className="rounded-[28px] border border-gray-200 bg-white px-5 py-4 text-right">
@@ -81,8 +81,8 @@ export default function BillingHistoryPage() {
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                         <span>{formatDateTime(item.created_at)}</span>
-                        <span>Key #{item.router_api_key_id ?? '-'}</span>
-                        <span>Usage #{item.usage_event_id ?? '-'}</span>
+                        <span>{item.ref_type || 'manual'}</span>
+                        <span>{item.ref_id || '-'}</span>
                       </div>
                     </div>
                   </div>

@@ -11,7 +11,6 @@ export default function AppFooter() {
   const quickLinks: NavItem[] = [
     { name: t('about'), path: '/about' },
     { name: t('products'), path: '/products/tierflow' },
-    { name: t('news'), path: '/about/news' },
     { name: t('login'), path: '/login' },
   ]
 

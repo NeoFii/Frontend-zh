@@ -140,7 +140,7 @@ function PowerIcon(props: { active: boolean }) {
 }
 
 export default function GetApiPage() {
-  const { keys, isLoading, isError, create, reveal: revealKey, update, remove, mutate } = useRouterKeys()
+  const { keys, isLoading, isError, create, update, disable, remove, mutate } = useRouterKeys()
   const [dialog, setDialog] = useState<DialogState | null>(null)
   const [copiedKeyId, setCopiedKeyId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -189,11 +189,12 @@ export default function GetApiPage() {
     }
   }
 
-  async function handleToggle(id: number, isActive: boolean) {
+  async function handleDisable(id: number) {
     setErrorMessage(null)
     setNoticeMessage(null)
     try {
-      await update(id, { is_active: !isActive })
+      await disable(id)
+      setNoticeMessage('这个 API Key 已禁用。后端当前不支持重新启用，若需要继续调用请创建新 Key。')
     } catch (error) {
       setErrorMessage(extractErrorMessage(error))
     }
@@ -208,27 +209,6 @@ export default function GetApiPage() {
     try {
       await remove(id)
     } catch (error) {
-      setErrorMessage(extractErrorMessage(error))
-    }
-  }
-
-  async function handleCopyKey(id: number) {
-    setErrorMessage(null)
-    setNoticeMessage(null)
-    try {
-      const payload = await revealKey(id)
-      await navigator.clipboard.writeText(payload.api_key)
-      setCopiedKeyId(id)
-      setNoticeMessage('完整 Key 已复制到剪贴板。前端不会保留明文缓存。')
-      window.setTimeout(() => setCopiedKeyId((current) => (current === id ? null : current)), 1500)
-    } catch (error) {
-      const status = typeof error === 'object' && error !== null && 'response' in error
-        ? Number((error as { response?: { status?: number } }).response?.status)
-        : undefined
-      if (status === 409) {
-        setErrorMessage('这个 Key 创建于“可再次复制”功能上线之前，无法直接复制完整 Key。请重新创建一个新 Key。')
-        return
-      }
       setErrorMessage(extractErrorMessage(error))
     }
   }
@@ -330,7 +310,7 @@ export default function GetApiPage() {
                     <th className="px-6 py-4 font-medium">密钥</th>
                     <th className="px-6 py-4 font-medium">备注</th>
                     <th className="px-6 py-4 font-medium">创建时间</th>
-                    <th className="px-6 py-4 font-medium">权限</th>
+                    <th className="px-6 py-4 font-medium">配额</th>
                     <th className="px-6 py-4 font-medium">操作</th>
                   </tr>
                 </thead>
@@ -341,16 +321,11 @@ export default function GetApiPage() {
                         <td className="px-6 py-5 align-middle text-sm text-gray-500">{index + 1}</td>
                         <td className="px-6 py-5 align-middle">
                           <div className="flex items-center gap-3">
-                            <button
-                              type="button"
-                              title="复制完整 Key"
-                              onClick={() => handleCopyKey(item.id)}
-                              className="text-base text-[#5c6471] transition hover:text-gray-950"
-                            >
+                            <span className="text-base text-[#5c6471]">
                               {item.token_preview}
-                            </button>
+                            </span>
                             <span className={`text-xs ${copiedKeyId === item.id ? 'text-emerald-600' : 'text-gray-500'}`}>
-                              {copiedKeyId === item.id ? '已复制完整 Key' : '点击 Key 临时复制完整 Key'}
+                              {copiedKeyId === item.id ? '已复制完整 Key' : '完整 Key 仅在创建时返回'}
                             </span>
                           </div>
                         </td>
@@ -358,12 +333,17 @@ export default function GetApiPage() {
                           <div className="font-medium text-gray-700">{item.name}</div>
                         </td>
                         <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">{formatDateTime(item.created_at)}</td>
-                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">全部</td>
+                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">
+                          {item.billing_mode === 'limited'
+                            ? `已用 ${item.quota_used.toFixed(2)} / ${item.quota_limit.toFixed(2)}`
+                            : '不限额'}
+                        </td>
                         <td className="px-6 py-5 align-middle">
                           <div className="flex items-center gap-2">
                             <IconButton
-                              title={item.is_active ? '将 Key 设为失效' : '重新启用 Key'}
-                              onClick={() => handleToggle(item.id, item.is_active)}
+                              title={item.is_active ? '禁用 Key' : '已禁用，后端不支持重新启用'}
+                              onClick={() => handleDisable(item.id)}
+                              disabled={!item.is_active}
                             >
                               <PowerIcon active={item.is_active} />
                             </IconButton>

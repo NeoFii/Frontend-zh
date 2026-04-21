@@ -11,6 +11,7 @@ interface CodeCountdownProps {
   disabled?: boolean
   sendingText?: string
   getCodeText?: string
+  className?: string
 }
 
 export function CodeCountdown({
@@ -19,6 +20,7 @@ export function CodeCountdown({
   disabled = false,
   sendingText = '发送中...',
   getCodeText = '获取验证码',
+  className = 'px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap',
 }: CodeCountdownProps) {
   const [countdown, setCountdown] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -50,7 +52,7 @@ export function CodeCountdown({
       type="button"
       onClick={handleClick}
       disabled={countdown > 0 || loading || disabled}
-      className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+      className={className}
     >
       {loading ? sendingText : countdown > 0 ? `${countdown}s` : getCodeText}
     </button>

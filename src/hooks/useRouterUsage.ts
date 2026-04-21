@@ -1,9 +1,24 @@
 import useSWR from 'swr'
 import {
   fetchAllRouterUsageEvents,
+  fetchRouterBalance,
   fetchRouterBillingLedger,
   fetchRouterUsageSummary,
 } from '@/lib/api/router'
+
+export function useRouterBalance() {
+  const { data, error, isLoading, mutate } = useSWR('router-balance', fetchRouterBalance, {
+    revalidateOnFocus: false,
+    dedupingInterval: 15000,
+  })
+
+  return {
+    balance: data?.data ?? null,
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
 
 export function useRouterUsageSummary(keyId?: number) {
   const cacheKey = keyId ? ['router-usage-summary', keyId] : ['router-usage-summary']

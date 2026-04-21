@@ -3,7 +3,7 @@
  * 处理登录逻辑和表单输入
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useAuthStore } from '@/stores/auth'
@@ -39,30 +39,6 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-
-  // ================= 终端打字机特效逻辑 =================
-  const [targetText, setTargetText] = useState('等待建立加密连接...')
-  const [displayedText, setDisplayedText] = useState('')
-
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    let i = 0;
-
-    setDisplayedText('');
-
-    const typeWriter = () => {
-      if (i < targetText.length) {
-        setDisplayedText(targetText.slice(0, i + 1));
-        i++;
-        timeoutId = setTimeout(typeWriter, Math.random() * 30 + 20);
-      }
-    };
-
-    timeoutId = setTimeout(typeWriter, 50);
-
-    return () => clearTimeout(timeoutId);
-  }, [targetText]);
-  // =======================================================
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -121,73 +97,53 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
     setLoading(true)
     setError('')
-    setTargetText('正在验证安全密钥...')
 
     try {
-      let res
-      if (loginType === 'password') {
-        res = await login({
+      const res = loginType === 'password'
+        ? await login({
           email: form.email,
           password: form.password,
         })
-      } else {
-        res = await loginWithCode({
+        : await loginWithCode({
           email: form.email,
           code: form.code,
         })
-      }
 
       if (res.code === 200) {
-        setTargetText('认证通过，路由分配中...')
         const { access_token, expires_in } = res.data
         setAccessToken(access_token, expires_in)
         saveUser(res.data.user)
         onSuccess()
       } else {
         setError(res.message || tErrors('loginFailed'))
-        setTargetText('>> 认证被拒绝')
       }
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } }
       const message = axiosError.response?.data?.message
       setError(message || tErrors('loginFailedRetry'))
-      setTargetText('>> 连接超时或网络异常')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleTabChange = (type: 'password' | 'code') => {
-    setLoginType(type)
-    if (type === 'password') {
-      setTargetText('已切换至 [邮箱密码] 校验协议。')
-    } else {
-      setTargetText('已切换至 [邮箱验证码] 协议。')
-    }
-  }
-
-  const cyberInputClass = "w-full px-4 py-3.5 bg-white/70 border border-slate-300 border-l-slate-300 border-l-[3px] rounded transition-all focus:border-tech-accent/50 focus:border-l-tech-accent focus:bg-white focus:outline-none focus:shadow-[inset_0_0_15px_rgba(0,210,255,0.05),0_0_15px_rgba(0,210,255,0.1)] font-tech-mono text-sm tracking-widest text-tech-text placeholder-slate-400"
+  const inputClass = 'h-11 w-full rounded-md border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#111827] outline-none transition placeholder:text-[#9ca3af] focus:border-[#f97316] focus:shadow-[0_0_0_3px_rgba(249,115,22,0.15)]'
 
   return (
-    <>
-      <div className="bg-slate-100/60 border border-slate-200/80 p-3 mb-8 rounded font-tech-mono text-xs shadow-inner relative overflow-hidden">
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-tech-accent/60"></div>
-        <div className="flex items-center text-tech-text h-4">
-          <span className="text-tech-accent font-bold mr-2 opacity-80 shrink-0">系统&gt;</span>
-          <span>{displayedText}</span>
-          <span className="inline-block w-[6px] h-[14px] bg-tech-accent align-middle ml-1 animate-[blink_1s_step-end_infinite] shrink-0"></span>
-        </div>
+    <div>
+      <LoginTypeSwitcher loginType={loginType} onChange={setLoginType} />
+
+      <div className="mb-7">
+        <h1 className="mb-2 text-[28px] font-semibold tracking-[-0.015em] text-[#111827]">欢迎回来</h1>
+        <p className="m-0 text-sm text-[#6b7280]">使用你的账户继续。</p>
       </div>
 
-      <LoginTypeSwitcher loginType={loginType} onChange={handleTabChange} />
-
-      <form onSubmit={handleLogin} className="space-y-6">
+      <form onSubmit={handleLogin} className="space-y-4">
         <FormAlert error={error} />
 
-        <div className="relative group">
-          <div className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-tech-mono text-tech-muted font-bold z-10 uppercase tracking-wider">
-            {t('email') || '邮箱地址'}
-          </div>
+        <div>
+          <label htmlFor="email" className="mb-1.5 block font-mono text-xs uppercase tracking-[0.06em] text-[#6b7280]">
+            {t('email') || '邮箱'}
+          </label>
           <input
             id="email"
             name="email"
@@ -195,54 +151,49 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             required
             value={form.email}
             onChange={handleChange}
-            onFocus={() => setTargetText(loginType === 'code' ? '请输入邮箱以下发一次性秘钥。' : '请输入邮箱以校验身份。')}
-            onBlur={() => setTargetText('等待输入...')}
-            className={cyberInputClass}
-            placeholder={t('emailPlaceholder') || '请输入您的邮箱'}
+            className={inputClass}
+            placeholder={t('emailPlaceholder') || '请输入邮箱'}
           />
         </div>
 
-        {/* 核心动画：加入 key={loginType} 和 animate-fade-in 触发平滑切入 */}
         <div key={loginType} className="animate-fade-in">
           {loginType === 'password' ? (
-            <div className="relative group mt-6">
-              <div className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-tech-mono text-tech-muted font-bold z-10 uppercase tracking-wider">
-                {t('password') || '安全密钥'}
-              </div>
-              <div onFocus={() => setTargetText('请输入密码以完成登录。')} onBlur={() => setTargetText('等待输入...')}>
-                <PasswordInput
-                  name="password"
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder={t('passwordPlaceholder') || '请输入您的密码'}
-                  required
-                  className={cyberInputClass}
-                />
-              </div>
+            <div>
+              <label htmlFor="password" className="mb-1.5 block font-mono text-xs uppercase tracking-[0.06em] text-[#6b7280]">
+                {t('password') || '密码'}
+              </label>
+              <PasswordInput
+                id="password"
+                name="password"
+                value={form.password}
+                onChange={handleChange}
+                placeholder={t('passwordPlaceholder') || '请输入密码'}
+                required
+                className={`${inputClass} pr-12`}
+              />
             </div>
           ) : (
-            <div className="flex gap-3 relative mt-6">
-              <div className="absolute -top-2 left-3 bg-white px-1 text-[10px] font-tech-mono text-tech-muted font-bold z-10 uppercase tracking-wider">
-                {t('code') || '临时令牌'}
-              </div>
-              <input
-                id="code"
-                name="code"
-                type="text"
-                required
-                maxLength={6}
-                value={form.code}
-                onChange={handleChange}
-                onFocus={() => setTargetText('请输入临时令牌。')}
-                onBlur={() => setTargetText('等待输入...')}
-                className={`${cyberInputClass} text-center tracking-[0.5em]`}
-                placeholder={t('codePlaceholder') || '请输入验证码'}
-              />
-              <div className="shrink-0 flex items-center">
+            <div>
+              <label htmlFor="code" className="mb-1.5 block font-mono text-xs uppercase tracking-[0.06em] text-[#6b7280]">
+                {t('code') || '验证码'}
+              </label>
+              <div className="flex gap-3">
+                <input
+                  id="code"
+                  name="code"
+                  type="text"
+                  required
+                  maxLength={6}
+                  value={form.code}
+                  onChange={handleChange}
+                  className={`${inputClass} text-center tracking-[0.35em]`}
+                  placeholder={t('codePlaceholder') || '请输入验证码'}
+                />
                 <CodeCountdown
                   onSendCode={handleSendCode}
                   sendingText={t('sending')}
                   getCodeText={t('getCode')}
+                  className="h-11 shrink-0 whitespace-nowrap rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-4 font-mono text-xs text-[#374151] transition hover:border-[#d1d5db] hover:text-[#111827] disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
             </div>
@@ -252,31 +203,24 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         <button
           type="submit"
           disabled={loading}
-          className="relative w-full mt-10 bg-tech-text text-white py-4 rounded font-tech-mono text-sm tracking-[0.3em] font-bold hover:bg-[#0B1121]/90 transition-all overflow-hidden group shadow-[0_5px_20px_rgba(11,17,33,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-2 h-[46px] w-full rounded-md bg-[#111827] text-sm font-medium text-white transition hover:-translate-y-px hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
         >
-          <span className="relative z-10 flex items-center justify-center gap-2">
-            {loading ? t('submitting') : (t('submit') || '立即登录_享受智能路由')}
-            {!loading && (
-              <svg className="w-4 h-4 text-tech-accent group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-              </svg>
-            )}
-          </span>
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+          {loading ? t('submitting') : (t('submit') || '立即登录')}
         </button>
       </form>
 
-      <div className="mt-6 border-t border-slate-200/80 pt-4 flex items-center justify-between text-[10px] font-tech-mono text-tech-muted uppercase">
-        <Link href="/forgot-password" className="hover:text-tech-accent transition-colors flex items-center gap-1">
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-          </svg>
-          {t('forgotPassword') || '忘记密码'}
-        </Link>
-        <Link href="/register" className="hover:text-tech-accent font-bold transition-colors text-tech-text">
-          &gt; 申请_账号
+      <div className="mt-4 text-right">
+        <Link href="/forgot-password" className="text-[12.5px] text-[#6b7280] transition hover:text-[#111827]">
+          {t('forgotPassword') || '忘记密码？'}
         </Link>
       </div>
-    </>
+
+      <p className="mt-8 text-center text-[13px] leading-7 text-[#6b7280]">
+        还没有账号？
+        <Link href="/register" className="text-[#111827] underline decoration-[#d1d5db] underline-offset-4 transition hover:decoration-[#f97316]">
+          立即注册
+        </Link>
+      </p>
+    </div>
   )
 }

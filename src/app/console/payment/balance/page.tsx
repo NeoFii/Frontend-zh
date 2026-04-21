@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
-import { useRouterUsageEvents, useRouterUsageSummary } from '@/hooks/useRouterUsage'
+import { useRouterBalance, useRouterUsageEvents, useRouterUsageSummary } from '@/hooks/useRouterUsage'
 import {
   calculateMonthlySpend,
   calculateSuccessRate,
@@ -11,7 +11,6 @@ import {
   formatCompactNumber,
   formatCurrency,
   summarizeUsageEvents,
-  sumPrepaidBalance,
   usageSummaryToAggregate,
 } from '@/lib/router-analytics'
 
@@ -28,16 +27,16 @@ function StatCard(props: { label: string; value: string; hint: string }) {
 export default function BalancePage() {
   const router = useRouter()
   const { keys, isLoading: keysLoading } = useRouterKeys()
+  const { balance, isLoading: balanceLoading } = useRouterBalance()
   const { summary, isLoading: summaryLoading } = useRouterUsageSummary()
   const { events, isLoading: eventsLoading } = useRouterUsageEvents({ limit: 200, maxPages: 10 })
 
   const currency = extractCurrency(summary, events)
-  const prepaidBalance = sumPrepaidBalance(keys)
   const aggregate = events.length > 0 ? summarizeUsageEvents(events, currency) : usageSummaryToAggregate(summary)
   const monthlySpend = calculateMonthlySpend(events)
   const successRate = calculateSuccessRate(aggregate)
   const activeKeys = countActiveKeys(keys)
-  const loading = keysLoading || summaryLoading || eventsLoading
+  const loading = keysLoading || balanceLoading || summaryLoading || eventsLoading
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
@@ -52,9 +51,12 @@ export default function BalancePage() {
               这里汇总 prepaid Key 余额、累计消耗和真实 Router 调用成本结构，作为支付与账务页的入口。
             </p>
             <div className="mt-6 text-4xl tracking-tight text-gray-950">
-              {loading ? '...' : formatCurrency(prepaidBalance, currency)}
+              {loading ? '...' : formatCurrency(balance?.available_balance ?? 0, balance?.currency ?? currency)}
             </div>
-            <p className="mt-3 text-sm text-gray-500">可用于 prepaid Router Key 的后续扣费。</p>
+            <p className="mt-3 text-sm text-gray-500">
+              账户总余额 {loading ? '...' : formatCurrency(balance?.balance ?? 0, balance?.currency ?? currency)}
+              ，冻结 {loading ? '...' : formatCurrency(balance?.frozen_amount ?? 0, balance?.currency ?? currency)}。
+            </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <button
@@ -106,8 +108,19 @@ export default function BalancePage() {
                       <p className="mt-2 text-xs text-gray-400">{item.token_preview}</p>
                     </div>
                     <div className="text-left md:text-right">
-                      <p className="text-xs uppercase tracking-[0.2em] text-gray-400">当前余额</p>
-                      <p className="mt-2 text-lg text-gray-950">{formatCurrency(item.balance ?? 0, currency)}</p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
+                        {item.billing_mode === 'limited' ? '剩余额度' : '配额模式'}
+                      </p>
+                      <p className="mt-2 text-lg text-gray-950">
+                        {item.billing_mode === 'limited'
+                          ? formatCurrency(item.balance ?? 0, currency)
+                          : '不限额'}
+                      </p>
+                      {item.billing_mode === 'limited' ? (
+                        <p className="mt-1 text-xs text-gray-400">
+                          已用 {formatCurrency(item.quota_used, currency)} / {formatCurrency(item.quota_limit, currency)}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -133,7 +146,7 @@ export default function BalancePage() {
             </div>
             <div className="flex items-center justify-between">
               <dt className="text-gray-500">总费用</dt>
-              <dd className="text-gray-900">{loading ? '...' : formatCurrency(aggregate.totalCost, currency)}</dd>
+              <dd className="text-gray-900">{loading ? '...' : formatCurrency(balance?.used_amount ?? aggregate.totalCost, balance?.currency ?? currency)}</dd>
             </div>
             <div className="flex items-center justify-between">
               <dt className="text-gray-500">结算币种</dt>

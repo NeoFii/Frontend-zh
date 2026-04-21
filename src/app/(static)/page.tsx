@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type Dispatch, type SetStateAction } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useUser } from '@/hooks/useUser'
@@ -36,7 +36,6 @@ export default function Home() {
 
   const [copied, setCopied] = useState(false)
   const [typedText, setTypedText] = useState('')
-  const [isScrolled, setIsScrolled] = useState(false)
 
   // 图表和数值动画 Refs
   const chartCanvasRef1 = useRef<HTMLCanvasElement>(null)
@@ -60,12 +59,6 @@ export default function Home() {
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
-
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   useEffect(() => {
     const texts = [
@@ -112,7 +105,7 @@ export default function Home() {
     const sumOld = dataOld.reduce((a, b) => a + b, 0)
     const sumNew = dataNew.reduce((a, b) => a + b, 0)
 
-    const animateValue = (setter: any, end: number, duration: number) => {
+    const animateValue = (setter: Dispatch<SetStateAction<number>>, end: number, duration: number) => {
       let startTimestamp: number | null = null
       const step = (timestamp: number) => {
         if (!startTimestamp) startTimestamp = timestamp
@@ -127,8 +120,11 @@ export default function Home() {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          document.querySelectorAll('.progress-bar-custom').forEach((bar: any) => {
-            bar.style.width = bar.getAttribute('data-width')
+          document.querySelectorAll<HTMLElement>('.progress-bar-custom').forEach((bar) => {
+            const width = bar.dataset.width
+            if (width) {
+              bar.style.width = width
+            }
           })
 
           if (chartCanvasRef1.current) {
@@ -323,15 +319,15 @@ export default function Home() {
                 </div>
                 <div className="p-6 overflow-x-auto bg-white text-sm">
                   <pre className="font-mono text-[13px] md:text-sm leading-loose text-slate-700 whitespace-pre">
-                    <div className="flex"><span className="text-purple-600 font-medium mr-2">import</span> {'{'} OpenAI {'}'} <span className="text-purple-600 font-medium mx-2">from</span> <span className="text-blue-600">'openai'</span>;</div>
-                    <div className="text-slate-400 italic mt-3 mb-1">// 100% 兼容 OpenAI SDK，只需替换 baseURL</div>
+                    <div className="flex"><span className="text-purple-600 font-medium mr-2">import</span> {'{'} OpenAI {'}'} <span className="text-purple-600 font-medium mx-2">from</span> <span className="text-blue-600">{'\'openai\''}</span>;</div>
+                    <div className="text-slate-400 italic mt-3 mb-1">{'// 100% 兼容 OpenAI SDK，只需替换 baseURL'}</div>
                     <div className="flex"><span className="text-purple-600 font-medium mr-2">const</span> client = <span className="text-purple-600 font-medium mr-2">new</span> <span className="text-amber-600">OpenAI</span>({'{'})</div>
-                    <div className="pl-6">baseURL: <span className="text-blue-600">'{BASE_URL}'</span>,</div>
-                    <div className="pl-6">apiKey: <span className="text-blue-600">'sk-your-api-key'</span>,</div>
+                    <div className="pl-6">baseURL: <span className="text-blue-600">{`'${BASE_URL}'`}</span>,</div>
+                    <div className="pl-6">apiKey: <span className="text-blue-600">{'\'sk-your-api-key\''}</span>,</div>
                     <div>{'}'});</div>
                     <div className="flex mt-4"><span className="text-purple-600 font-medium mr-2">const</span> response = <span className="text-purple-600 font-medium mr-2">await</span> client.chat.completions.<span className="text-amber-600">create</span>({'{'})</div>
-                    <div className="pl-6 flex">model: <span className="text-blue-600 mx-2">'nexus-auto'</span>, <span className="text-slate-400 italic">// ✨ 启用自适应智能路由</span></div>
-                    <div className="pl-6 flex">messages: [{'{'} role: <span className="text-blue-600 mx-2">'user'</span>, content: <span className="text-blue-600 mx-2">'帮我写一段快排算法'</span> {'}'}],</div>
+                    <div className="pl-6 flex">model: <span className="text-blue-600 mx-2">{'\'nexus-auto\''}</span>, <span className="text-slate-400 italic">{'// ✨ 启用自适应智能路由'}</span></div>
+                    <div className="pl-6 flex">messages: [{'{'} role: <span className="text-blue-600 mx-2">{'\'user\''}</span>, content: <span className="text-blue-600 mx-2">{'\'帮我写一段快排算法\''}</span> {'}'}],</div>
                     <div>{'}'});</div>
                   </pre>
                 </div>
@@ -361,7 +357,7 @@ export default function Home() {
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-400"><path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.721 6.721 0 003.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 01-.814 1.686.75.75 0 00.44 1.223zM8.25 10.875a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25zM10.875 12a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zm4.875-1.125a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25z" clipRule="evenodd" /></svg>
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">日常对话 / 情感陪伴</span>
                   </div>
-                  <p className="text-slate-700 font-medium text-sm">"今天工作遇到挫折了，感觉自己好失败，能陪我聊聊吗？"</p>
+                  <p className="text-slate-700 font-medium text-sm">{'"今天工作遇到挫折了，感觉自己好失败，能陪我聊聊吗？"'}</p>
                 </div>
               </Reveal>
               <Reveal delay={200}>
@@ -370,7 +366,7 @@ export default function Home() {
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-400"><path fillRule="evenodd" d="M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6zm14.25 6a.75.75 0 01-.22.53l-2.25 2.25a.75.75 0 11-1.06-1.06L15.44 12l-1.72-1.72a.75.75 0 111.06-1.06l2.25 2.25c.141.14.22.331.22.53zm-10.28-.53a.75.75 0 000 1.06l2.25 2.25a.75.75 0 101.06-1.06L8.56 12l1.72-1.72a.75.75 0 10-1.06-1.06l-2.25 2.25z" clipRule="evenodd" /></svg>
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">复杂逻辑 / 架构设计</span>
                   </div>
-                  <p className="text-slate-700 font-medium text-sm">"帮我设计一个支持高并发的微服务系统架构，并写出核心网关代码..."</p>
+                  <p className="text-slate-700 font-medium text-sm">{'"帮我设计一个支持高并发的微服务系统架构，并写出核心网关代码..."'}</p>
                 </div>
               </Reveal>
               <Reveal delay={300}>
@@ -379,7 +375,7 @@ export default function Home() {
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-slate-400"><path d="M21.721 12.752a9.711 9.711 0 00-.945-5.003 12.754 12.754 0 01-4.339 2.708 18.991 18.991 0 01-.214 4.772 17.165 17.165 0 005.498-2.477zM14.634 15.55a17.324 17.324 0 00.332-4.647c-.952.227-1.945.347-2.966.347-1.021 0-2.014-.12-2.966-.347a17.515 17.515 0 00.332 4.647 17.385 17.385 0 005.268 0zM9.772 17.119a18.963 18.963 0 004.456 0A17.182 17.182 0 0112 21.724a17.18 17.18 0 01-2.228-4.605zM7.777 15.23a18.875 18.875 0 01-.214-4.774 12.753 12.753 0 01-4.34-2.708 9.711 9.711 0 00-.944 5.004 17.165 17.165 0 005.498 2.477zM21.356 14.752a9.765 9.765 0 01-7.478 6.817 18.64 18.64 0 001.988-4.718 18.627 18.627 0 005.49-2.098zM2.644 14.752c1.682.971 3.53 1.688 5.49 2.099a18.64 18.64 0 001.988 4.718 9.765 9.765 0 01-7.478-6.817zM11.439 4.005a9.761 9.761 0 016.12 3.208 12.924 12.924 0 00-6.12-1.325V4.005zM12.561 4.005v1.878c-2.19 0-4.269.467-6.12 1.325a9.761 9.761 0 016.12-3.208z" /></svg>
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">长文本翻译 / 总结</span>
                   </div>
-                  <p className="text-slate-700 font-medium text-sm">"将这篇 20 页的英文财报翻译成中文，并总结三个核心增长点..."</p>
+                  <p className="text-slate-700 font-medium text-sm">{'"将这篇 20 页的英文财报翻译成中文，并总结三个核心增长点..."'}</p>
                 </div>
               </Reveal>
             </div>
