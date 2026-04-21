@@ -11,10 +11,7 @@ import { useAuthStore } from '@/stores/auth'
 export const MENU_PATH_MAP: Record<string, string> = {
   'basic-information': '/console/account/basic-information',
   'interface-key': '/console/account/interface-key',
-  'request-limits': '/console/account/request-limits',
-  'child-account': '/console/account/child-account',
   'get-api': '/console/api/get-api',
-  'third-party-api': '/console/api/third-party-api',
   'usage-record': '/console/usage/record',
   'balance': '/console/payment/balance',
   'recharge': '/console/payment/recharge',

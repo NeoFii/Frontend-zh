@@ -1,17 +1,25 @@
 ﻿'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import React, { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
 import { extractErrorMessage } from '@/lib/error'
+import { apiKeyStatusMeta } from '@/lib/api/router'
 import {
   formatDateTime,
 } from '@/lib/router-analytics'
+
+import type { ApiKeyCreatePayload, ApiKeyUpdatePayload } from '@/lib/api/router'
 
 interface DialogState {
   mode: 'create' | 'edit'
   id?: number
   name: string
+  quota_mode: number
+  quota_limit: string
+  allowed_models: string
+  allow_ips: string
+  expires_at: string
 }
 
 function resolveRouterOpenAIBaseUrl() {
@@ -47,34 +55,122 @@ function IconButton(props: {
   )
 }
 
-function NameDialog(props: {
+function ApiKeyDialog(props: {
   title: string
   actionLabel: string
-  initialName: string
+  initial: DialogState
   submitting: boolean
-  onSubmit: (name: string) => void
+  onSubmit: (data: DialogState) => void
   onClose: () => void
 }) {
-  const [name, setName] = useState(props.initialName)
+  const [name, setName] = useState(props.initial.name)
+  const [quotaMode, setQuotaMode] = useState(props.initial.quota_mode)
+  const [quotaLimit, setQuotaLimit] = useState(props.initial.quota_limit)
+  const [allowedModels, setAllowedModels] = useState(props.initial.allowed_models)
+  const [allowIps, setAllowIps] = useState(props.initial.allow_ips)
+  const [expiresAt, setExpiresAt] = useState(props.initial.expires_at)
+
+  const handleSubmit = () => {
+    if (!name.trim() || props.submitting) return
+    props.onSubmit({
+      ...props.initial,
+      name: name.trim(),
+      quota_mode: quotaMode,
+      quota_limit: quotaLimit,
+      allowed_models: allowedModels,
+      allow_ips: allowIps,
+      expires_at: expiresAt,
+    })
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
-      <div className="w-full max-w-md rounded-[28px] bg-white p-6 shadow-2xl">
+      <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
         <h3 className="text-xl text-gray-900">{props.title}</h3>
         <p className="mt-2 text-sm text-gray-500">建议用备注区分使用场景，例如生产环境、联调环境、团队共享。</p>
-        <input
-          type="text"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && name.trim() && !props.submitting) {
-              props.onSubmit(name.trim())
-            }
-          }}
-          placeholder="例如：生产环境 / 团队联调"
-          className="mt-4 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm focus:border-gray-950 focus:outline-none"
-          autoFocus
-        />
+
+        <div className="mt-4 space-y-4">
+          <div>
+            <label className="text-sm text-gray-600">名称 / 备注</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSubmit() }}
+              placeholder="例如：生产环境 / 团队联调"
+              className="mt-1 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm focus:border-gray-950 focus:outline-none"
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-600">配额模式</label>
+            <div className="mt-1 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setQuotaMode(1)}
+                className={`rounded-xl px-4 py-2 text-sm transition ${quotaMode === 1 ? 'bg-gray-950 text-white' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+              >
+                不限额
+              </button>
+              <button
+                type="button"
+                onClick={() => setQuotaMode(2)}
+                className={`rounded-xl px-4 py-2 text-sm transition ${quotaMode === 2 ? 'bg-gray-950 text-white' : 'border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+              >
+                限额
+              </button>
+            </div>
+          </div>
+
+          {quotaMode === 2 && (
+            <div>
+              <label className="text-sm text-gray-600">配额上限（元）</label>
+              <input
+                type="number"
+                value={quotaLimit}
+                onChange={(e) => setQuotaLimit(e.target.value)}
+                placeholder="例如：100"
+                min="0"
+                step="0.01"
+                className="mt-1 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm focus:border-gray-950 focus:outline-none"
+              />
+            </div>
+          )}
+
+          <div>
+            <label className="text-sm text-gray-600">允许的模型（逗号分隔，留空表示全部）</label>
+            <input
+              type="text"
+              value={allowedModels}
+              onChange={(e) => setAllowedModels(e.target.value)}
+              placeholder="例如：gpt-4o,claude-sonnet-4.6"
+              className="mt-1 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm focus:border-gray-950 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-600">IP 白名单（每行一个 CIDR，留空表示不限）</label>
+            <textarea
+              value={allowIps}
+              onChange={(e) => setAllowIps(e.target.value)}
+              placeholder="例如：192.168.1.0/24"
+              rows={2}
+              className="mt-1 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm focus:border-gray-950 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-600">过期时间（留空表示永不过期）</label>
+            <input
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+              className="mt-1 w-full rounded-2xl border border-gray-200 px-4 py-3 text-sm focus:border-gray-950 focus:outline-none"
+            />
+          </div>
+        </div>
+
         <div className="mt-5 flex justify-end gap-2">
           <button
             onClick={props.onClose}
@@ -83,7 +179,7 @@ function NameDialog(props: {
             取消
           </button>
           <button
-            onClick={() => props.onSubmit(name.trim())}
+            onClick={handleSubmit}
             disabled={!name.trim() || props.submitting}
             className="rounded-xl bg-gray-950 px-4 py-2 text-sm text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -147,6 +243,7 @@ export default function GetApiPage() {
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [baseUrl, setBaseUrl] = useState('/router-api/v1')
+  const [expandedKeyId, setExpandedKeyId] = useState<number | null>(null)
 
   useEffect(() => {
     setBaseUrl(resolveRouterOpenAIBaseUrl())
@@ -154,16 +251,42 @@ export default function GetApiPage() {
 
   const visibleKeys = useMemo(() => [...keys].sort((left, right) => left.id - right.id), [keys])
 
-  async function handleCreate(name: string) {
+  function buildCreatePayload(data: DialogState): ApiKeyCreatePayload {
+    const payload: ApiKeyCreatePayload = { name: data.name }
+    if (data.quota_mode === 2) {
+      payload.quota_mode = 2
+      payload.quota_limit = Math.round(parseFloat(data.quota_limit || '0') * 100)
+    }
+    if (data.allowed_models.trim()) payload.allowed_models = data.allowed_models.trim()
+    if (data.allow_ips.trim()) payload.allow_ips = data.allow_ips.trim()
+    if (data.expires_at) payload.expires_at = new Date(data.expires_at).toISOString()
+    return payload
+  }
+
+  function buildUpdatePayload(data: DialogState): ApiKeyUpdatePayload {
+    const payload: ApiKeyUpdatePayload = {}
+    if (data.name) payload.name = data.name
+    if (data.quota_mode === 2 && data.quota_limit) {
+      payload.quota_limit = Math.round(parseFloat(data.quota_limit) * 100)
+    }
+    payload.allowed_models = data.allowed_models.trim() || null
+    payload.allow_ips = data.allow_ips.trim() || null
+    if (data.expires_at) {
+      payload.expires_at = new Date(data.expires_at).toISOString()
+    }
+    return payload
+  }
+
+  async function handleCreate(data: DialogState) {
     setSubmitting(true)
     setErrorMessage(null)
     setNoticeMessage(null)
     try {
-      const payload = await create(name)
-      await navigator.clipboard.writeText(payload.api_key)
-      setCopiedKeyId(payload.item.id)
+      const result = await create(buildCreatePayload(data))
+      await navigator.clipboard.writeText(result.api_key)
+      setCopiedKeyId(result.item.id)
       setNoticeMessage('新创建的完整 Key 已复制到剪贴板。页面不会缓存完整密钥，请立即保管。')
-      window.setTimeout(() => setCopiedKeyId((current) => (current === payload.item.id ? null : current)), 1500)
+      window.setTimeout(() => setCopiedKeyId((current) => (current === result.item.id ? null : current)), 1500)
       setDialog(null)
     } catch (error) {
       setErrorMessage(extractErrorMessage(error))
@@ -172,7 +295,7 @@ export default function GetApiPage() {
     }
   }
 
-  async function handleUpdate(name: string) {
+  async function handleUpdate(data: DialogState) {
     if (!dialog?.id) {
       return
     }
@@ -180,7 +303,7 @@ export default function GetApiPage() {
     setErrorMessage(null)
     setNoticeMessage(null)
     try {
-      await update(dialog.id, { name })
+      await update(dialog.id, buildUpdatePayload(data))
       setDialog(null)
     } catch (error) {
       setErrorMessage(extractErrorMessage(error))
@@ -219,7 +342,7 @@ export default function GetApiPage() {
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <section className="rounded-[32px] bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
+      <section className="rounded-2xl bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
             <h2 className="text-[1.75rem] tracking-tight text-gray-950">API</h2>
@@ -233,7 +356,7 @@ export default function GetApiPage() {
         </div>
       </section>
 
-      <section className="rounded-[32px] bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
+      <section className="rounded-2xl bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
         <h3 className="text-[1.75rem] tracking-tight text-gray-950">BaseURL</h3>
         <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
           <p className="text-sm text-gray-900">OpenAI compatible baseURL:</p>
@@ -260,7 +383,7 @@ export default function GetApiPage() {
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{noticeMessage}</div>
       ) : null}
 
-      <section className="rounded-[32px] bg-[#f7f7f8] px-8 py-6 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
+      <section className="rounded-2xl bg-[#f7f7f8] px-8 py-6 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
         <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div />
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -273,7 +396,7 @@ export default function GetApiPage() {
               API 使用文档
             </Link>
             <button
-              onClick={() => setDialog({ mode: 'create', name: '' })}
+              onClick={() => setDialog({ mode: 'create', name: '', quota_mode: 1, quota_limit: '', allowed_models: '', allow_ips: '', expires_at: '' })}
               className="inline-flex h-11 items-center gap-3 rounded-full bg-gray-950 px-6 text-sm font-medium text-white shadow-[0_20px_40px_-24px_rgba(15,23,42,0.7)] transition hover:bg-gray-800"
             >
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/50">
@@ -285,7 +408,7 @@ export default function GetApiPage() {
         </div>
 
         {isLoading ? (
-          <div className="rounded-[24px] bg-white p-6">
+          <div className="rounded-xl bg-white p-6">
             <div className="h-40 animate-pulse rounded-2xl bg-gray-100"></div>
           </div>
         ) : !isLoading && isError ? (
@@ -296,12 +419,12 @@ export default function GetApiPage() {
             </button>
           </div>
         ) : visibleKeys.length === 0 ? (
-          <div className="rounded-[24px] border border-dashed border-gray-200 bg-white px-6 py-16 text-center">
+          <div className="rounded-xl border border-dashed border-gray-200 bg-white px-6 py-16 text-center">
             <p className="text-lg text-gray-900">你还没有创建任何 API Key</p>
             <p className="mt-2 text-sm text-gray-500">点击右上角按钮创建第一个 Key。完整密钥只会即时复制，不会在页面中缓存。</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-[24px] bg-white ring-1 ring-inset ring-gray-100">
+          <div className="overflow-hidden rounded-xl bg-white ring-1 ring-inset ring-gray-100">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="bg-[#edf2f7] text-gray-500">
@@ -309,15 +432,24 @@ export default function GetApiPage() {
                     <th className="px-6 py-4 font-medium">ID</th>
                     <th className="px-6 py-4 font-medium">密钥</th>
                     <th className="px-6 py-4 font-medium">备注</th>
-                    <th className="px-6 py-4 font-medium">创建时间</th>
+                    <th className="px-6 py-4 font-medium">状态</th>
                     <th className="px-6 py-4 font-medium">配额</th>
+                    <th className="px-6 py-4 font-medium">最后使用</th>
+                    <th className="px-6 py-4 font-medium">过期时间</th>
                     <th className="px-6 py-4 font-medium">操作</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visibleKeys.map((item, index) => {
+                    const statusMeta = apiKeyStatusMeta(item.status)
+                    const isExpanded = expandedKeyId === item.id
                     return (
-                      <tr key={item.id} className="border-t border-gray-100 text-gray-700">
+                      <React.Fragment key={item.id}>
+                      <tr
+                        key={item.id}
+                        className="border-t border-gray-100 text-gray-700 cursor-pointer hover:bg-gray-50/50"
+                        onClick={() => setExpandedKeyId(expandedKeyId === item.id ? null : item.id)}
+                      >
                         <td className="px-6 py-5 align-middle text-sm text-gray-500">{index + 1}</td>
                         <td className="px-6 py-5 align-middle">
                           <div className="flex items-center gap-3">
@@ -332,14 +464,21 @@ export default function GetApiPage() {
                         <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">
                           <div className="font-medium text-gray-700">{item.name}</div>
                         </td>
+                        <td className="px-6 py-5 align-middle">
+                          <span className={`rounded-full px-2.5 py-1 text-xs ${statusMeta.tone}`}>
+                            {statusMeta.label}
+                          </span>
+                        </td>
                         <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">{formatDateTime(item.created_at)}</td>
                         <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">
                           {item.billing_mode === 'limited'
                             ? `已用 ${item.quota_used.toFixed(2)} / ${item.quota_limit.toFixed(2)}`
                             : '不限额'}
                         </td>
+                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">{formatDateTime(item.last_used_at)}</td>
+                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">{item.expires_at ? formatDateTime(item.expires_at) : '永不过期'}</td>
                         <td className="px-6 py-5 align-middle">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <IconButton
                               title={item.is_active ? '禁用 Key' : '已禁用，后端不支持重新启用'}
                               onClick={() => handleDisable(item.id)}
@@ -349,7 +488,16 @@ export default function GetApiPage() {
                             </IconButton>
                             <IconButton
                               title="修改备注"
-                              onClick={() => setDialog({ mode: 'edit', id: item.id, name: item.name })}
+                              onClick={() => setDialog({
+                                mode: 'edit',
+                                id: item.id,
+                                name: item.name,
+                                quota_mode: item.quota_mode,
+                                quota_limit: item.quota_mode === 2 ? item.quota_limit.toString() : '',
+                                allowed_models: item.allowed_models || '',
+                                allow_ips: item.allow_ips || '',
+                                expires_at: item.expires_at ? item.expires_at.slice(0, 16) : '',
+                              })}
                             >
                               <EditIcon />
                             </IconButton>
@@ -359,6 +507,27 @@ export default function GetApiPage() {
                           </div>
                         </td>
                       </tr>
+                      {isExpanded && (
+                        <tr className="border-t border-gray-50 bg-gray-50/50">
+                          <td colSpan={8} className="px-6 py-4">
+                            <div className="grid gap-3 md:grid-cols-3">
+                              <div>
+                                <p className="text-xs text-gray-400">允许的模型</p>
+                                <p className="mt-1 text-sm text-gray-700">{item.allowed_models || '全部模型'}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-400">IP 白名单</p>
+                                <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{item.allow_ips || '不限制'}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-400">创建时间</p>
+                                <p className="mt-1 text-sm text-gray-700">{formatDateTime(item.created_at)}</p>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      </React.Fragment>
                     )
                   })}
                 </tbody>
@@ -368,7 +537,7 @@ export default function GetApiPage() {
         )}
       </section>
 
-      <section id="usage-guide" className="rounded-[32px] border border-gray-100 bg-white p-6 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)]">
+      <section id="usage-guide" className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)]">
         <h3 className="text-xl text-gray-950">使用说明</h3>
         <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-2xl bg-gray-50 p-5">
@@ -388,11 +557,11 @@ export default function GetApiPage() {
       </section>
 
       {dialog ? (
-        <NameDialog
+        <ApiKeyDialog
           key={`${dialog.mode}-${dialog.id ?? 'new'}`}
-          title={dialog.mode === 'create' ? '创建新的 API Key' : '修改备注'}
+          title={dialog.mode === 'create' ? '创建新的 API Key' : '编辑 API Key'}
           actionLabel={dialog.mode === 'create' ? '创建' : '保存'}
-          initialName={dialog.name}
+          initial={dialog}
           submitting={submitting}
           onSubmit={dialog.mode === 'create' ? handleCreate : handleUpdate}
           onClose={() => {

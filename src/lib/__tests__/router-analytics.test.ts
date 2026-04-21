@@ -14,35 +14,32 @@ import {
 
 const baseEvent = {
   request_id: 'req_1',
-  router_api_key_id: 1,
-  provider_slug: 'openai',
-  requested_model: 'smart-router',
-  resolved_model: 'gpt-4o',
+  api_key_id: 1,
+  model_name: 'gpt-4o',
   prompt_tokens: 100,
   completion_tokens: 50,
+  cached_tokens: 0,
   total_tokens: 150,
-  cost_input: 0.2,
-  cost_output: 0.3,
-  cost_total: 0.5,
-  currency: 'CNY',
+  cost: 0.5,
+  is_stream: false,
   error_code: null,
-  error_message: null,
-  latency_ms: 120,
+  error_msg: null,
+  duration_ms: 120,
 }
 
 describe('router analytics helpers', () => {
   it('filters events by time range', () => {
     const now = new Date('2026-03-11T12:00:00Z')
-    const recent = { ...baseEvent, id: 1, status_code: 200, created_at: '2026-03-10T12:00:00Z' }
-    const old = { ...baseEvent, id: 2, status_code: 200, created_at: '2026-03-01T12:00:00Z' }
+    const recent = { ...baseEvent, id: 1, status: 1, created_at: '2026-03-10T12:00:00Z' }
+    const old = { ...baseEvent, id: 2, status: 1, created_at: '2026-03-01T12:00:00Z' }
 
     expect(filterUsageEventsByRange([recent, old], '7d', now)).toHaveLength(1)
   })
 
   it('summarizes usage events', () => {
     const events = [
-      { ...baseEvent, id: 1, status_code: 200, created_at: '2026-03-10T12:00:00Z' },
-      { ...baseEvent, id: 2, status_code: 500, cost_total: 0.25, total_tokens: 80, created_at: '2026-03-10T13:00:00Z' },
+      { ...baseEvent, id: 1, status: 1, created_at: '2026-03-10T12:00:00Z' },
+      { ...baseEvent, id: 2, status: 2, cost: 0.25, total_tokens: 80, created_at: '2026-03-10T13:00:00Z' },
     ]
     const result = summarizeUsageEvents(events)
 
@@ -55,9 +52,9 @@ describe('router analytics helpers', () => {
 
   it('builds model and daily trend aggregates', () => {
     const events = [
-      { ...baseEvent, id: 1, status_code: 200, resolved_model: 'gpt-4o', created_at: '2026-03-10T12:00:00Z' },
-      { ...baseEvent, id: 2, status_code: 200, resolved_model: 'claude-3.5', cost_total: 1.2, created_at: '2026-03-10T16:00:00Z' },
-      { ...baseEvent, id: 3, status_code: 200, resolved_model: 'gpt-4o', cost_total: 0.1, created_at: '2026-03-11T08:00:00Z' },
+      { ...baseEvent, id: 1, status: 1, model_name: 'gpt-4o', created_at: '2026-03-10T12:00:00Z' },
+      { ...baseEvent, id: 2, status: 1, model_name: 'claude-3.5', cost: 1.2, created_at: '2026-03-10T16:00:00Z' },
+      { ...baseEvent, id: 3, status: 1, model_name: 'gpt-4o', cost: 0.1, created_at: '2026-03-11T08:00:00Z' },
     ]
 
     const modelStats = buildModelUsageStats(events)
@@ -70,8 +67,8 @@ describe('router analytics helpers', () => {
 
   it('normalizes model names and builds dashboard comparison', () => {
     const events = [
-      { ...baseEvent, id: 1, status_code: 200, resolved_model: 'gpt-4o-2024-08-06', created_at: '2026-03-10T12:00:00Z' },
-      { ...baseEvent, id: 2, status_code: 200, resolved_model: 'claude-3-5-sonnet', cost_total: 1.2, created_at: '2026-03-10T16:00:00Z' },
+      { ...baseEvent, id: 1, status: 1, model_name: 'gpt-4o-2024-08-06', created_at: '2026-03-10T12:00:00Z' },
+      { ...baseEvent, id: 2, status: 1, model_name: 'claude-3-5-sonnet', cost: 1.2, created_at: '2026-03-10T16:00:00Z' },
     ]
 
     expect(normalizeModelLabel('gpt-4o-2024-08-06')).toBe('GPT-4o')
@@ -96,8 +93,8 @@ describe('router analytics helpers', () => {
       { id: 3, is_active: true, billing_mode: 'prepaid', balance: 5.5 },
     ]
     const events = [
-      { ...baseEvent, id: 1, status_code: 200, created_at: '2026-03-02T12:00:00Z' },
-      { ...baseEvent, id: 2, status_code: 200, cost_total: 0.25, created_at: '2026-02-25T12:00:00Z' },
+      { ...baseEvent, id: 1, status: 1, created_at: '2026-03-02T12:00:00Z' },
+      { ...baseEvent, id: 2, status: 1, cost: 0.25, created_at: '2026-02-25T12:00:00Z' },
     ]
 
     expect(countActiveKeys(keys as never)).toBe(2)

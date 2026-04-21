@@ -1,4 +1,4 @@
-import type { RouterApiKey, RouterBillingLedgerItem, RouterUsageEvent, RouterUsageSummary } from '@/lib/api/router'
+import type { RouterApiKey, RouterUsageEvent, RouterUsageSummary } from '@/lib/api/router'
 
 export type UsageRange = '24h' | '7d' | '30d' | '90d'
 
@@ -93,16 +93,15 @@ export function summarizeUsageEvents(events: RouterUsageEvent[], currency = 'CNY
   const summary = events.reduce<UsageAggregate>(
     (acc, event) => {
       acc.totalRequests += 1
-      if (event.status_code >= 200 && event.status_code < 300) {
+      if (event.status === 1) {
         acc.successRequests += 1
       }
       acc.totalTokens += event.total_tokens
       acc.promptTokens += event.prompt_tokens
       acc.completionTokens += event.completion_tokens
-      acc.totalCost += event.cost_total
-      acc.currency = event.currency || acc.currency
-      if (typeof event.latency_ms === 'number') {
-        latencyTotal += event.latency_ms
+      acc.totalCost += event.cost
+      if (typeof event.duration_ms === 'number') {
+        latencyTotal += event.duration_ms
         latencyCount += 1
       }
       return acc
@@ -139,7 +138,7 @@ export function usageSummaryToAggregate(summary: RouterUsageSummary | null): Usa
 export function buildModelUsageStats(events: RouterUsageEvent[]) {
   const bucket = new Map<string, ModelUsageStat>()
   events.forEach((event) => {
-    const model = normalizeModelLabel(event.resolved_model || event.requested_model || 'unknown')
+    const model = normalizeModelLabel(event.model_name || 'unknown')
     const current = bucket.get(model) ?? {
       model,
       requests: 0,
@@ -148,7 +147,7 @@ export function buildModelUsageStats(events: RouterUsageEvent[]) {
     }
     current.requests += 1
     current.totalTokens += event.total_tokens
-    current.totalCost += event.cost_total
+    current.totalCost += event.cost
     bucket.set(model, current)
   })
   return Array.from(bucket.values()).sort((left, right) => right.totalCost - left.totalCost)
@@ -170,7 +169,7 @@ export function buildDailyTrend(events: RouterUsageEvent[]) {
     current.promptTokens += event.prompt_tokens
     current.completionTokens += event.completion_tokens
     current.totalTokens += event.total_tokens
-    current.totalCost += event.cost_total
+    current.totalCost += event.cost
     bucket.set(date, current)
   })
   return Array.from(bucket.values()).sort((left, right) => left.date.localeCompare(right.date))
@@ -295,7 +294,7 @@ export function createUsageDashboardViewModel(options: {
   now?: Date
 }) {
   const filteredEvents = filterUsageEventsByRange(options.events, options.range, options.now)
-  const currency = extractCurrency(options.summary, filteredEvents)
+  const currency = extractCurrency(options.summary)
   const aggregate = filteredEvents.length > 0
     ? summarizeUsageEvents(filteredEvents, currency)
     : options.events.length === 0
@@ -343,25 +342,15 @@ export function calculateMonthlySpend(events: RouterUsageEvent[], now: Date = ne
   return events.reduce((total, event) => {
     const createdAt = toDate(event.created_at)
     if (createdAt.getFullYear() === year && createdAt.getMonth() === month) {
-      return total + event.cost_total
+      return total + event.cost
     }
     return total
   }, 0)
 }
 
-export function extractCurrency(
-  summary: RouterUsageSummary | null,
-  events: RouterUsageEvent[],
-  ledgerItems: RouterBillingLedgerItem[] = []
-) {
+export function extractCurrency(summary: RouterUsageSummary | null) {
   if (summary?.currency) {
     return summary.currency
-  }
-  if (events[0]?.currency) {
-    return events[0].currency
-  }
-  if (ledgerItems[0]?.currency) {
-    return ledgerItems[0].currency
   }
   return 'CNY'
 }

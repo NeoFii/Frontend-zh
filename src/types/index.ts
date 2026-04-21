@@ -83,12 +83,6 @@ export type {
 } from '@/lib/api/auth'
 
 export type {
-  ApiKey,
-  UsageStats,
-  PlatformData,
-} from '@/lib/api/platform'
-
-export type {
   RouterApiKey,
   RouterBillingLedgerItem,
   RouterUsageEvent,

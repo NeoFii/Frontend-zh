@@ -49,6 +49,7 @@ describe('user-service backed router console API', () => {
         id: 10,
         name: 'prod',
         token_preview: 'sk-abc12...',
+        status: 1,
         is_active: true,
         billing_mode: 'limited',
         quota_limit: 50,
@@ -83,7 +84,7 @@ describe('user-service backed router console API', () => {
     })
 
     const { createRouterKey } = await import('./router')
-    const response = await createRouterKey('test')
+    const response = await createRouterKey({ name: 'test' })
 
     expect(mockPost).toHaveBeenCalledWith('/keys', { name: 'test' })
     expect(response.data.api_key).toBe('sk-full-secret')
@@ -128,13 +129,12 @@ describe('user-service backed router console API', () => {
     })
     expect(response.data.items[0]).toEqual(
       expect.objectContaining({
-        router_api_key_id: 10,
-        requested_model: 'gpt-4o',
-        resolved_model: 'gpt-4o',
+        api_key_id: 10,
+        model_name: 'gpt-4o',
         total_tokens: 150,
-        cost_total: 1.23,
-        status_code: 200,
-        latency_ms: 345,
+        cost: 1.23,
+        status: 200,
+        duration_ms: 345,
       })
     )
   })
@@ -200,9 +200,9 @@ describe('user-service backed router console API', () => {
     expect(response.data.items[0]).toEqual(
       expect.objectContaining({
         id: 30,
+        type: 2,
         direction: 'debit',
         amount: -4.56,
-        currency: 'CNY',
         balance_before: 10,
         balance_after: 5.44,
         description: 'api_call #req-1',

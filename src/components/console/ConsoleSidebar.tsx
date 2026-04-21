@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react'
 import { useTranslation } from '@/hooks/useTranslation'
+import { useAuthStore } from '@/stores/auth'
 
 interface MenuItem {
   id: string
@@ -44,10 +45,30 @@ const FinanceIcon = () => (
   </svg>
 )
 
-const developingItems = new Set(['third-party-api', 'request-limits', 'child-account', 'recharge', 'voucher'])
+const developingItems = new Set(['recharge', 'voucher'])
 
 export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSidebarProps) {
   const { t } = useTranslation('console.menu')
+  const { t: tHeader } = useTranslation('console.header')
+  const user = useAuthStore((state) => state.user)
+  const logoutAsync = useAuthStore((state) => state.logoutAsync)
+
+  const getUserInitial = () => {
+    if (user?.email) {
+      const localPart = user.email.split('@')[0]
+      return /^[a-zA-Z]/.test(localPart) ? localPart.charAt(0).toUpperCase() : localPart.charAt(0)
+    }
+    return 'U'
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logoutAsync()
+      window.location.href = '/login'
+    } catch {
+      // best effort
+    }
+  }
 
   const menuGroups: MenuGroup[] = [
     {
@@ -62,8 +83,6 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
       icon: <AccountIcon />,
       items: [
         { id: 'basic-information', name: t('accountInfo') },
-        { id: 'request-limits', name: t('requestLimits') },
-        { id: 'child-account', name: t('childAccount') },
       ],
     },
     {
@@ -72,7 +91,6 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
       icon: <ApiIcon />,
       items: [
         { id: 'get-api', name: t('getApi') },
-        { id: 'third-party-api', name: t('thirdPartyApi') },
       ],
     },
     {
@@ -111,7 +129,7 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
                     <button
                       key={item.id}
                       onClick={() => onMenuChange(item.id)}
-                      className={`flex w-full items-center justify-between rounded-[18px] px-4 py-3 text-left transition ${
+                      className={`flex w-full items-center justify-between rounded-lg px-4 py-3 text-left transition ${
                         isActive
                           ? 'bg-gray-950 text-white shadow-[0_16px_30px_-18px_rgba(15,23,42,0.55)]'
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-950'
@@ -134,6 +152,27 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
             </section>
           ))}
         </nav>
+      </div>
+
+      <div className="border-t border-gray-200 px-4 py-4">
+        <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-950 text-sm font-medium text-white">
+            {getUserInitial()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-gray-900">{user?.email || '当前账户'}</p>
+            <p className="text-[11px] uppercase tracking-[0.14em] text-gray-400">Account</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            title={tHeader('logout')}
+            className="shrink-0 rounded-xl p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
       </div>
     </aside>
   )

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/hooks/useUser'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
 import { useRouterUsageSummary } from '@/hooks/useRouterUsage'
-import { changePassword, resetPassword, sendResetPasswordCode } from '@/lib/api/auth'
+import { changePassword, resetPassword, sendResetPasswordCode, sendVerifyEmailCode, verifyEmail } from '@/lib/api/auth'
 import { extractErrorMessage } from '@/lib/error'
 import {
   countActiveKeys,
@@ -19,7 +19,7 @@ import { useAuthStore } from '@/stores/auth'
 
 function SummaryCard(props: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-[28px] border border-gray-100 bg-white p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
       <p className="text-sm text-gray-500">{props.label}</p>
       <p className="mt-3 text-2xl tracking-tight text-gray-950">{props.value}</p>
       <p className="mt-2 text-xs leading-6 text-gray-400">{props.hint}</p>
@@ -150,7 +150,7 @@ function PasswordDialog(props: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <div className="w-full max-w-2xl rounded-[32px] border border-gray-200 bg-white p-6 shadow-[0_30px_90px_-36px_rgba(15,23,42,0.45)]">
+      <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_30px_90px_-36px_rgba(15,23,42,0.45)]">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="inline-flex rounded-full bg-gray-950 px-3 py-1 text-[11px] font-medium tracking-[0.24em] text-white">
@@ -176,7 +176,7 @@ function PasswordDialog(props: {
               setError(null)
               setMessage(null)
             }}
-            className={`rounded-[22px] border px-4 py-4 text-left transition ${
+            className={`rounded-lg border px-4 py-4 text-left transition ${
               mode === 'current'
                 ? 'border-gray-950 bg-gray-950 text-white'
                 : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -193,7 +193,7 @@ function PasswordDialog(props: {
               setError(null)
               setMessage(null)
             }}
-            className={`rounded-[22px] border px-4 py-4 text-left transition ${
+            className={`rounded-lg border px-4 py-4 text-left transition ${
               mode === 'email'
                 ? 'border-gray-950 bg-gray-950 text-white'
                 : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -298,6 +298,11 @@ export default function BasicInformationPage() {
   const logout = useAuthStore((state) => state.logout)
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
   const [passwordSubmitting, setPasswordSubmitting] = useState(false)
+  const [verifyCode, setVerifyCode] = useState('')
+  const [verifySending, setVerifySending] = useState(false)
+  const [verifySubmitting, setVerifySubmitting] = useState(false)
+  const [verifyMessage, setVerifyMessage] = useState<string | null>(null)
+  const [verifyError, setVerifyError] = useState<string | null>(null)
 
   const handlePasswordSuccess = async () => {
     setPasswordSubmitting(true)
@@ -314,10 +319,10 @@ export default function BasicInformationPage() {
   if (isLoading) {
     return (
       <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-        <div className="h-44 animate-pulse rounded-[32px] bg-gray-100"></div>
+        <div className="h-44 animate-pulse rounded-2xl bg-gray-100"></div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
           {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="h-28 animate-pulse rounded-[28px] bg-gray-100"></div>
+            <div key={index} className="h-28 animate-pulse rounded-xl bg-gray-100"></div>
           ))}
         </div>
       </div>
@@ -337,7 +342,7 @@ export default function BasicInformationPage() {
 
   const activeKeyCount = countActiveKeys(keys)
   const prepaidBalance = sumPrepaidBalance(keys)
-  const currency = extractCurrency(summary, [])
+  const currency = extractCurrency(summary)
   const totalRequests = summary?.total_requests ?? 0
   const totalTokens = summary?.total_tokens ?? 0
   const totalCost = summary?.total_cost ?? 0
@@ -353,7 +358,7 @@ export default function BasicInformationPage() {
         onSuccess={handlePasswordSuccess}
       />
 
-      <section className="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(15,23,42,0.08),_transparent_32%),linear-gradient(145deg,#ffffff_0%,#f8fafc_100%)] p-8 shadow-[0_26px_60px_-42px_rgba(15,23,42,0.22)]">
+      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(15,23,42,0.08),_transparent_32%),linear-gradient(145deg,#ffffff_0%,#f8fafc_100%)] p-8 shadow-[0_26px_60px_-42px_rgba(15,23,42,0.22)]">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
             <div className="inline-flex rounded-full bg-gray-950 px-3 py-1 text-xs font-medium tracking-[0.24em] text-white">
@@ -380,12 +385,12 @@ export default function BasicInformationPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <div className="rounded-[28px] bg-gray-950 p-5 text-white">
+            <div className="rounded-xl bg-gray-950 p-5 text-white">
               <p className="text-xs tracking-[0.24em] text-slate-400">账户身份</p>
               <p className="mt-3 text-lg">{user?.email || '-'}</p>
               <p className="mt-2 text-sm text-slate-300">UID {user?.uid || '-'} · 当前账户已登录</p>
             </div>
-            <div className="rounded-[28px] border border-gray-200 bg-white p-5">
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
               <p className="text-xs tracking-[0.24em] text-gray-400">结算币种</p>
               <p className="mt-3 text-lg text-gray-950">{currency}</p>
               <p className="mt-2 text-sm text-gray-500">费用与余额面板都会按后端返回币种显示。</p>
@@ -403,7 +408,7 @@ export default function BasicInformationPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <h3 className="text-lg text-gray-900">账户信息</h3>
           <div className="mt-5 grid gap-4 md:grid-cols-2">
             <div className="rounded-2xl bg-gray-50 p-4">
@@ -416,16 +421,20 @@ export default function BasicInformationPage() {
             </div>
             <div className="rounded-2xl bg-gray-50 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-gray-400">账户状态</p>
-              <p className="mt-2 text-sm text-emerald-600">正常</p>
+              <p className={`mt-2 text-sm ${user?.status === 1 ? 'text-emerald-600' : 'text-red-600'}`}>
+                {user?.status === 1 ? '正常' : '已禁用'}
+              </p>
             </div>
             <div className="rounded-2xl bg-gray-50 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-gray-400">认证状态</p>
-              <p className="mt-2 text-sm text-gray-900">邮箱已绑定</p>
+              <p className={`mt-2 text-sm ${user?.email_verified_at ? 'text-emerald-600' : 'text-amber-600'}`}>
+                {user?.email_verified_at ? '邮箱已验证' : '邮箱未验证'}
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <h3 className="text-lg text-gray-900">安全与管理</h3>
           <div className="mt-5 space-y-4">
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
@@ -441,9 +450,69 @@ export default function BasicInformationPage() {
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
               <p className="text-sm font-medium text-gray-900">邮箱绑定</p>
               <p className="mt-2 text-sm leading-6 text-gray-600">当前绑定邮箱为 {user?.email || '-'}，用于登录和验证码验证。</p>
-              <div className="mt-4 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
-                已绑定
-              </div>
+              {user?.email_verified_at ? (
+                <div className="mt-4 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
+                  已验证
+                </div>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={verifyCode}
+                        onChange={(e) => setVerifyCode(e.target.value)}
+                        placeholder="输入 6 位验证码"
+                        maxLength={6}
+                        className="w-full rounded-2xl border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-gray-950"
+                      />
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (!user?.email) return
+                        setVerifySending(true)
+                        setVerifyError(null)
+                        try {
+                          await sendVerifyEmailCode(user.email)
+                          setVerifyMessage('验证码已发送到邮箱。')
+                        } catch (err) {
+                          setVerifyError(extractErrorMessage(err))
+                        } finally {
+                          setVerifySending(false)
+                        }
+                      }}
+                      disabled={verifySending}
+                      className="rounded-full bg-gray-950 px-4 py-2.5 text-sm text-white transition hover:bg-gray-800 disabled:bg-gray-300"
+                    >
+                      {verifySending ? '发送中...' : '发送验证码'}
+                    </button>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (!user?.email || !verifyCode.trim()) return
+                      setVerifySubmitting(true)
+                      setVerifyError(null)
+                      setVerifyMessage(null)
+                      try {
+                        await verifyEmail({ email: user.email, code: verifyCode.trim() })
+                        setVerifyMessage('邮箱验证成功。')
+                        setVerifyCode('')
+                        mutate()
+                      } catch (err) {
+                        setVerifyError(extractErrorMessage(err))
+                      } finally {
+                        setVerifySubmitting(false)
+                      }
+                    }}
+                    disabled={verifySubmitting || !verifyCode.trim()}
+                    className="rounded-full bg-gray-950 px-4 py-2 text-sm text-white transition hover:bg-gray-800 disabled:bg-gray-300"
+                  >
+                    {verifySubmitting ? '验证中...' : '验证邮箱'}
+                  </button>
+                  {verifyMessage && <p className="text-xs text-emerald-600">{verifyMessage}</p>}
+                  {verifyError && <p className="text-xs text-red-600">{verifyError}</p>}
+                </div>
+              )}
             </div>
           </div>
         </div>

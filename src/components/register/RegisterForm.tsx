@@ -153,6 +153,7 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
         verification_code: form.code,
         password: form.password,
         confirm_password: form.confirmPassword,
+        lang: 'zh',
       })
 
       if (res.code === 201) {

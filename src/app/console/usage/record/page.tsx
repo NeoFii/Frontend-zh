@@ -6,11 +6,11 @@ import * as echarts from 'echarts/core'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
-import { useRouterUsageEvents, useRouterUsageSummary } from '@/hooks/useRouterUsage'
+import { useRouterUsageEvents, useRouterUsageSummary, useRouterUsageLogs } from '@/hooks/useRouterUsage'
+import { useRouterKeys } from '@/hooks/useRouterKeys'
 import {
   USAGE_REFERENCE_MODELS,
   createUsageDashboardViewModel,
-  filterUsageEventsByRange,
   formatCompactNumber,
   formatCurrency,
   formatDateTime,
@@ -67,8 +67,25 @@ function EmptyPanel(props: { title: string; description: string; compact?: boole
 export default function UsageRecordPage() {
   const [timeRange, setTimeRange] = useState<UsageRange>('7d')
   const [referenceModelId, setReferenceModelId] = useState('claude-sonnet-4.6')
-  const { events, isLoading, isError, mutate } = useRouterUsageEvents({ limit: 200, maxPages: 10 })
+  const { events, isLoading, isError, mutate } = useRouterUsageEvents({ limit: 100, maxPages: 10 })
   const { summary } = useRouterUsageSummary()
+  const { keys } = useRouterKeys()
+
+  // 服务端分页筛选状态
+  const [logsPage, setLogsPage] = useState(1)
+  const [filterModel, setFilterModel] = useState('')
+  const [filterKeyId, setFilterKeyId] = useState<number | undefined>(undefined)
+  const [filterStart, setFilterStart] = useState('')
+  const [filterEnd, setFilterEnd] = useState('')
+  const { items: logItems, total: logTotal, isLoading: logsLoading } = useRouterUsageLogs({
+    page: logsPage,
+    pageSize: 20,
+    modelName: filterModel || undefined,
+    keyId: filterKeyId,
+    start: filterStart || undefined,
+    end: filterEnd || undefined,
+  })
+  const logTotalPages = Math.ceil(logTotal / 20)
 
   const dashboard = useMemo(
     () =>
@@ -79,13 +96,6 @@ export default function UsageRecordPage() {
         range: timeRange,
       }),
     [events, summary, referenceModelId, timeRange]
-  )
-  const recentEvents = useMemo(
-    () =>
-      [...filterUsageEventsByRange(events, timeRange)].sort(
-        (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
-      ),
-    [events, timeRange]
   )
 
   const topModel = dashboard.modelStats[0]
@@ -278,7 +288,7 @@ export default function UsageRecordPage() {
   if (isLoading) {
     return (
       <div className="space-y-4" style={{ fontFamily: 'MiSans, sans-serif' }}>
-        <div className="h-40 animate-pulse rounded-[28px] bg-gray-100"></div>
+        <div className="h-40 animate-pulse rounded-2xl bg-gray-100"></div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
           {Array.from({ length: 5 }).map((_, index) => (
             <div key={index} className="h-28 animate-pulse rounded-3xl bg-gray-100"></div>
@@ -305,7 +315,7 @@ export default function UsageRecordPage() {
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <section className="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.18),_transparent_32%),linear-gradient(145deg,#0f172a_0%,#111827_45%,#1f2937_100%)] text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.75)]">
+      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.18),_transparent_32%),linear-gradient(145deg,#0f172a_0%,#111827_45%,#1f2937_100%)] text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.75)]">
         <div className="grid gap-8 px-6 py-7 lg:grid-cols-[1.6fr_1fr] lg:px-8">
           <div>
             <div className="flex flex-wrap items-center gap-3">
@@ -336,7 +346,7 @@ export default function UsageRecordPage() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-white/10 bg-white/[0.08] p-5 backdrop-blur-sm">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-5 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-300">参考模型对比</p>
@@ -417,7 +427,7 @@ export default function UsageRecordPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-medium text-gray-900">成本对比总览</p>
@@ -449,7 +459,7 @@ export default function UsageRecordPage() {
           </div>
         </div>
 
-        <div className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <p className="text-sm font-medium text-gray-900">观测重点</p>
           <div className="mt-5 space-y-4">
             <div className="rounded-2xl bg-gray-50 p-4">
@@ -472,7 +482,7 @@ export default function UsageRecordPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-[30px] border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">模型请求排行</div>
           {dashboard.hasEvents ? (
             <ReactECharts option={modelRequestsOption} style={{ height: '320px' }} />
@@ -480,7 +490,7 @@ export default function UsageRecordPage() {
             <EmptyPanel title="模型请求排行" description="接入真实请求后，这里会展示不同模型的调用次数分布。" compact />
           )}
         </div>
-        <div className="rounded-[30px] border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">模型费用占比</div>
           {dashboard.hasEvents ? (
             <ReactECharts option={modelCostShareOption} style={{ height: '320px' }} />
@@ -491,7 +501,7 @@ export default function UsageRecordPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-[30px] border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">请求与费用趋势</div>
           {dashboard.hasEvents ? (
             <ReactECharts option={trendOption} style={{ height: '320px' }} />
@@ -499,7 +509,7 @@ export default function UsageRecordPage() {
             <EmptyPanel title="请求与费用趋势" description="趋势图会在有真实 usage events 后按天聚合请求量与费用。" />
           )}
         </div>
-        <div className="rounded-[30px] border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">Token 趋势</div>
           {dashboard.hasEvents ? (
             <ReactECharts option={tokenTrendOption} style={{ height: '320px' }} />
@@ -509,60 +519,134 @@ export default function UsageRecordPage() {
         </div>
       </section>
 
-      <section className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+      <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
         <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
-            <h3 className="text-lg text-gray-900">最近请求</h3>
-            <p className="mt-1 text-sm text-gray-500">保留最近 20 条明细，便于核对模型、厂商、费用和状态码。</p>
+            <h3 className="text-lg text-gray-900">请求明细</h3>
+            <p className="mt-1 text-sm text-gray-500">支持按日期、模型、API Key 筛选，服务端分页。</p>
           </div>
-          <span className="text-sm text-gray-400">{dashboard.hasEvents ? `${Math.min(recentEvents.length, 20)} 条可见` : '等待真实记录'}</span>
+          <span className="text-sm text-gray-400">共 {logTotal} 条</span>
         </div>
-        {dashboard.hasEvents ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 text-gray-400">
-                  <th className="px-3 py-3 font-normal">时间</th>
-                  <th className="px-3 py-3 font-normal">模型</th>
-                  <th className="px-3 py-3 font-normal">厂商</th>
-                  <th className="px-3 py-3 font-normal">Tokens</th>
-                  <th className="px-3 py-3 font-normal">费用</th>
-                  <th className="px-3 py-3 font-normal">状态</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentEvents
-                  .slice(0, 20)
-                  .map((event) => (
+
+        <div className="mb-4 flex flex-wrap items-end gap-3">
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">开始时间</label>
+            <input
+              type="datetime-local"
+              value={filterStart}
+              onChange={(e) => { setFilterStart(e.target.value); setLogsPage(1) }}
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-950"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">结束时间</label>
+            <input
+              type="datetime-local"
+              value={filterEnd}
+              onChange={(e) => { setFilterEnd(e.target.value); setLogsPage(1) }}
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-950"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">模型名</label>
+            <input
+              type="text"
+              value={filterModel}
+              onChange={(e) => { setFilterModel(e.target.value); setLogsPage(1) }}
+              placeholder="如 gpt-4o"
+              className="w-40 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-950"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-gray-500">API Key</label>
+            <select
+              value={filterKeyId ?? ''}
+              onChange={(e) => { setFilterKeyId(e.target.value ? Number(e.target.value) : undefined); setLogsPage(1) }}
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-950"
+            >
+              <option value="">全部</option>
+              {keys.map((k) => (
+                <option key={k.id} value={k.id}>{k.name} ({k.token_preview})</option>
+              ))}
+            </select>
+          </div>
+          {(filterStart || filterEnd || filterModel || filterKeyId) && (
+            <button
+              onClick={() => { setFilterStart(''); setFilterEnd(''); setFilterModel(''); setFilterKeyId(undefined); setLogsPage(1) }}
+              className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
+            >
+              清除筛选
+            </button>
+          )}
+        </div>
+
+        {logsLoading ? (
+          <div className="h-40 animate-pulse rounded-2xl bg-gray-100" />
+        ) : logItems.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-14 text-center">
+            <p className="text-base text-gray-900">当前筛选条件下没有请求记录</p>
+            <p className="mt-2 text-sm text-gray-500">调整筛选条件或等待新的 Router 调用。</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100 text-gray-400">
+                    <th className="px-3 py-3 font-normal">时间</th>
+                    <th className="px-3 py-3 font-normal">模型</th>
+                    <th className="px-3 py-3 font-normal">Tokens</th>
+                    <th className="px-3 py-3 font-normal">费用</th>
+                    <th className="px-3 py-3 font-normal">耗时</th>
+                    <th className="px-3 py-3 font-normal">状态</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logItems.map((event) => (
                     <tr key={event.id} className="border-b border-gray-50 text-gray-700">
                       <td className="px-3 py-3">{formatDateTime(event.created_at)}</td>
-                      <td className="px-3 py-3">{event.resolved_model || event.requested_model}</td>
-                      <td className="px-3 py-3">{event.provider_slug || '-'}</td>
+                      <td className="px-3 py-3">{event.model_name}</td>
                       <td className="px-3 py-3">{formatCompactNumber(event.total_tokens)}</td>
-                      <td className="px-3 py-3">{formatCurrency(event.cost_total, event.currency || dashboard.currency)}</td>
+                      <td className="px-3 py-3">{formatCurrency(event.cost, dashboard.currency)}</td>
+                      <td className="px-3 py-3">{event.duration_ms != null ? `${event.duration_ms}ms` : '-'}</td>
                       <td className="px-3 py-3">
                         <span
                           className={`rounded-full px-2.5 py-1 text-xs ${
-                            event.status_code >= 200 && event.status_code < 300
+                            event.status === 1
                               ? 'bg-green-50 text-green-700'
-                              : 'bg-red-50 text-red-600'
+                              : event.status === 3
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-red-50 text-red-600'
                           }`}
                         >
-                          {event.status_code}
+                          {event.status === 1 ? '成功' : event.status === 3 ? '已退款' : '错误'}
                         </span>
                       </td>
                     </tr>
                   ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-14 text-center">
-            <p className="text-base text-gray-900">当前范围内还没有可展示的真实请求</p>
-            <p className="mt-2 text-sm text-gray-500">
-              完成一次 Router 调用后，这里会自动显示模型、厂商、token 和账单结果。
-            </p>
-          </div>
+                </tbody>
+              </table>
+            </div>
+            {logTotalPages > 1 && (
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setLogsPage((p) => Math.max(1, p - 1))}
+                  disabled={logsPage <= 1}
+                  className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+                >
+                  上一页
+                </button>
+                <span className="text-sm text-gray-500">{logsPage} / {logTotalPages}</span>
+                <button
+                  onClick={() => setLogsPage((p) => Math.min(logTotalPages, p + 1))}
+                  disabled={logsPage >= logTotalPages}
+                  className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
+                >
+                  下一页
+                </button>
+              </div>
+            )}
+          </>
         )}
       </section>
     </div>

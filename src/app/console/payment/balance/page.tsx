@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
 import { useRouterBalance, useRouterUsageEvents, useRouterUsageSummary } from '@/hooks/useRouterUsage'
+import { apiKeyStatusMeta } from '@/lib/api/router'
 import {
   calculateMonthlySpend,
   calculateSuccessRate,
@@ -16,7 +17,7 @@ import {
 
 function StatCard(props: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-[28px] border border-gray-100 bg-white p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
+    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
       <p className="text-sm text-gray-500">{props.label}</p>
       <p className="mt-3 text-2xl tracking-tight text-gray-950">{props.value}</p>
       <p className="mt-2 text-xs leading-6 text-gray-400">{props.hint}</p>
@@ -29,9 +30,9 @@ export default function BalancePage() {
   const { keys, isLoading: keysLoading } = useRouterKeys()
   const { balance, isLoading: balanceLoading } = useRouterBalance()
   const { summary, isLoading: summaryLoading } = useRouterUsageSummary()
-  const { events, isLoading: eventsLoading } = useRouterUsageEvents({ limit: 200, maxPages: 10 })
+  const { events, isLoading: eventsLoading } = useRouterUsageEvents({ limit: 100, maxPages: 10 })
 
-  const currency = extractCurrency(summary, events)
+  const currency = extractCurrency(summary)
   const aggregate = events.length > 0 ? summarizeUsageEvents(events, currency) : usageSummaryToAggregate(summary)
   const monthlySpend = calculateMonthlySpend(events)
   const successRate = calculateSuccessRate(aggregate)
@@ -40,7 +41,7 @@ export default function BalancePage() {
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <section className="overflow-hidden rounded-[32px] border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(15,23,42,0.08),_transparent_32%),linear-gradient(145deg,#ffffff_0%,#f8fafc_100%)] p-8 shadow-[0_26px_60px_-42px_rgba(15,23,42,0.22)]">
+      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(15,23,42,0.08),_transparent_32%),linear-gradient(145deg,#ffffff_0%,#f8fafc_100%)] p-8 shadow-[0_26px_60px_-42px_rgba(15,23,42,0.22)]">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="inline-flex rounded-full bg-gray-950 px-3 py-1 text-xs font-medium tracking-[0.24em] text-white">
@@ -71,6 +72,12 @@ export default function BalancePage() {
             >
               查看账单历史
             </button>
+            <button
+              onClick={() => router.push('/console/payment/recharge')}
+              className="rounded-full border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+            >
+              充值记录
+            </button>
           </div>
         </div>
       </section>
@@ -83,7 +90,7 @@ export default function BalancePage() {
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.3fr_0.7fr]">
-        <div className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg text-gray-900">Key 余额分布</h3>
             <span className="text-sm text-gray-400">{keys.length} 个 Key</span>
@@ -94,14 +101,16 @@ export default function BalancePage() {
             </div>
           ) : (
             <div className="space-y-3">
-              {[...keys].sort((left, right) => left.id - right.id).map((item) => (
+              {[...keys].sort((left, right) => left.id - right.id).map((item) => {
+                const statusMeta = apiKeyStatusMeta(item.status)
+                return (
                 <div key={item.id} className="rounded-2xl border border-gray-100 p-4">
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="text-sm text-gray-900">{item.name}</p>
-                        <span className={`rounded-full px-2.5 py-1 text-xs ${item.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'}`}>
-                          {item.is_active ? '启用中' : '已失效'}
+                        <span className={`rounded-full px-2.5 py-1 text-xs ${statusMeta.tone}`}>
+                          {statusMeta.label}
                         </span>
                         <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs text-orange-700">{item.billing_mode}</span>
                       </div>
@@ -124,12 +133,12 @@ export default function BalancePage() {
                     </div>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           )}
         </div>
 
-        <div className="rounded-[30px] border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <h3 className="text-lg text-gray-900">消费概览</h3>
           <dl className="mt-5 space-y-4 text-sm">
             <div className="flex items-center justify-between">

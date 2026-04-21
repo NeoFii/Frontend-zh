@@ -88,10 +88,39 @@ interface BackendPagedResponse<T> {
   page_size: number
 }
 
+interface BackendTopupOrderItem {
+  id: number
+  order_no: string
+  amount: number
+  status: number
+  payment_channel: string
+  payment_no: string | null
+  paid_at: string | null
+  remark: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface TopupOrderItem {
+  id: number
+  order_no: string
+  amount: number
+  /** 订单状态 */
+  status: number
+  payment_channel: string
+  payment_no: string | null
+  paid_at: string | null
+  remark: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface RouterApiKey {
   id: number
   name: string
   token_preview: string
+  /** 1=active, 2=disabled, 3=expired, 4=exhausted */
+  status: number
   is_active: boolean
   is_deleted?: boolean
   billing_mode: string
@@ -99,11 +128,6 @@ export interface RouterApiKey {
   quota_mode: number
   quota_limit: number
   quota_used: number
-  daily_quota_tokens: number | null
-  monthly_quota_tokens: number | null
-  daily_quota_cost: number | null
-  monthly_quota_cost: number | null
-  rate_limit_rpm: number | null
   allowed_models: string | null
   allow_ips: string | null
   expires_at: string | null
@@ -125,21 +149,19 @@ export interface RouterBalance {
 export interface RouterUsageEvent {
   id: number
   request_id: string
-  router_api_key_id: number | null
-  provider_slug: string | null
-  requested_model: string
-  resolved_model: string
+  api_key_id: number | null
+  model_name: string
   prompt_tokens: number
   completion_tokens: number
+  cached_tokens: number
   total_tokens: number
-  cost_input: number
-  cost_output: number
-  cost_total: number
-  currency: string
-  status_code: number
+  cost: number
+  /** 1=success, 2=error, 3=refunded */
+  status: number
+  duration_ms: number | null
+  is_stream: boolean
   error_code: string | null
-  error_message: string | null
-  latency_ms: number | null
+  error_msg: string | null
   created_at: string
 }
 
@@ -155,16 +177,16 @@ export interface RouterUsageSummary {
 
 export interface RouterBillingLedgerItem {
   id: number
-  usage_event_id: number | null
-  router_api_key_id: number | null
+  /** 1=TOPUP, 2=CONSUME, 3=REFUND, 4=FREEZE, 5=UNFREEZE, 6=ADMIN_ADJUST */
+  type: number
   direction: string
   amount: number
-  currency: string
-  balance_before: number | null
-  balance_after: number | null
+  balance_before: number
+  balance_after: number
   description: string | null
-  ref_type?: string | null
-  ref_id?: string | null
+  ref_type: string | null
+  ref_id: string | null
+  remark: string | null
   created_at: string
 }
 
@@ -195,6 +217,9 @@ export interface RouterListParams {
   key_id?: number
   limit?: number
   offset?: number
+  start?: string
+  end?: string
+  model_name?: string
 }
 
 const CURRENCY = 'CNY'
@@ -203,6 +228,40 @@ const API_KEY_QUOTA_MODE_LIMITED = 2
 const TX_TYPE_TOPUP = 1
 const TX_TYPE_REFUND = 3
 const TX_TYPE_ADMIN_ADJUST = 6
+
+export function apiKeyStatusMeta(status: number) {
+  switch (status) {
+    case 1:
+      return { label: '启用中', tone: 'bg-emerald-50 text-emerald-700' }
+    case 2:
+      return { label: '已禁用', tone: 'bg-red-50 text-red-600' }
+    case 3:
+      return { label: '已过期', tone: 'bg-amber-50 text-amber-700' }
+    case 4:
+      return { label: '额度耗尽', tone: 'bg-orange-50 text-orange-700' }
+    default:
+      return { label: '未知', tone: 'bg-gray-100 text-gray-500' }
+  }
+}
+
+export function transactionTypeMeta(type: number) {
+  switch (type) {
+    case 1:
+      return { label: '充值', tone: 'bg-emerald-50 text-emerald-700', iconTone: 'bg-emerald-100 text-emerald-700' }
+    case 2:
+      return { label: '消费', tone: 'bg-gray-100 text-gray-700', iconTone: 'bg-gray-100 text-gray-700' }
+    case 3:
+      return { label: '退款', tone: 'bg-blue-50 text-blue-700', iconTone: 'bg-blue-100 text-blue-700' }
+    case 4:
+      return { label: '冻结', tone: 'bg-amber-50 text-amber-700', iconTone: 'bg-amber-100 text-amber-700' }
+    case 5:
+      return { label: '解冻', tone: 'bg-cyan-50 text-cyan-700', iconTone: 'bg-cyan-100 text-cyan-700' }
+    case 6:
+      return { label: '管理员调整', tone: 'bg-purple-50 text-purple-700', iconTone: 'bg-purple-100 text-purple-700' }
+    default:
+      return { label: '其他', tone: 'bg-gray-100 text-gray-500', iconTone: 'bg-gray-100 text-gray-500' }
+  }
+}
 
 function centsToCurrency(value: number | null | undefined) {
   return (value ?? 0) / 100
@@ -215,6 +274,9 @@ function toPagedParams(params?: RouterListParams) {
     page: Math.floor(offset / pageSize) + 1,
     page_size: pageSize,
     ...(params?.key_id ? { api_key_id: params.key_id } : {}),
+    ...(params?.start ? { start: params.start } : {}),
+    ...(params?.end ? { end: params.end } : {}),
+    ...(params?.model_name ? { model_name: params.model_name } : {}),
   }
 }
 
@@ -227,6 +289,7 @@ function normalizeApiKey(item: BackendApiKeyItem): RouterApiKey {
     id: item.id,
     name: item.name,
     token_preview: `${item.key_prefix}...`,
+    status: item.status,
     is_active: item.status === API_KEY_STATUS_ACTIVE,
     is_deleted: false,
     billing_mode: isLimited ? 'limited' : 'unlimited',
@@ -234,11 +297,6 @@ function normalizeApiKey(item: BackendApiKeyItem): RouterApiKey {
     quota_mode: item.quota_mode,
     quota_limit: quotaLimit,
     quota_used: quotaUsed,
-    daily_quota_tokens: null,
-    monthly_quota_tokens: null,
-    daily_quota_cost: null,
-    monthly_quota_cost: isLimited ? quotaLimit : null,
-    rate_limit_rpm: null,
     allowed_models: item.allowed_models,
     allow_ips: item.allow_ips,
     expires_at: item.expires_at,
@@ -266,21 +324,18 @@ function normalizeUsageLog(item: BackendUsageLogItem): RouterUsageEvent {
   return {
     id: item.id,
     request_id: item.request_id,
-    router_api_key_id: item.api_key_id,
-    provider_slug: null,
-    requested_model: item.model_name,
-    resolved_model: item.model_name,
+    api_key_id: item.api_key_id,
+    model_name: item.model_name,
     prompt_tokens: item.prompt_tokens,
     completion_tokens: item.completion_tokens,
+    cached_tokens: item.cached_tokens,
     total_tokens: item.total_tokens,
-    cost_input: 0,
-    cost_output: 0,
-    cost_total: centsToCurrency(item.cost),
-    currency: CURRENCY,
-    status_code: item.status,
+    cost: centsToCurrency(item.cost),
+    status: item.status,
+    duration_ms: item.duration_ms,
+    is_stream: item.is_stream,
     error_code: item.error_code,
-    error_message: item.error_msg,
-    latency_ms: item.duration_ms,
+    error_msg: item.error_msg,
     created_at: item.created_at,
   }
 }
@@ -331,18 +386,35 @@ function transactionDescription(item: BackendBalanceTransactionItem) {
 function normalizeTransaction(item: BackendBalanceTransactionItem): RouterBillingLedgerItem {
   return {
     id: item.id,
-    usage_event_id: null,
-    router_api_key_id: null,
+    type: item.type,
     direction: transactionDirection(item.type),
     amount: centsToCurrency(item.amount),
-    currency: CURRENCY,
     balance_before: centsToCurrency(item.balance_before),
     balance_after: centsToCurrency(item.balance_after),
     description: transactionDescription(item),
     ref_type: item.ref_type,
     ref_id: item.ref_id,
+    remark: item.remark,
     created_at: item.created_at,
   }
+}
+
+export interface ApiKeyCreatePayload {
+  name: string
+  quota_mode?: number
+  quota_limit?: number
+  allowed_models?: string | null
+  allow_ips?: string | null
+  expires_at?: string | null
+}
+
+export interface ApiKeyUpdatePayload {
+  name?: string
+  quota_limit?: number
+  reset_quota_used?: boolean
+  allowed_models?: string | null
+  allow_ips?: string | null
+  expires_at?: string | null
 }
 
 export function listRouterKeys() {
@@ -354,9 +426,9 @@ export function listRouterKeys() {
   }))
 }
 
-export function createRouterKey(name: string) {
+export function createRouterKey(payload: ApiKeyCreatePayload) {
   return http
-    .post<RouterApiResponse<BackendApiKeyCreateData>>('/keys', { name })
+    .post<RouterApiResponse<BackendApiKeyCreateData>>('/keys', payload)
     .then((response) => ({
       ...response,
       data: {
@@ -366,12 +438,7 @@ export function createRouterKey(name: string) {
     }))
 }
 
-export function updateRouterKey(
-  keyId: number,
-  payload: {
-    name?: string
-  }
-) {
+export function updateRouterKey(keyId: number, payload: ApiKeyUpdatePayload) {
   return http
     .patch<RouterApiResponse<BackendApiKeyItem>>(`/keys/${keyId}`, payload)
     .then((response) => ({
@@ -442,12 +509,29 @@ export function fetchRouterBillingLedger(params?: RouterListParams) {
     }))
 }
 
+export function fetchTopupOrders(params?: { page?: number; page_size?: number }) {
+  return http
+    .get<RouterApiResponse<BackendPagedResponse<BackendTopupOrderItem>>>('/billing/topup-orders', {
+      params: { page: params?.page ?? 1, page_size: params?.page_size ?? 20 },
+    })
+    .then((response) => ({
+      ...response,
+      data: {
+        items: response.data.items.map((item): TopupOrderItem => ({
+          ...item,
+          amount: centsToCurrency(item.amount),
+        })),
+        total: response.data.total,
+      },
+    }))
+}
+
 export async function fetchAllRouterUsageEvents(options?: {
   key_id?: number
   limit?: number
   maxPages?: number
 }) {
-  const limit = options?.limit ?? 200
+  const limit = options?.limit ?? 100
   const maxPages = options?.maxPages ?? 10
   const items: RouterUsageEvent[] = []
 

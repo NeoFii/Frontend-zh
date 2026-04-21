@@ -12,6 +12,7 @@ export interface RegisterParams {
   verification_code: string
   password: string
   confirm_password: string
+  lang?: string
 }
 
 export interface User {
@@ -178,4 +179,28 @@ export interface ChangePasswordResponse {
 
 export function changePassword(params: ChangePasswordParams): Promise<ChangePasswordResponse> {
   return http.post('/auth/change-password', params)
+}
+
+/**
+ * 发送邮箱验证码（用于邮箱验证）
+ */
+export function sendVerifyEmailCode(email: string): Promise<SendCodeResponse> {
+  return http.post('/auth/send-email-code', { email, purpose: 'verify' })
+}
+
+/**
+ * 验证邮箱
+ */
+export interface VerifyEmailParams {
+  email: string
+  code: string
+}
+
+export interface VerifyEmailResponse {
+  code: number
+  message: string
+}
+
+export function verifyEmail(params: VerifyEmailParams): Promise<VerifyEmailResponse> {
+  return http.post('/auth/verify-email', params)
 }
