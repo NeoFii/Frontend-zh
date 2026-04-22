@@ -10,7 +10,6 @@ export default function AppFooter() {
   // 使用相对路径
   const quickLinks: NavItem[] = [
     { name: t('about'), path: '/about' },
-    { name: t('products'), path: '/products/tierflow' },
     { name: t('login'), path: '/login' },
   ]
 

@@ -18,13 +18,6 @@ export default function AppHeader() {
 
   // 动态导航项
   const navItems: NavItem[] = [
-    {
-      name: t('products'),
-      path: '',
-      children: [
-        { name: 'TierFlow', path: '/products/tierflow' },
-      ],
-    },
     { name: t('models'), path: '/model' },
     { name: t('price'), path: '/price' },
     {

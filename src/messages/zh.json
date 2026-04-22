@@ -1,6 +1,5 @@
 {
   "nav": {
-    "products": "产品服务",
     "models": "模型",
     "price": "价格",
     "docs": "文档中心",
@@ -193,14 +192,6 @@
     "providerList": "供应商列表",
     "noProviderData": "暂无供应商数据"
   },
-  "product": {
-    "tryNow": "立即体验",
-    "learnMore": "了解更多",
-    "coreCapabilities": "核心能力",
-    "useCases": "应用场景",
-    "scene": "场景",
-    "faq": "常见问题"
-  },
   "ecosystem": {
     "title": "生态合作",
     "subtitle": "携手共建 AI 生态，共创智能未来",
@@ -371,7 +362,6 @@
     "privacy": "隐私政策",
     "terms": "服务条款",
     "about": "关于我们",
-    "products": "产品服务",
     "login": "登录",
     "tagline": "致力于为企业提供高性能 AI 推理优化方案，推动智能化转型。",
     "address": "北京市朝阳区科技园区88号",

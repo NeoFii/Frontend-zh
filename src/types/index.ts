@@ -56,20 +56,6 @@ export interface NavItem {
 }
 
 export type {
-  ProductItem,
-  ProductFrontmatter,
-  CMSQueryParams,
-  CMSQueryResult,
-  Testimonial,
-  FAQItem,
-  ProductHighlight,
-  UseCase,
-  ProductStat,
-  PricingPlan,
-  ProductPricing,
-} from './cms'
-
-export type {
   LoginParams,
   RegisterParams,
   User,
