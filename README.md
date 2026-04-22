@@ -1,36 +1,107 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Eucal AI 前端
 
-## Getting Started
+Eucal AI 统一大模型 API 网关的中文前端，基于 Next.js 14 App Router 构建。
 
-First, run the development server:
+## 技术栈
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Next.js 14 (App Router) + React 18 + TypeScript
+- Tailwind CSS 3.4
+- Zustand (认证状态) + SWR (服务端数据)
+- Axios + 双 Token 认证 (access token 内存 / refresh token httpOnly cookie)
+- ECharts + Chart.js (数据可视化)
+- Jest + Testing Library + Playwright (测试)
+- pnpm (包管理)
+
+## 项目结构
+
+```
+src/
+  app/
+    (static)/       # 公开页面：首页、模型、价格、关于、生态、法律条款
+    (dynamic)/      # 认证页面：登录、注册、忘记密码、模型详情
+    console/        # 控制台：用量、API Key、余额、充值、账单
+  components/
+    ui/             # 通用组件：PageHero、Modal、Pagination、ErrorBanner 等
+    console/        # 控制台组件：Header、Sidebar
+    layout/         # 布局组件：AppHeader、AppFooter、SiteLayout
+    login/          # 登录相关
+    register/       # 注册相关
+    model/          # 模型卡片、筛选
+  hooks/            # useUser、useRouterKeys、useRouterUsage
+  lib/
+    api/            # API 客户端：auth、router、testing-model
+  stores/           # Zustand auth store
+  types/            # TypeScript 类型定义
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 本地启动
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 环境要求
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js >= 18
+- pnpm >= 8
 
-## Learn More
+### 1. 克隆仓库
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+git clone git@github.com:NeoFii/Frontend-zh.git
+cd Frontend-zh
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 2. 安装依赖
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm install
+```
 
-## Deploy on Vercel
+### 3. 配置环境变量
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+cp .env.example .env
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+根据实际后端地址修改 `.env`：
+
+```env
+# 主 API（认证、用户）
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+API_URL=http://127.0.0.1:8000
+
+# Router API（API Key、计费、用量）
+NEXT_PUBLIC_ROUTER_API_BASE_URL=http://localhost:8003/api/v1
+ROUTER_API_URL=http://127.0.0.1:8003
+
+# 模型目录 API
+NEXT_PUBLIC_TESTING_API_URL=http://localhost:8002
+```
+
+### 4. 启动开发服务器
+
+```bash
+pnpm dev
+```
+
+浏览器打开 http://localhost:3000
+
+### 5. 构建与生产运行
+
+```bash
+pnpm build
+pnpm start
+```
+
+## 其他命令
+
+```bash
+pnpm lint          # ESLint 检查
+pnpm test          # 运行测试
+```
+
+## Docker 部署
+
+```bash
+cd deploy
+docker compose up -d
+```
+
+部署配置位于 `deploy/` 目录，包含 Dockerfile、docker-compose.yml 和 Nginx 配置。
