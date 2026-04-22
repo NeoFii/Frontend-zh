@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, type Dispatch, type SetStateAction } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslation } from '@/hooks/useTranslation'
 import { useUser } from '@/hooks/useUser'
 import Reveal from '@/components/Reveal'
 import { useAuthStore } from '@/stores/auth'
@@ -28,7 +27,6 @@ const providers = [
 ]
 
 export default function Home() {
-  const { t } = useTranslation('home')
   const router = useRouter()
   useUser({ enabled: true })
   const sessionStatus = useAuthStore((state) => state.sessionStatus)
@@ -270,7 +268,7 @@ export default function Home() {
               </div>
 
               <div className="inline-flex items-center gap-4 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl px-5 py-3 mb-10 shadow-sm">
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('baseUrl.label')}</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">BASE URL</span>
                 <span className="text-sm font-mono text-slate-800 select-all">{BASE_URL}</span>
                 <button
                   onClick={copyBaseUrl}
@@ -288,11 +286,11 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button onClick={handleCtaClick} className="bg-[#2563eb] hover:bg-blue-700 text-white px-8 py-3.5 rounded-full text-base font-semibold transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 group">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="group-hover:rotate-12 transition-transform"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
-                  {t('cta.getKey')}
+                  获取密钥
                 </button>
                 <a href="https://neofii.github.io/TierFlow-Doc/" target="_blank" rel="noopener noreferrer" className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-8 py-3.5 rounded-full text-base font-semibold transition-all shadow-sm flex items-center justify-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-slate-500"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                  {t('cta.docs')}
+                  文档
                 </a>
               </div>
             </Reveal>
@@ -576,7 +574,7 @@ export default function Home() {
             <p className="text-slate-500 mb-10 text-lg">加入全球开发者团队，立即告别高昂且低效的大模型账单。</p>
             <div className="flex justify-center mb-20">
               <button onClick={handleCtaClick} className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2 hover:-translate-y-1">
-                {t('cta.startFree')}
+                免费开始
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg>
               </button>
             </div>

@@ -3,15 +3,14 @@
  * 显示密码强度等级和视觉反馈
  */
 
-import { useTranslation } from '@/hooks/useTranslation'
 import { getPasswordStrength, PasswordStrengthResult } from '@/lib/utils/password'
 
-// 密码强度 key 到翻译 key 的映射
+// 密码强度 key 到中文标签的映射
 const strengthTextMap: Record<string, string> = {
-  weak: 'passwordWeak',
-  fair: 'passwordFair',
-  strong: 'passwordStrong',
-  veryStrong: 'passwordVeryStrong',
+  weak: '弱',
+  fair: '一般',
+  strong: '强',
+  veryStrong: '非常强',
 }
 
 interface PasswordStrengthProps {
@@ -19,12 +18,11 @@ interface PasswordStrengthProps {
 }
 
 export function PasswordStrength({ password }: PasswordStrengthProps) {
-  const { t } = useTranslation('auth.common')
   const strength: PasswordStrengthResult = getPasswordStrength(password)
 
   if (!password) return null
 
-  const strengthLabel = strengthTextMap[strength.text] ? t(strengthTextMap[strength.text]) : strength.text
+  const strengthLabel = strengthTextMap[strength.text] || strength.text
 
   return (
     <div className="mt-2">
@@ -38,7 +36,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
         ))}
       </div>
       <div className="flex justify-between text-xs">
-        <span className="text-gray-500">{t('passwordRequirements')}</span>
+        <span className="text-gray-500">密码要求</span>
         <span className={strength.color.replace('bg-', 'text-')}>
           {strengthLabel}
         </span>

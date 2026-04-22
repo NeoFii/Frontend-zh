@@ -6,7 +6,6 @@
  */
 
 import React from 'react'
-import { useTranslation } from '@/hooks/useTranslation'
 
 interface ModelSearchProps {
   value: string
@@ -18,8 +17,6 @@ export const ModelSearch: React.FC<ModelSearchProps> = ({
   value,
   onChange,
 }) => {
-  const { t } = useTranslation('model')
-
   return (
     <div className="relative w-full max-w-md">
       {/* 搜索图标 */}
@@ -45,7 +42,7 @@ export const ModelSearch: React.FC<ModelSearchProps> = ({
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={t('searchPlaceholder')}
+        placeholder="搜索模型名称"
         className="w-full h-10 pl-9 pr-4 bg-white border border-gray-200 rounded-lg text-[14px] text-[#181E25] placeholder:text-[#9CA3AF] focus:outline-none focus:border-gray-300 focus:ring-0 transition-colors"
       />
 

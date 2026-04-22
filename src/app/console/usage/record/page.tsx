@@ -9,6 +9,9 @@ import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/compon
 import { useRouterUsageEvents, useRouterUsageSummary, useRouterUsageLogs } from '@/hooks/useRouterUsage'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
 import { Select } from '@/components/ui/Select'
+import ErrorBanner from '@/components/ui/ErrorBanner'
+import EmptyState from '@/components/ui/EmptyState'
+import Pagination from '@/components/ui/Pagination'
 import {
   USAGE_REFERENCE_MODELS,
   createUsageDashboardViewModel,
@@ -305,12 +308,7 @@ export default function UsageRecordPage() {
 
   if (isError) {
     return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-600" style={{ fontFamily: 'MiSans, sans-serif' }}>
-        用量数据加载失败。
-        <button onClick={() => mutate()} className="ml-2 font-medium text-red-700 hover:text-red-900">
-          重试
-        </button>
-      </div>
+      <ErrorBanner message="用量数据加载失败。" onRetry={() => mutate()} />
     )
   }
 
@@ -561,7 +559,7 @@ export default function UsageRecordPage() {
           <div>
             <label className="mb-1 block text-xs text-gray-500">API Key</label>
             <Select
-              value={filterKeyId ?? ''}
+              value={String(filterKeyId ?? '')}
               onChange={(v) => { setFilterKeyId(v ? Number(v) : undefined); setLogsPage(1) }}
               options={[
                 { value: '', label: '全部' },
@@ -582,10 +580,7 @@ export default function UsageRecordPage() {
         {logsLoading ? (
           <div className="h-40 animate-pulse rounded-2xl bg-gray-100" />
         ) : logItems.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-gray-200 bg-gray-50/80 px-6 py-14 text-center">
-            <p className="text-base text-gray-900">当前筛选条件下没有请求记录</p>
-            <p className="mt-2 text-sm text-gray-500">调整筛选条件或等待新的 Router 调用。</p>
-          </div>
+          <EmptyState title="当前筛选条件下没有请求记录" description="调整筛选条件或等待新的 Router 调用。" />
         ) : (
           <>
             <div className="overflow-x-auto">
@@ -627,23 +622,7 @@ export default function UsageRecordPage() {
               </table>
             </div>
             {logTotalPages > 1 && (
-              <div className="mt-4 flex items-center justify-center gap-2">
-                <button
-                  onClick={() => setLogsPage((p) => Math.max(1, p - 1))}
-                  disabled={logsPage <= 1}
-                  className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
-                >
-                  上一页
-                </button>
-                <span className="text-sm text-gray-500">{logsPage} / {logTotalPages}</span>
-                <button
-                  onClick={() => setLogsPage((p) => Math.min(logTotalPages, p + 1))}
-                  disabled={logsPage >= logTotalPages}
-                  className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
-                >
-                  下一页
-                </button>
-              </div>
+              <Pagination page={logsPage - 1} totalPages={logTotalPages} onPageChange={(p) => setLogsPage(p + 1)} />
             )}
           </>
         )}

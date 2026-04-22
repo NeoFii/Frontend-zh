@@ -4,6 +4,10 @@ import { useMemo, useState } from 'react'
 import { useRouterBillingLedger } from '@/hooks/useRouterUsage'
 import { transactionTypeMeta } from '@/lib/api/router'
 import { formatCurrency, formatDateTime } from '@/lib/router-analytics'
+import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
+import ErrorBanner from '@/components/ui/ErrorBanner'
+import EmptyState from '@/components/ui/EmptyState'
+import Pagination from '@/components/ui/Pagination'
 
 const CURRENCY = 'CNY'
 const PAGE_SIZE = 50
@@ -40,33 +44,16 @@ export default function BillingHistoryPage() {
 
   if (isError) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600" style={{ fontFamily: 'MiSans, sans-serif' }}>
-        账单记录加载失败。
-        <button onClick={() => mutate()} className="ml-2 font-medium text-red-700 hover:text-red-900">
-          重试
-        </button>
-      </div>
+      <ErrorBanner message="账单记录加载失败。" onRetry={() => mutate()} />
     )
   }
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(15,23,42,0.08),_transparent_32%),linear-gradient(145deg,#ffffff_0%,#f8fafc_100%)] p-8 shadow-[0_26px_60px_-42px_rgba(15,23,42,0.22)]">
-        <div>
-          <div className="inline-flex rounded-full bg-gray-950 px-3 py-1 text-xs font-medium tracking-[0.24em] text-white">
-            BILLING LEDGER
-          </div>
-          <h2 className="mt-5 text-[1.75rem] tracking-tight text-gray-950">账单历史与账务流水</h2>
-          <p className="mt-3 text-sm leading-7 text-gray-600">
-            这里按账户余额流水实时渲染入账、调整、冻结和扣费记录，用于核对每次资金变化和调用来源。
-          </p>
-        </div>
-      </section>
+      <ConsolePageHeader badge="BILLING LEDGER" title="账单历史与账务流水" description="这里按账户余额流水实时渲染入账、调整、冻结和扣费记录，用于核对每次资金变化和调用来源。" />
 
       {items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-200 bg-white px-6 py-16 text-center text-gray-500">
-          暂无账单流水。
-        </div>
+        <EmptyState title="暂无账单流水。" />
       ) : (
         <section className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <div className="mb-4 flex flex-wrap gap-2 px-2">
@@ -128,25 +115,7 @@ export default function BillingHistoryPage() {
           </div>
           )}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 border-t border-gray-100 px-4 py-4">
-              <button
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                disabled={page === 0}
-                className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
-              >
-                上一页
-              </button>
-              <span className="text-sm text-gray-500">
-                {page + 1} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                disabled={page >= totalPages - 1}
-                className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition hover:bg-gray-50 disabled:opacity-40"
-              >
-                下一页
-              </button>
-            </div>
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           )}
         </section>
       )}

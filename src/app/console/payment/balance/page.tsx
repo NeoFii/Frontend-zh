@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
 import { useRouterBalance, useRouterUsageEvents, useRouterUsageSummary } from '@/hooks/useRouterUsage'
 import { apiKeyStatusMeta } from '@/lib/api/router'
+import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
 import {
   calculateMonthlySpend,
   calculateSuccessRate,
@@ -94,16 +95,9 @@ export default function BalancePage() {
       <section className="rounded-2xl bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <div className="inline-flex rounded-full bg-gray-950 px-3 py-1 text-xs font-medium tracking-[0.24em] text-white">
-              BALANCE
-            </div>
-            <h2 className="mt-5 text-[1.75rem] tracking-tight text-gray-950">账户余额</h2>
+            <ConsolePageHeader badge="BALANCE" title="账户余额" description={`总余额 ${loading ? '...' : formatCurrency(totalBalance, balanceCurrency)}，冻结 ${loading ? '...' : formatCurrency(frozenAmount, balanceCurrency)}`} />
             <p className="mt-2 text-5xl font-semibold tracking-tight text-gray-950">
               {loading ? '...' : formatCurrency(availableBalance, balanceCurrency)}
-            </p>
-            <p className="mt-3 text-sm text-gray-500">
-              总余额 {loading ? '...' : formatCurrency(totalBalance, balanceCurrency)}
-              ，冻结 {loading ? '...' : formatCurrency(frozenAmount, balanceCurrency)}
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <button

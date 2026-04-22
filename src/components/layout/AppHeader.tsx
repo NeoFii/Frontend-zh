@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useTranslation } from '@/hooks/useTranslation'
-import type { NavItem } from '@/types'
+
+interface NavItem { name: string; path: string; children?: NavItem[]; external?: boolean }
 
 const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'Eucal AI'
 
 export default function AppHeader() {
-  const { t } = useTranslation('nav')
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isHidden, setIsHidden] = useState(false)
@@ -18,15 +17,15 @@ export default function AppHeader() {
 
   // 动态导航项
   const navItems: NavItem[] = [
-    { name: t('models'), path: '/model' },
-    { name: t('price'), path: '/price' },
+    { name: '模型', path: '/model' },
+    { name: '价格', path: '/price' },
     {
-      name: t('docs'),
+      name: '文档中心',
       path: 'https://neofii.github.io/TierFlow-Doc/',
       external: true,
     },
-    { name: t('ecosystem'), path: '/ecosystem' },
-    { name: t('about'), path: '/about' },
+    { name: '生态合作', path: '/ecosystem' },
+    { name: '关于我们', path: '/about' },
   ]
 
   // 处理登录按钮点击
@@ -186,7 +185,7 @@ export default function AppHeader() {
               onClick={handleAuthClick}
               className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 transition-colors duration-300"
             >
-              {t('login')}
+              登录
             </button>
           </div>
 
@@ -194,7 +193,7 @@ export default function AppHeader() {
           <button
             onClick={toggleMenu}
             className="md:hidden p-2.5 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200"
-            aria-label={isMenuOpen ? t('closeMenu') : t('openMenu')}
+            aria-label={isMenuOpen ? '关闭菜单' : '打开菜单'}
           >
             {!isMenuOpen ? (
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -266,7 +265,7 @@ export default function AppHeader() {
                 onClick={handleAuthClick}
                 className="block w-full text-center px-4 py-3 bg-gray-900 text-white rounded-xl text-[15px] font-semibold hover:bg-gray-800 transition-colors duration-200"
               >
-                {t('login')}
+                登录
               </button>
             </div>
           </div>

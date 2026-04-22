@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useTranslation } from '@/hooks/useTranslation'
+import PageHero from '@/components/ui/PageHero'
 
 // --- 动画组件 1: 数字滚动效果 (Odometer/CountUp) ---
 function AnimatedNumber({ value, isLoaded }: { value: string, isLoaded: boolean }) {
@@ -78,7 +78,6 @@ const animationClasses = {
 }
 
 export default function AboutClient() {
-  const { t } = useTranslation('about')
   const [isLoaded, setIsLoaded] = useState(false)
 
   // 页面加载后触发全局进场动画
@@ -87,10 +86,10 @@ export default function AboutClient() {
   }, [])
 
   const coreValues = [
-    { title: t('values.customerFirst'), description: t('values.customerFirstDesc'), colorTheme: 'blue' },
-    { title: t('values.innovation'), description: t('values.innovationDesc'), colorTheme: 'violet' },
-    { title: t('values.integrity'), description: t('values.integrityDesc'), colorTheme: 'indigo' },
-    { title: t('values.collaboration'), description: t('values.collaborationDesc'), colorTheme: 'cyan' },
+    { title: '客户至上', description: '始终以客户需求为中心，提供超越期望的服务体验，建立长期信任的合作关系', colorTheme: 'blue' },
+    { title: '创新驱动', description: '持续探索前沿 AI 技术，为客户带来行业领先的智能化解决方案', colorTheme: 'violet' },
+    { title: '诚信正直', description: '以信任为基础，数据透明，算法公平可解释', colorTheme: 'indigo' },
+    { title: '合作共赢', description: '与客户和合作伙伴共同成长，推动 AI 技术的落地应用，共创美好未来', colorTheme: 'cyan' },
   ]
 
   const getColorClasses = (theme: string) => {
@@ -105,31 +104,11 @@ export default function AboutClient() {
 
   return (
     <main className="relative flex flex-col w-full overflow-hidden flex-1 pb-[120px] min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* 背景光晕装饰 */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] opacity-40 pointer-events-none -z-10 flex justify-center">
-        <div className="absolute top-[-10%] w-[600px] h-[600px] bg-blue-400/20 rounded-full blur-[100px] mix-blend-multiply" />
-        <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-violet-400/20 rounded-full blur-[120px] mix-blend-multiply" />
-      </div>
-
-      {/* 头部区域 */}
-      <div className={`relative z-10 w-full flex flex-col items-center mt-[80px] mb-[32px] px-6 lg:px-0 ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-200`}>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/50 border border-blue-200/50 text-blue-600 text-sm font-medium mb-6">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-          </span>
-          Discover Us
-        </div>
-
-        <h1 className="m-0 p-0 text-center text-5xl md:text-6xl font-extrabold tracking-tight leading-tight pb-4 max-w-[900px]">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
-            {t('page.title')}
-          </span>
-        </h1>
-        <p className="text-slate-500 text-lg md:text-xl font-medium text-center max-w-[700px] mb-10">
-          {t('page.subtitle')}
-        </p>
-      </div>
+      <PageHero
+        badge="Discover Us"
+        title="引领 AI 创新"
+        subtitle="我们致力于将前沿人工智能技术转化为实际的商业价值，为企业智能化转型提供强劲动力"
+      />
 
       {/* 内容区域 */}
       <div className="w-full flex justify-center">
@@ -143,11 +122,11 @@ export default function AboutClient() {
                   <div>
                     {/* 使用动态跳出文字组件作为标题 */}
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-6 h-10">
-                      <BouncingText text={t('intro.title') || "专注于 AI 技术创新"} delayOffset={0.6} isLoaded={isLoaded} />
+                      <BouncingText text="专注于 AI 技术创新" delayOffset={0.6} isLoaded={isLoaded} />
                     </h2>
                     <div className="space-y-4 text-slate-600 text-base leading-relaxed mb-8">
-                      <p>{t('intro.description1')}</p>
-                      <p>{t('intro.description2')}</p>
+                      <p>Eucal AI 成立于2026年，是一家专注于人工智能技术研发与应用的创新型科技公司。我们致力于将前沿的 AI 技术转化为实际的商业价值，为企业提供智能化的解决方案。</p>
+                      <p>我们的团队由来自全球顶尖高校和科技公司的 AI 专家组成，在机器学习、自然语言处理、计算机视觉等领域拥有深厚的技术积累。</p>
                     </div>
 
                     {/* 数据统计网格 - 使用数字滚动组件 */}
@@ -156,25 +135,25 @@ export default function AboutClient() {
                         <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-violet-600 mb-1">
                           <AnimatedNumber value="1" isLoaded={isLoaded} />
                         </div>
-                        <div className="text-slate-500 text-sm font-medium">{t('stats.years')}</div>
+                        <div className="text-slate-500 text-sm font-medium">年行业经验</div>
                       </div>
                       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:-translate-y-1 transition-transform duration-300 text-center">
                         <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-violet-600 mb-1">
                           <AnimatedNumber value="500+" isLoaded={isLoaded} />
                         </div>
-                        <div className="text-slate-500 text-sm font-medium">{t('stats.customers')}</div>
+                        <div className="text-slate-500 text-sm font-medium">企业客户</div>
                       </div>
                       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:-translate-y-1 transition-transform duration-300 text-center">
                         <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-violet-600 mb-1">
                           <AnimatedNumber value="200+" isLoaded={isLoaded} />
                         </div>
-                        <div className="text-slate-500 text-sm font-medium">{t('stats.experts')}</div>
+                        <div className="text-slate-500 text-sm font-medium">AI 专家</div>
                       </div>
                       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:-translate-y-1 transition-transform duration-300 text-center">
                         <div className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-blue-600 to-violet-600 mb-1">
                           <AnimatedNumber value="50+" isLoaded={isLoaded} />
                         </div>
-                        <div className="text-slate-500 text-sm font-medium">{t('stats.patents')}</div>
+                        <div className="text-slate-500 text-sm font-medium">核心专利</div>
                       </div>
                     </div>
                   </div>
@@ -193,9 +172,9 @@ export default function AboutClient() {
                         </div>
                         {/* 品牌名称同样使用跳出动画 */}
                         <div className="text-slate-900 font-bold text-3xl tracking-tight mb-3 h-10">
-                          <BouncingText text={t('brand.name') || "Eucal AI"} delayOffset={0.8} isLoaded={isLoaded} />
+                          <BouncingText text="Eucal AI" delayOffset={0.8} isLoaded={isLoaded} />
                         </div>
-                        <div className="text-slate-500 text-sm font-medium uppercase tracking-widest">{t('brand.tagline')}</div>
+                        <div className="text-slate-500 text-sm font-medium uppercase tracking-widest">智能 · 创新 · 未来</div>
                       </div>
                     </div>
                   </div>
@@ -205,7 +184,7 @@ export default function AboutClient() {
               {/* --- 愿景与使命 --- */}
               <section className={`w-full ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-600`}>
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">{t('visionMission.title')}</h2>
+                  <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">驱动智能变革</h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -219,9 +198,9 @@ export default function AboutClient() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
                       </div>
-                      <h3 className="text-2xl font-bold mb-4 tracking-tight">{t('vision')}</h3>
+                      <h3 className="text-2xl font-bold mb-4 tracking-tight">我们的愿景</h3>
                       <p className="text-blue-50 text-base leading-relaxed opacity-90">
-                        {t('visionDesc')}
+                        成为全球领先的 AI 技术提供商，用人工智能赋能千行百业，让智能技术惠及每一个人
                       </p>
                     </div>
                   </div>
@@ -234,9 +213,9 @@ export default function AboutClient() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                       </div>
-                      <h3 className="text-2xl font-bold mb-4 tracking-tight">{t('mission')}</h3>
+                      <h3 className="text-2xl font-bold mb-4 tracking-tight">我们的使命</h3>
                       <p className="text-slate-400 text-base leading-relaxed">
-                        {t('missionDesc')}
+                        以创新的 AI 技术和专业的服务，帮助客户解决复杂问题，创造智能化的未来
                       </p>
                     </div>
                   </div>
@@ -246,8 +225,8 @@ export default function AboutClient() {
               {/* --- 核心价值观 --- */}
               <section className={`w-full ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-800`}>
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-4">{t('values.title')}</h2>
-                  <p className="text-slate-500 text-lg">{t('values.subtitle')}</p>
+                  <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-4">核心价值观</h2>
+                  <p className="text-slate-500 text-lg">指导我们日常工作的行为准则和文化基石</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -300,12 +279,11 @@ export default function AboutClient() {
 }
 
 function ValueIcon({ name, className }: { name: string; className?: string }) {
-  const { t } = useTranslation('about')
   const keyMap: Record<string, string> = {
-    [t('values.customerFirst')]: 'customerFirst',
-    [t('values.innovation')]: 'innovation',
-    [t('values.integrity')]: 'integrity',
-    [t('values.collaboration')]: 'collaboration',
+    '客户至上': 'customerFirst',
+    '创新驱动': 'innovation',
+    '诚信正直': 'integrity',
+    '合作共赢': 'collaboration',
   }
   const key = keyMap[name] || name
 

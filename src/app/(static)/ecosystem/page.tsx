@@ -1,7 +1,7 @@
 'use client'
 
-import { useTranslation } from '@/hooks/useTranslation'
 import { useEffect, useState } from 'react'
+import PageHero from '@/components/ui/PageHero'
 
 // 定义进入动画的 Tailwind 类组合
 const animationClasses = {
@@ -40,7 +40,6 @@ const PartnerInteractionBtn = ({ href }: { href: string }) => {
 }
 
 export default function EcosystemPage() {
-  const { t } = useTranslation('ecosystem')
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
@@ -48,20 +47,14 @@ export default function EcosystemPage() {
   }, [])
 
   // 提取合作伙伴数据，生成足够长的数组以实现无缝无限滚动
-  const basePartners = [t('partnerA'), t('partnerB'), t('partnerC'), t('partnerD')]
+  const basePartners = ['合作伙伴 A', '合作伙伴 B', '合作伙伴 C', '合作伙伴 D']
   // 复制三次确保单屏宽度被填满，然后再在渲染时复制一份实现 translateX(-50%) 的无缝循环
   const marqueeBlock = [...basePartners, ...basePartners, ...basePartners, ...basePartners]
 
   return (
     <main className="relative flex flex-col items-center w-full overflow-hidden flex-1 pb-[120px] min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* --- 背景光晕装饰 --- */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] opacity-40 pointer-events-none -z-10 flex justify-center">
-        <div className="absolute top-[-10%] w-[600px] h-[600px] bg-blue-400/20 rounded-full blur-[100px] mix-blend-multiply" />
-        <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-violet-400/20 rounded-full blur-[120px] mix-blend-multiply" />
-      </div>
-
-      {/* --- 1 & 2. 沉浸式 Hero 区块 (流光 Logo 墙 + 悬浮内容) --- */}
-      <div className="relative w-full min-h-[700px] md:min-h-[85vh] flex items-center justify-center overflow-hidden mb-[48px]">
+      {/* --- 1 & 2. 沉浸式 Hero 区块 (流光 Logo 墙 + PageHero 内容) --- */}
+      <div className="relative w-full flex flex-col items-center overflow-hidden mb-[48px]">
 
         {/* 背景层：无限滚动 Marquee */}
         {/* 使用 mask-image 添加边缘羽化过渡效果 */}
@@ -106,43 +99,19 @@ export default function EcosystemPage() {
           </div>
         </div>
 
-        {/* ========================================================= */}
-        {/* ============= 前景层：居中的毛玻璃内容卡片 =============== */}
-        {/* ========================================================= */}
-        <div
-          className={`relative z-10 mx-6 px-8 py-12 md:px-16 md:py-16 w-full max-w-[900px] flex flex-col items-center
-            bg-white/20 backdrop-blur-2xl border border-white/30 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] rounded-[2.5rem]
-            ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-200`}
-        >
-          {/* 徽章也稍微通透一点 */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/30 border border-blue-200/30 text-blue-700 text-sm font-medium mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            Open Ecosystem
-          </div>
-
-          <h1 className="m-0 p-0 text-center text-5xl md:text-6xl font-extrabold tracking-tight leading-tight pb-4 max-w-[800px]">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
-              {t('title')}
-            </span>
-          </h1>
-
-          <div className="flex flex-col items-center max-w-[600px] space-y-4 mt-2">
-            {/* 调亮文本颜色，使其在玻璃上更清晰 */}
-            <p className="text-slate-900 text-lg md:text-xl font-medium text-center">
-              {t('subtitle')}
-            </p>
-            <p className="text-slate-600 text-base font-normal leading-relaxed text-center">
-              {t('description')}
-            </p>
-          </div>
-
-          {/* 顶部 CTA 按钮 */}
-          <div className="flex items-center justify-center pt-8">
-            <PartnerInteractionBtn href="mailto:partnership@example.com" />
-          </div>
+        {/* 前景层：PageHero 内容 */}
+        <div className="relative z-10">
+          <PageHero
+            badge="Open Ecosystem"
+            title="生态合作"
+            subtitle="携手共建 AI 生态，共创智能未来"
+            description="我们致力于与合作伙伴共同构建开放的 AI 生态系统，为开发者和企业提供更丰富、更强大的 AI 能力。"
+          >
+            {/* CTA 按钮 */}
+            <div className="flex items-center justify-center pt-8">
+              <PartnerInteractionBtn href="mailto:partnership@example.com" />
+            </div>
+          </PageHero>
         </div>
       </div>
 
@@ -152,7 +121,7 @@ export default function EcosystemPage() {
           } ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-600`}
       >
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 text-center mb-12">
-          {t('cooperation')}
+          合作方式
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -165,9 +134,9 @@ export default function EcosystemPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('technical')}</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">技术合作</h3>
                 <p className="text-sm text-slate-500 leading-relaxed group-hover:text-slate-600 transition-colors duration-300">
-                  {t('technicalDesc')}
+                  与技术合作伙伴共同研发创新解决方案，整合双方技术优势，为客户提供更完善的 AI 产品和服务。
                 </p>
               </div>
             </div>
@@ -182,9 +151,9 @@ export default function EcosystemPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('channel')}</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">渠道合作</h3>
                 <p className="text-sm text-slate-500 leading-relaxed group-hover:text-slate-600 transition-colors duration-300">
-                  {t('channelDesc')}
+                  招募区域代理商和渠道合作伙伴，共同开拓市场，提供有竞争力的佣金政策和市场支持。
                 </p>
               </div>
             </div>
@@ -199,9 +168,9 @@ export default function EcosystemPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('solution')}</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">解决方案合作</h3>
                 <p className="text-sm text-slate-500 leading-relaxed group-hover:text-slate-600 transition-colors duration-300">
-                  {t('solutionDesc')}
+                  与行业解决方案提供商合作，共同打造垂直行业的 AI 应用解决方案，满足特定行业需求。
                 </p>
               </div>
             </div>
@@ -216,9 +185,9 @@ export default function EcosystemPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('strategic')}</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">战略合作</h3>
                 <p className="text-sm text-slate-500 leading-relaxed group-hover:text-slate-600 transition-colors duration-300">
-                  {t('strategicDesc')}
+                  与战略合作伙伴建立深度合作关系，共同探索 AI 技术前沿，开展联合研发和市场推广。
                 </p>
               </div>
             </div>
@@ -232,15 +201,22 @@ export default function EcosystemPage() {
           } ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-800`}
       >
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 text-center mb-10">
-          {t('benefits')}
+          合作伙伴权益
         </h2>
 
         <div className="bg-white rounded-3xl p-10 border border-slate-200/60 shadow-xl shadow-slate-200/40 relative overflow-hidden">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl" />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12 relative z-10">
-            {[1, 2, 3, 4, 5, 6].map((num) => (
-              <div key={num} className="flex items-start gap-4 group cursor-default">
+            {[
+              { title: '专属技术支持', desc: '获得专业技术团队的一对一支持' },
+              { title: '优惠价格政策', desc: '享受合作伙伴专属价格优惠' },
+              { title: '市场推广支持', desc: '联合举办市场活动，共同推广' },
+              { title: '产品优先体验', desc: '优先体验新功能和新产品' },
+              { title: '培训与赋能', desc: '定期产品培训和技术交流' },
+              { title: '商业机会共享', desc: '优先获得客户推荐和商业机会' },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-start gap-4 group cursor-default">
                 <div className="mt-1 w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -248,10 +224,10 @@ export default function EcosystemPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-slate-900 group-hover:text-blue-700 transition-colors duration-200">
-                    {t(`benefit${num}`)}
+                    {item.title}
                   </h3>
                   <p className="text-sm text-slate-500 mt-1 leading-relaxed">
-                    {t(`benefit${num}Desc`)}
+                    {item.desc}
                   </p>
                 </div>
               </div>
@@ -271,10 +247,10 @@ export default function EcosystemPage() {
           <div className="absolute bottom-[-20%] right-[-10%] w-[300px] h-[300px] bg-violet-600/30 rounded-full blur-[80px] pointer-events-none" />
 
           <h2 className="relative z-10 text-3xl md:text-4xl font-bold tracking-tight text-white mb-6">
-            {t('contact')}
+            联系我们
           </h2>
           <p className="relative z-10 text-base md:text-lg text-slate-300 mb-10 max-w-[500px]">
-            {t('contactDesc')}
+            欢迎有意向的合作伙伴与我们联系，共同探索合作机会
           </p>
 
           <div className="relative z-10">

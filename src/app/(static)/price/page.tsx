@@ -1,8 +1,7 @@
 'use client'
 
-import { useTranslation } from '@/hooks/useTranslation'
-import messages from '@/messages/zh.json'
 import { useEffect, useState } from 'react'
+import PageHero from '@/components/ui/PageHero'
 
 // 定义进入动画的 Tailwind 类组合
 const animationClasses = {
@@ -12,10 +11,9 @@ const animationClasses = {
 }
 
 export default function PricePage() {
-  const { t } = useTranslation('price')
-  const freeFeatures = messages.price.free.features
-  const proFeatures = messages.price.pro.features
-  const enterpriseFeatures = messages.price.enterprise.features
+  const freeFeatures = ['每月 1,000 次 API 调用', '支持基础模型', '标准响应速度', '社区支持']
+  const proFeatures = ['每月 100,000 次 API 调用', '支持全部模型', '优先响应速度', '邮件支持']
+  const enterpriseFeatures = ['无限 API 调用', '专属模型定制', '超低延迟响应', '7×24 专属客服']
 
   // 用于触发页面进入动画的状态
   const [isLoaded, setIsLoaded] = useState(false)
@@ -34,40 +32,12 @@ export default function PricePage() {
 
   return (
     <main className="relative flex flex-col items-center w-full overflow-hidden flex-1 pb-[160px] min-h-screen bg-slate-50 font-sans text-slate-900">
-      {/* --- 背景光晕装饰 (Glow Background) --- */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] opacity-40 pointer-events-none -z-10 flex justify-center">
-        <div className="absolute top-[-10%] w-[600px] h-[600px] bg-blue-400/20 rounded-full blur-[100px] mix-blend-multiply" />
-        <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-violet-400/20 rounded-full blur-[120px] mix-blend-multiply" />
-      </div>
-
-      {/* --- 1. 标题区域 (Hero Section) --- */}
-      <div
-        className={`relative z-10 px-6 lg:px-0 w-full max-w-[1000px] flex flex-col items-center mt-[80px] mb-[48px] ${animationClasses.container
-          } ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-200`}
-      >
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/50 border border-blue-200/50 text-blue-600 text-sm font-medium mb-6">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-          </span>
-          Transparent Pricing
-        </div>
-
-        <h1 className="m-0 p-0 text-center text-5xl md:text-6xl font-extrabold tracking-tight leading-tight pb-4 max-w-[900px]">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
-            {t('title')}
-          </span>
-        </h1>
-
-        <div className="flex flex-col items-center max-w-[700px] space-y-2 mt-4">
-          <p className="text-slate-800 text-lg md:text-xl font-medium text-center">
-            {t('subtitle')}
-          </p>
-          <p className="text-slate-500 text-base font-normal leading-relaxed text-center">
-            {t('description')}
-          </p>
-        </div>
-      </div>
+      <PageHero
+        badge="Transparent Pricing"
+        title="透明定价"
+        subtitle="按需付费，灵活选择，为您提供最具性价比的 AI 服务"
+        description="我们提供竞争力的定价，让您以更低的成本获得高质量的 AI 能力。企业用户还可享受批量折扣和定制方案。"
+      />
 
       {/* --- 2. 价格方案 (Pricing Cards) --- */}
       <div
@@ -79,12 +49,12 @@ export default function PricePage() {
           {/* 免费版 (Free) */}
           <div className="flex flex-col bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-slate-200/80 shadow-lg shadow-slate-200/40 hover:-translate-y-2 transition-transform duration-300 group cursor-pointer hover:shadow-2xl hover:shadow-slate-200/60">
             <div className="mb-6">
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">{t('free.name')}</h3>
-              <p className="text-sm text-slate-500 min-h-[40px]">{t('free.description')}</p>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">免费版</h3>
+              <p className="text-sm text-slate-500 min-h-[40px]">适合个人开发者和测试使用</p>
             </div>
             <div className="mb-8">
-              <span className="text-5xl font-bold tracking-tight text-slate-900">{t('free.price')}</span>
-              <span className="text-base text-slate-500 font-medium ml-1">{t('free.period')}</span>
+              <span className="text-5xl font-bold tracking-tight text-slate-900">¥0</span>
+              <span className="text-base text-slate-500 font-medium ml-1">/月</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
               {freeFeatures.map((feature: string, index: number) => (
@@ -100,7 +70,7 @@ export default function PricePage() {
               href="/login"
               className="block w-full text-center py-3.5 bg-slate-100 text-slate-700 rounded-xl text-base font-semibold hover:bg-slate-200 transition-all duration-200 active:scale-[0.98]"
             >
-              {t('free.cta')}
+              立即开始
             </a>
           </div>
 
@@ -115,12 +85,12 @@ export default function PricePage() {
               推荐方案
             </div>
             <div className="mb-6 mt-2 relative z-10">
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">{t('pro.name')}</h3>
-              <p className="text-sm text-slate-500 min-h-[40px] group-hover:text-slate-600 transition-colors duration-200">{t('pro.description')}</p>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">专业版</h3>
+              <p className="text-sm text-slate-500 min-h-[40px] group-hover:text-slate-600 transition-colors duration-200">适合个人开发者和小型团队</p>
             </div>
             <div className="mb-8 relative z-10">
-              <span className="text-5xl font-bold tracking-tight text-slate-900">{t('pro.price')}</span>
-              <span className="text-base text-slate-500 font-medium ml-1">{t('pro.period')}</span>
+              <span className="text-5xl font-bold tracking-tight text-slate-900">¥99</span>
+              <span className="text-base text-slate-500 font-medium ml-1">/月</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1 relative z-10">
               {proFeatures.map((feature: string, index: number) => (
@@ -185,11 +155,11 @@ export default function PricePage() {
               } ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-500`}
           >
             <div className="mb-6">
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">{t('enterprise.name')}</h3>
-              <p className="text-sm text-slate-500 min-h-[40px]">{t('enterprise.description')}</p>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">企业版</h3>
+              <p className="text-sm text-slate-500 min-h-[40px]">适合大型企业和高并发场景</p>
             </div>
             <div className="mb-8 h-[60px] flex items-center">
-              <span className="text-4xl font-bold tracking-tight text-slate-900">{t('enterprise.price')}</span>
+              <span className="text-4xl font-bold tracking-tight text-slate-900">定制</span>
             </div>
             <ul className="space-y-4 mb-8 flex-1">
               {enterpriseFeatures.map((feature: string, index: number) => (
@@ -205,7 +175,7 @@ export default function PricePage() {
               href="mailto:contact@eucal.ai"
               className="block w-full text-center py-3.5 bg-slate-900 text-white rounded-xl text-base font-semibold hover:bg-slate-800 shadow-md transition-all duration-200 active:scale-[0.98]"
             >
-              {t('enterprise.cta')}
+              联系销售
             </a>
           </div>
         </div>
@@ -217,7 +187,7 @@ export default function PricePage() {
           } ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-700`}
       >
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 text-center mb-12">
-          {t('billing.title')}
+          计费方式
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -229,9 +199,9 @@ export default function PricePage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('billing.payAsYouGo')}</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">按量付费</h3>
                 <p className="text-sm text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors duration-200">
-                  {t('billing.payAsYouGoDesc')}
+                  根据实际使用量计费，无固定月费，适合使用量不稳定的场景。按 token 计费，价格透明。
                 </p>
               </div>
             </div>
@@ -245,9 +215,9 @@ export default function PricePage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">{t('billing.monthly')}</h3>
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">包月套餐</h3>
                 <p className="text-sm text-slate-500 leading-relaxed group-hover:text-slate-700 transition-colors duration-200">
-                  {t('billing.monthlyDesc')}
+                  固定月费，享受更低单价，适合稳定使用的企业用户。套餐内 API 调用可累计使用。
                 </p>
               </div>
             </div>
@@ -261,20 +231,25 @@ export default function PricePage() {
           } ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-900`}
       >
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 text-center mb-10">
-          {t('faq.title')}
+          常见问题
         </h2>
 
         <div className="grid gap-4">
-          {[1, 2, 3, 4].map((num) => (
-            <div key={num} className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow duration-200 group cursor-pointer hover:border-slate-300">
+          {[
+            { q: '如何选择适合自己的方案？', a: '如果您是个人开发者或仅用于测试，建议先使用免费版。如果您的项目需要上线运营，建议选择专业版或企业版以获得更好的服务支持。' },
+            { q: '如何查看我的使用量？', a: '登录控制台后，您可以在「账户管理」页面查看详细的 API 调用统计和使用量报表。' },
+            { q: '是否支持退款？', a: '我们提供 7 天无理由退款服务。如果您对服务不满意，可以在购买后 7 天内申请全额退款。' },
+            { q: '企业版有哪些专属服务？', a: '企业版用户可享受专属客服、SLA 服务保障、定制化模型训练、优先技术支持等多项专属服务。' },
+          ].map((item, idx) => (
+            <div key={idx} className="bg-white rounded-2xl p-6 border border-slate-200/60 shadow-sm hover:shadow-md transition-shadow duration-200 group cursor-pointer hover:border-slate-300">
               <h3 className="text-base font-semibold text-slate-900 mb-3 flex items-center group-hover:text-blue-700 transition-colors duration-200">
                 <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs mr-3 shadow-inner group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors duration-200">
-                  Q{num}
+                  Q{idx + 1}
                 </span>
-                {t(`faq.q${num}`)}
+                {item.q}
               </h3>
               <p className="text-sm text-slate-600 leading-relaxed pl-9 group-hover:text-slate-800 transition-colors duration-200">
-                {t(`faq.a${num}`)}
+                {item.a}
               </p>
             </div>
           ))}

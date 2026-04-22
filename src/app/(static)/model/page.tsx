@@ -14,6 +14,7 @@ import CategoryTabs from '@/components/model/CategoryTabs'
 import ModelSearch from '@/components/model/ModelSearch'
 import ModelCardV2 from '@/components/model/ModelCardV2'
 import VendorFilter from '@/components/model/VendorFilter'
+import PageHero from '@/components/ui/PageHero'
 
 // 定义进入动画的 Tailwind 类组合
 const animationClasses = {
@@ -73,33 +74,15 @@ export default function ModelPage() {
 
   return (
     <main className="relative min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 overflow-hidden pb-20">
-      {/* --- 背景光晕装饰 (Glow Background) --- */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1200px] h-[600px] opacity-40 pointer-events-none -z-10 flex justify-center">
-        <div className="absolute top-[-10%] w-[600px] h-[600px] bg-blue-400/20 rounded-full blur-[100px] mix-blend-multiply" />
-        <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] bg-violet-400/20 rounded-full blur-[120px] mix-blend-multiply" />
-      </div>
 
       <div className="w-full max-w-[1400px] mx-auto px-4 lg:px-8 pt-12 lg:pt-16 flex flex-col">
 
         {/* --- 1. 标题区域 (Hero Section) --- */}
-        <div className={`flex flex-col items-center text-center mb-10 ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden}`}>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100/50 border border-blue-200/50 text-blue-600 text-sm font-medium mb-6">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-            </span>
-            Model Directory
-          </div>
-
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">
-              探索 AI 模型矩阵
-            </span>
-          </h1>
-          <p className="text-base md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            发现并体验我们支持的全面 AI 模型。通过多维度的分类与组合筛选，快速定位最契合您业务场景的智能引擎。
-          </p>
-        </div>
+        <PageHero
+          badge="Model Directory"
+          title="探索 AI 模型矩阵"
+          description="发现并体验我们支持的全面 AI 模型。通过多维度的分类与组合筛选，快速定位最契合您业务场景的智能引擎。"
+        />
 
         {/* --- 2. 核心控制面板 (Filter Control Panel) --- */}
         <div className={`w-full bg-white/70 backdrop-blur-xl border border-slate-200/80 rounded-[2rem] p-6 md:p-8 shadow-lg shadow-slate-200/40 mb-8 ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-200`}>

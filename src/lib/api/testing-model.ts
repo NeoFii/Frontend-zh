@@ -8,18 +8,13 @@ import type {
   ModelVendor,
   PagedResponse,
 } from '@/types/model'
+import type { ApiResponse } from '@/types'
 import {
   DEFAULT_MODEL_CATEGORIES,
   normalizeModelCategories,
   normalizeModelDetail,
   normalizeModelListItem,
 } from '@/lib/model-categories'
-
-interface ApiResponse<T> {
-  code: number
-  message: string
-  data: T
-}
 
 const MODEL_CATALOG_API_BASE =
   process.env.NEXT_PUBLIC_MODEL_CATALOG_API_BASE_URL ||

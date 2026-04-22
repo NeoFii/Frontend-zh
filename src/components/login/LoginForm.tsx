@@ -5,7 +5,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useTranslation } from '@/hooks/useTranslation'
 import { useAuthStore } from '@/stores/auth'
 import { setAccessToken } from '@/lib/token'
 import { LoginTypeSwitcher } from './LoginTypeSwitcher'
@@ -26,9 +25,6 @@ interface FormData {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const { t } = useTranslation('auth.login')
-  const { t: tValidation } = useTranslation('auth.validation')
-  const { t: tErrors } = useTranslation('auth.errors')
   const { login: saveUser } = useAuthStore()
 
   const [loginType, setLoginType] = useState<'password' | 'code'>('password')
@@ -51,12 +47,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
   const handleSendCode = async () => {
     if (!form.email) {
-      setError(tValidation('enterEmail'))
+      setError('请先输入邮箱')
       return
     }
 
     if (!validateEmail(form.email)) {
-      setError(tValidation('invalidEmail'))
+      setError('请输入有效的邮箱地址')
       return
     }
 
@@ -64,26 +60,26 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     try {
       const res = await sendLoginCode(form.email)
       if (res.code !== 200) {
-        setError(res.message || tErrors('sendFailed'))
+        setError(res.message || '发送失败')
       }
     } catch {
-      setError(tErrors('sendFailed'))
+      setError('发送失败')
     }
   }
 
   const validateForm = (): boolean => {
     if (!form.email) {
-      setError(tValidation('enterEmail'))
+      setError('请先输入邮箱')
       return false
     }
 
     if (loginType === 'password' && !form.password) {
-      setError(tValidation('enterPassword'))
+      setError('请填写密码')
       return false
     }
 
     if (loginType === 'code' && !form.code) {
-      setError(tValidation('enterCode'))
+      setError('请填写验证码')
       return false
     }
 
@@ -115,12 +111,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         saveUser(res.data.user)
         onSuccess()
       } else {
-        setError(res.message || tErrors('loginFailed'))
+        setError(res.message || '登录失败')
       }
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } }
       const message = axiosError.response?.data?.message
-      setError(message || tErrors('loginFailedRetry'))
+      setError(message || '登录失败，请稍后重试')
     } finally {
       setLoading(false)
     }
@@ -142,7 +138,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
 
         <div>
           <label htmlFor="email" className="mb-1.5 block font-mono text-xs uppercase tracking-[0.06em] text-[#6b7280]">
-            {t('email') || '邮箱'}
+            {'邮箱'}
           </label>
           <input
             id="email"
@@ -152,7 +148,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
             value={form.email}
             onChange={handleChange}
             className={inputClass}
-            placeholder={t('emailPlaceholder') || '请输入邮箱'}
+            placeholder={'请输入邮箱'}
           />
         </div>
 
@@ -160,14 +156,14 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           {loginType === 'password' ? (
             <div>
               <label htmlFor="password" className="mb-1.5 block font-mono text-xs uppercase tracking-[0.06em] text-[#6b7280]">
-                {t('password') || '密码'}
+                {'密码'}
               </label>
               <PasswordInput
                 id="password"
                 name="password"
                 value={form.password}
                 onChange={handleChange}
-                placeholder={t('passwordPlaceholder') || '请输入密码'}
+                placeholder={'请输入密码'}
                 required
                 className={`${inputClass} pr-12`}
               />
@@ -175,7 +171,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           ) : (
             <div>
               <label htmlFor="code" className="mb-1.5 block font-mono text-xs uppercase tracking-[0.06em] text-[#6b7280]">
-                {t('code') || '验证码'}
+                {'验证码'}
               </label>
               <div className="flex gap-3">
                 <input
@@ -187,12 +183,12 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
                   value={form.code}
                   onChange={handleChange}
                   className={`${inputClass} text-center tracking-[0.35em]`}
-                  placeholder={t('codePlaceholder') || '请输入验证码'}
+                  placeholder={'请输入验证码'}
                 />
                 <CodeCountdown
                   onSendCode={handleSendCode}
-                  sendingText={t('sending')}
-                  getCodeText={t('getCode')}
+                  sendingText={'发送中...'}
+                  getCodeText={'获取验证码'}
                   className="h-11 shrink-0 whitespace-nowrap rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-4 font-mono text-xs text-[#374151] transition hover:border-[#d1d5db] hover:text-[#111827] disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
@@ -205,13 +201,13 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
           disabled={loading}
           className="mt-2 h-[46px] w-full rounded-md bg-[#111827] text-sm font-medium text-white transition hover:-translate-y-px hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
         >
-          {loading ? t('submitting') : (t('submit') || '立即登录')}
+          {loading ? '登录中...' : '立即登录'}
         </button>
       </form>
 
       <div className="mt-4 text-right">
         <Link href="/forgot-password" className="text-[12.5px] text-[#6b7280] transition hover:text-[#111827]">
-          {t('forgotPassword') || '忘记密码？'}
+          {'忘记密码？'}
         </Link>
       </div>
 

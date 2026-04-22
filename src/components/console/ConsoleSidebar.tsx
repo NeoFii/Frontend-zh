@@ -2,7 +2,6 @@
 
 import { ReactNode } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { useTranslation } from '@/hooks/useTranslation'
 import { useAuthStore } from '@/stores/auth'
 
 interface MenuItem {
@@ -40,13 +39,11 @@ const FinanceIcon = () => (
   </svg>
 )
 
-const developingItems = new Set([])
+const developingItems = new Set<string>([])
 
 export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { t } = useTranslation('console.menu')
-  const { t: tHeader } = useTranslation('console.header')
   const user = useAuthStore((state) => state.user)
   const logoutAsync = useAuthStore((state) => state.logoutAsync)
   const isAccountPage = pathname.endsWith('/console/account/basic-information')
@@ -71,27 +68,27 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
   const menuGroups: MenuGroup[] = [
     {
       id: 'usage',
-      name: t('usage'),
+      name: '用量记录',
       icon: <UsageIcon />,
-      items: [{ id: 'usage-record', name: t('usageRecord') }],
+      items: [{ id: 'usage-record', name: '用量记录' }],
     },
     {
       id: 'api',
-      name: t('api'),
+      name: 'API管理',
       icon: <ApiIcon />,
       items: [
-        { id: 'get-api', name: t('getApi') },
+        { id: 'get-api', name: '获取API' },
       ],
     },
     {
       id: 'payment',
-      name: t('payment'),
+      name: '财务管理',
       icon: <FinanceIcon />,
       items: [
-        { id: 'balance', name: t('balance') },
-        { id: 'recharge', name: t('recharge') },
-        { id: 'voucher', name: t('voucher') },
-        { id: 'billing-history', name: t('billingHistory') },
+        { id: 'balance', name: '余额' },
+        { id: 'recharge', name: '充值记录' },
+        { id: 'voucher', name: '代金券记录' },
+        { id: 'billing-history', name: '账单记录' },
       ],
     },
   ]
@@ -162,7 +159,7 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); handleLogout() }}
-            title={tHeader('logout')}
+            title="退出登录"
             className={`shrink-0 rounded-xl p-2 transition ${
               isAccountPage
                 ? 'text-slate-400 hover:text-red-400 hover:bg-white/10'

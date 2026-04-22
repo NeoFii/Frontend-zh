@@ -3,14 +3,9 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter as useNextRouter } from 'next/navigation'
-import { useTranslation } from '@/hooks/useTranslation'
 import { sendResetPasswordCode, resetPassword } from '@/lib/api/auth'
 
 export default function ForgotPassword() {
-  const { t: tAuth } = useTranslation('auth.forgotPassword')
-  const { t: tValidation } = useTranslation('auth.forgotPassword.validation')
-  const { t: tErrors } = useTranslation('auth.forgotPassword.errors')
-  const { t: tHero } = useTranslation('auth.hero')
   const router = useNextRouter()
   const [loading, setLoading] = useState(false)
   const [codeLoading, setCodeLoading] = useState(false)
@@ -49,14 +44,14 @@ export default function ForgotPassword() {
   const sendCode = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.email) {
-      setError(tValidation('enterEmail'))
+      setError('请先输入邮箱')
       return
     }
 
     // 简单验证邮箱格式
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(form.email)) {
-      setError(tValidation('invalidEmail'))
+      setError('请输入有效的邮箱地址')
       return
     }
 
@@ -69,11 +64,11 @@ export default function ForgotPassword() {
         setCodeCountdown(60)
         setStep(2)
       } else {
-        setError(res.message || tErrors('sendFailed'))
+        setError(res.message || '发送失败')
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || tErrors('sendFailedRetry'))
+      setError(error.response?.data?.message || '发送失败，请稍后重试')
     } finally {
       setCodeLoading(false)
     }
@@ -84,19 +79,19 @@ export default function ForgotPassword() {
     setError('')
 
     if (!form.code) {
-      setError(tValidation('enterCode'))
+      setError('请填写验证码')
       return
     }
     if (!form.password) {
-      setError(tValidation('enterPassword'))
+      setError('请填写新密码')
       return
     }
     if (form.password.length < 8) {
-      setError(tValidation('passwordTooShort'))
+      setError('密码长度至少为8位')
       return
     }
     if (form.password !== form.confirmPassword) {
-      setError(tValidation('passwordMismatch'))
+      setError('两次输入的密码不一致')
       return
     }
 
@@ -112,11 +107,11 @@ export default function ForgotPassword() {
         // 重置成功，跳转到登录页
         router.push('/login?reset=true')
       } else {
-        setError(res.message || tErrors('resetFailed'))
+        setError(res.message || '重置失败')
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || tErrors('resetFailedRetry'))
+      setError(error.response?.data?.message || '重置失败，请稍后重试')
     } finally {
       setLoading(false)
     }
@@ -131,8 +126,8 @@ export default function ForgotPassword() {
 
         <div className="relative z-10 flex flex-col justify-center px-16 w-full">
           <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-            {tHero('title')}<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">{tHero('highlight')}</span>
+            当你调用 AI，<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">就是在调用我们。</span>
           </h1>
         </div>
       </div>
@@ -141,10 +136,10 @@ export default function ForgotPassword() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900">
-              {step === 1 ? tAuth('titleStep1') : tAuth('titleStep2')}
+              {step === 1 ? '忘记密码' : '重置密码'}
             </h2>
             <p className="text-sm text-gray-500 mt-2">
-              {step === 1 ? tAuth('subtitleStep1') : tAuth('subtitleStep2')}
+              {step === 1 ? '请输入您注册时使用的邮箱' : '请输入邮箱收到的验证码和新密码'}
             </p>
           </div>
 
@@ -156,7 +151,7 @@ export default function ForgotPassword() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">{tAuth('email')}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">邮箱</label>
               <input
                 name="email"
                 type="email"
@@ -165,14 +160,14 @@ export default function ForgotPassword() {
                 onChange={handleChange}
                 disabled={step === 2}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all disabled:bg-gray-100 disabled:text-gray-500"
-                placeholder={tAuth('emailPlaceholder')}
+                placeholder="请输入邮箱"
               />
             </div>
 
             {step === 2 && (
               <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{tAuth('code')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">验证码</label>
                   <div className="flex space-x-3">
                     <input
                       name="code"
@@ -182,7 +177,7 @@ export default function ForgotPassword() {
                       value={form.code}
                       onChange={handleChange}
                       className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                      placeholder={tAuth('codePlaceholder')}
+                      placeholder="请输入验证码"
                     />
                     <button
                       type="button"
@@ -190,13 +185,13 @@ export default function ForgotPassword() {
                       disabled={codeCountdown > 0 || codeLoading}
                       className="px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
-                      {codeLoading ? tAuth('sending') : codeCountdown > 0 ? `${codeCountdown}s` : tAuth('resend')}
+                      {codeLoading ? '发送中...' : codeCountdown > 0 ? `${codeCountdown}s` : '重新发送'}
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{tAuth('newPassword')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">新密码</label>
                   <input
                     name="password"
                     type="password"
@@ -205,12 +200,12 @@ export default function ForgotPassword() {
                     value={form.password}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                    placeholder={tAuth('newPasswordPlaceholder')}
+                    placeholder="请设置新密码（至少8位）"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">{tAuth('confirmPassword')}</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">确认新密码</label>
                   <input
                     name="confirmPassword"
                     type="password"
@@ -218,7 +213,7 @@ export default function ForgotPassword() {
                     value={form.confirmPassword}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                    placeholder={tAuth('confirmPasswordPlaceholder')}
+                    placeholder="请再次输入新密码"
                   />
                 </div>
               </>
@@ -229,14 +224,14 @@ export default function ForgotPassword() {
               disabled={loading || codeLoading}
               className="w-full py-3.5 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? tAuth('processing') : step === 1 ? tAuth('sendCode') : tAuth('resetPassword')}
+              {loading ? '处理中...' : step === 1 ? '发送验证码' : '重置密码'}
             </button>
           </form>
 
           <div className="mt-6 text-center text-sm">
-            <span className="text-gray-500">{tAuth('rememberPassword')}</span>
+            <span className="text-gray-500">想起密码了？</span>
             <Link href="/login" className="text-gray-900 font-medium hover:text-gray-700 ml-1">
-              {tAuth('loginNow')}
+              立即登录
             </Link>
           </div>
         </div>

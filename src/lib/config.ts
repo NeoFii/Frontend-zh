@@ -1,3 +1,5 @@
+export const DEFAULT_USER_API_BASE_URL = 'http://localhost:8000/api/v1'
+
 // 站点配置
 export const siteConfig = {
   // 公司信息
@@ -13,14 +15,6 @@ export const siteConfig = {
     email: 'contact@eucal.ai',
     phone: '400-888-8888',
     businessHours: '周一至周五 9:00-18:00',
-  },
-
-  // 社交媒体链接
-  social: {
-    twitter: 'https://twitter.com/eucalai',
-    github: 'https://github.com/eucalai',
-    linkedin: 'https://linkedin.com/company/eucalai',
-    wechat: '#', // 微信二维码或公众号链接
   },
 
   // 备案信息（中国网站需要）

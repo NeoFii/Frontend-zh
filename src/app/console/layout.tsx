@@ -8,7 +8,7 @@ import { useUser } from '@/hooks/useUser'
 import { useAuthStore } from '@/stores/auth'
 
 // 统一的菜单路径映射常量
-export const MENU_PATH_MAP: Record<string, string> = {
+const MENU_PATH_MAP: Record<string, string> = {
   'usage-record': '/console/usage/record',
   'get-api': '/console/api/get-api',
   'balance': '/console/payment/balance',
@@ -18,7 +18,7 @@ export const MENU_PATH_MAP: Record<string, string> = {
 }
 
 // 路径到菜单ID的反向映射
-export const PATH_MENU_MAP: Record<string, string> = Object.entries(MENU_PATH_MAP).reduce(
+const PATH_MENU_MAP: Record<string, string> = Object.entries(MENU_PATH_MAP).reduce(
   (acc, [menu, path]) => {
     acc[path] = menu
     return acc
@@ -51,9 +51,7 @@ export default function ConsoleLayout({
 
   // 根据当前路径确定活动菜单
   const getActiveMenuFromPath = (path: string): string => {
-    // 剥离语言前缀（如 /zh/console/... -> /console/...）
-    const pathWithoutLocale = path.replace(/^\/(zh|en)\//, '/')
-    return PATH_MENU_MAP[pathWithoutLocale] || ''
+    return PATH_MENU_MAP[path] || ''
   }
 
   const [activeMenu, setActiveMenu] = useState(() => getActiveMenuFromPath(pathname))

@@ -6,7 +6,6 @@
  */
 
 import React, { useState } from 'react'
-import { useTranslation } from '@/hooks/useTranslation'
 
 export type SortOrder = 'default' | 'desc' | 'asc'
 
@@ -21,13 +20,12 @@ interface ModelSortProps {
 }
 
 export const ModelSort: React.FC<ModelSortProps> = ({ value, onChange, labels }) => {
-  const { t } = useTranslation('model')
   const [isOpen, setIsOpen] = useState(false)
 
   const sortLabels = labels || {
-    default: t('sortDefault'),
-    newestDesc: t('sortNewestDesc'),
-    newestAsc: t('sortNewestAsc'),
+    default: '按默认排序',
+    newestDesc: '发布时间倒序',
+    newestAsc: '发布时间正序',
   }
 
   const sortOptions: { value: SortOrder; label: string }[] = [

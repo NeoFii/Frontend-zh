@@ -4,7 +4,6 @@
  */
 
 import { useState } from 'react'
-import { useTranslation } from '@/hooks/useTranslation'
 
 interface PasswordInputProps {
   id?: string
@@ -31,7 +30,6 @@ export function PasswordInput({
 }: PasswordInputProps) {
   // 如果没有提供 id，使用 name 作为 id
   const inputId = id || name
-  const { t } = useTranslation('auth.common')
   const [showPassword, setShowPassword] = useState(false)
 
   return (
@@ -52,7 +50,7 @@ export function PasswordInput({
         type="button"
         onClick={() => setShowPassword(!showPassword)}
         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none p-1"
-        title={showPassword ? t('hidePassword') : t('showPassword')}
+        title={showPassword ? '隐藏密码' : '显示密码'}
       >
         {showPassword ? (
           // 眼睛睁开图标 - 表示当前显示密码，点击后隐藏

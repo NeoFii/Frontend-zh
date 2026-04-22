@@ -6,7 +6,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useTranslation } from '@/hooks/useTranslation'
 import { PasswordStrength } from './PasswordStrength'
 import { PasswordRequirements } from './PasswordRequirements'
 import { AgreementLinks } from './AgreementLinks'
@@ -39,10 +38,6 @@ const getApiErrorMessage = (error: unknown) => (error as ApiError).response?.dat
 
 export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
   const router = useRouter()
-  const { t } = useTranslation('auth.register')
-  const { t: tValidation } = useTranslation('auth.validation')
-  const { t: tErrors } = useTranslation('auth.errors')
-  const { t: tLogin } = useTranslation('auth.login')
   const { login: saveUser } = useAuthStore()
 
   const [loading, setLoading] = useState(false)
@@ -71,12 +66,12 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const handleSendCode = async () => {
     if (!form.email) {
-      setError(tValidation('enterEmail'))
+      setError('请先输入邮箱')
       return
     }
 
     if (!validateEmail(form.email)) {
-      setError(tValidation('invalidEmail'))
+      setError('请输入有效的邮箱地址')
       return
     }
 
@@ -86,10 +81,10 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
     try {
       const res = await sendVerificationCode(form.email)
       if (res.code !== 200) {
-        setError(res.message || tErrors('sendFailed'))
+        setError(res.message || '发送失败')
       }
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err) || tErrors('sendFailed'))
+      setError(getApiErrorMessage(err) || '发送失败')
     } finally {
       setCodeLoading(false)
     }
@@ -97,42 +92,42 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const validateForm = (): boolean => {
     if (!form.invitationCode.trim()) {
-      setError(tValidation('enterInvitationCode'))
+      setError('请输入邀请码')
       return false
     }
 
     if (!form.email) {
-      setError(tValidation('enterEmail'))
+      setError('请先输入邮箱')
       return false
     }
 
     if (!validateEmail(form.email)) {
-      setError(tValidation('invalidEmail'))
+      setError('请输入有效的邮箱地址')
       return false
     }
 
     if (!form.code) {
-      setError(tValidation('enterCode'))
+      setError('请填写验证码')
       return false
     }
 
     if (!form.password || !form.confirmPassword) {
-      setError(tValidation('enterPassword'))
+      setError('请填写密码')
       return false
     }
 
     if (form.password !== form.confirmPassword) {
-      setError(tValidation('passwordMismatch'))
+      setError('两次输入的密码不一致')
       return false
     }
 
     if (!validatePassword(form.password)) {
-      setError(tValidation('passwordComplexity'))
+      setError('密码需包含大写字母、小写字母、数字和特殊符号，且不少于8位')
       return false
     }
 
     if (!form.agreement) {
-      setError(tValidation('agreeToTerms'))
+      setError('请阅读并同意用户协议和隐私政策')
       return false
     }
 
@@ -172,10 +167,10 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
           onSuccess()
         }
       } else {
-        setError(res.message || tErrors('registerFailed'))
+        setError(res.message || '注册失败')
       }
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err) || tErrors('registerFailedRetry'))
+      setError(getApiErrorMessage(err) || '注册失败，请稍后重试')
     } finally {
       setLoading(false)
     }
@@ -193,7 +188,7 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
 
         <div>
           <label htmlFor="invitationCode" className={labelClass}>
-            {t('invitationCode') || '邀请码'}
+            {'邀请码'}
           </label>
           <input
             id="invitationCode"
@@ -203,13 +198,13 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
             value={form.invitationCode}
             onChange={handleChange}
             className={inputClass}
-            placeholder={t('invitationCodePlaceholder') || '请输入邀请码'}
+            placeholder={'请输入邀请码'}
           />
         </div>
 
         <div>
           <label htmlFor="email" className={labelClass}>
-            {t('email') || '邮箱'}
+            {'邮箱'}
           </label>
           <input
             id="email"
@@ -219,13 +214,13 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
             value={form.email}
             onChange={handleChange}
             className={inputClass}
-            placeholder={t('emailPlaceholder') || '请输入邮箱'}
+            placeholder={'请输入邮箱'}
           />
         </div>
 
         <div>
           <label htmlFor="code" className={labelClass}>
-            {t('code') || '验证码'}
+            {'验证码'}
           </label>
           <div className="flex gap-3">
             <input
@@ -237,13 +232,13 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
               value={form.code}
               onChange={handleChange}
               className={`${inputClass} text-center tracking-[0.35em]`}
-              placeholder={t('codePlaceholder') || '请输入验证码'}
+              placeholder={'请输入验证码'}
             />
             <CodeCountdown
               onSendCode={handleSendCode}
               disabled={codeLoading}
-              sendingText={tLogin('sending')}
-              getCodeText={tLogin('getCode')}
+              sendingText={'发送中...'}
+              getCodeText={'获取验证码'}
               className="h-11 shrink-0 whitespace-nowrap rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-4 font-mono text-xs text-[#374151] transition hover:border-[#d1d5db] hover:text-[#111827] disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
@@ -251,14 +246,14 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
 
         <div>
           <label htmlFor="password" className={labelClass}>
-            {t('password') || '密码'}
+            {'密码'}
           </label>
           <PasswordInput
             id="password"
             name="password"
             value={form.password}
             onChange={handleChange}
-            placeholder={t('passwordPlaceholder') || '请设置密码（至少8位，含大小写字母、数字和特殊符号）'}
+            placeholder={'请设置密码（至少8位，含大小写字母、数字和特殊符号）'}
             required
             minLength={8}
             className={`${inputClass} pr-12`}
@@ -269,14 +264,14 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
 
         <div>
           <label htmlFor="confirmPassword" className={labelClass}>
-            {t('confirmPassword') || '确认密码'}
+            {'确认密码'}
           </label>
           <PasswordInput
             id="confirmPassword"
             name="confirmPassword"
             value={form.confirmPassword}
             onChange={handleChange}
-            placeholder={t('confirmPasswordPlaceholder') || '请再次输入密码'}
+            placeholder={'请再次输入密码'}
             required
             className={`${inputClass} pr-12`}
           />
@@ -295,14 +290,14 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
           disabled={loading}
           className="mt-2 h-[46px] w-full rounded-md bg-[#111827] text-sm font-medium text-white transition hover:-translate-y-px hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none"
         >
-          {loading ? t('submitting') : (t('submit') || '立即注册')}
+          {loading ? '注册中...' : '立即注册'}
         </button>
       </form>
 
       <p className="mt-8 text-center text-[13px] leading-7 text-[#6b7280]">
-        {t('hasAccount') || '已有账号？'}
+        {'已有账号？'}
         <Link href="/login" className="text-[#111827] underline decoration-[#d1d5db] underline-offset-4 transition hover:decoration-[#f97316]">
-          {t('loginNow') || '立即登录'}
+          {'立即登录'}
         </Link>
       </p>
     </div>
