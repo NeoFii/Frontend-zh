@@ -52,20 +52,14 @@ export default function BillingHistoryPage() {
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <section className="overflow-hidden rounded-2xl border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(15,23,42,0.08),_transparent_32%),linear-gradient(145deg,#ffffff_0%,#f8fafc_100%)] p-8 shadow-[0_26px_60px_-42px_rgba(15,23,42,0.22)]">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="inline-flex rounded-full bg-gray-950 px-3 py-1 text-xs font-medium tracking-[0.24em] text-white">
-              BILLING LEDGER
-            </div>
-            <h2 className="mt-5 text-[1.75rem] tracking-tight text-gray-950">账单历史与账务流水</h2>
-            <p className="mt-3 text-sm leading-7 text-gray-600">
-              这里按账户余额流水实时渲染入账、调整、冻结和扣费记录，用于核对每次资金变化和调用来源。
-            </p>
+        <div>
+          <div className="inline-flex rounded-full bg-gray-950 px-3 py-1 text-xs font-medium tracking-[0.24em] text-white">
+            BILLING LEDGER
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4 text-right">
-            <p className="text-xs tracking-[0.2em] text-gray-400">TOTAL RECORDS</p>
-            <p className="mt-2 text-2xl text-gray-950">{total}</p>
-          </div>
+          <h2 className="mt-5 text-[1.75rem] tracking-tight text-gray-950">账单历史与账务流水</h2>
+          <p className="mt-3 text-sm leading-7 text-gray-600">
+            这里按账户余额流水实时渲染入账、调整、冻结和扣费记录，用于核对每次资金变化和调用来源。
+          </p>
         </div>
       </section>
 

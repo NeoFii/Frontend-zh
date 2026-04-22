@@ -40,7 +40,7 @@ const FinanceIcon = () => (
   </svg>
 )
 
-const developingItems = new Set(['recharge', 'voucher'])
+const developingItems = new Set([])
 
 export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSidebarProps) {
   const router = useRouter()

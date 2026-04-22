@@ -8,6 +8,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
 import { useRouterUsageEvents, useRouterUsageSummary, useRouterUsageLogs } from '@/hooks/useRouterUsage'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
+import { Select } from '@/components/ui/Select'
 import {
   USAGE_REFERENCE_MODELS,
   createUsageDashboardViewModel,
@@ -559,16 +560,14 @@ export default function UsageRecordPage() {
           </div>
           <div>
             <label className="mb-1 block text-xs text-gray-500">API Key</label>
-            <select
+            <Select
               value={filterKeyId ?? ''}
-              onChange={(e) => { setFilterKeyId(e.target.value ? Number(e.target.value) : undefined); setLogsPage(1) }}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-950"
-            >
-              <option value="">全部</option>
-              {keys.map((k) => (
-                <option key={k.id} value={k.id}>{k.name} ({k.token_preview})</option>
-              ))}
-            </select>
+              onChange={(v) => { setFilterKeyId(v ? Number(v) : undefined); setLogsPage(1) }}
+              options={[
+                { value: '', label: '全部' },
+                ...keys.map((k) => ({ value: String(k.id), label: `${k.name} (${k.token_preview})` })),
+              ]}
+            />
           </div>
           {(filterStart || filterEnd || filterModel || filterKeyId) && (
             <button
