@@ -21,9 +21,12 @@ interface ApiResponse<T> {
   data: T
 }
 
-const TESTING_API_BASE =
-  process.env.NEXT_PUBLIC_TESTING_API_BASE_URL ||
-  `${(process.env.NEXT_PUBLIC_TESTING_API_URL || 'http://localhost:8002').replace(/\/$/, '')}/api`
+const MODEL_CATALOG_API_BASE =
+  process.env.NEXT_PUBLIC_MODEL_CATALOG_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  (process.env.NEXT_PUBLIC_API_URL
+    ? `${process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '')}/api/v1`
+    : '/api/v1')
 
 const testingAxios = axios.create({
   timeout: 10000,
@@ -42,21 +45,22 @@ const EMPTY_BENCHMARK_TRENDS: BenchmarkTrendResponse = {
 
 const testingClient = {
   get: <T>(url: string, config?: Parameters<typeof testingAxios.get>[1]) =>
-    testingAxios.get<T, T>(`${TESTING_API_BASE}${url}`, config),
+    testingAxios.get<T, T>(`${MODEL_CATALOG_API_BASE}${url}`, config),
 }
 
-function isProtectedBenchmarkError(error: unknown): boolean {
-  return axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)
+function isUnavailableBenchmarkError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false
+  return [401, 403, 404].includes(error.response?.status ?? 0)
 }
 
 export async function getVendors(): Promise<ModelVendor[]> {
-  const response = await testingClient.get<{ data: PagedResponse<ModelVendor> }>('/v1/vendors')
+  const response = await testingClient.get<{ data: PagedResponse<ModelVendor> }>('/model-vendors')
   return response.data.items
 }
 
 export async function getCategories(): Promise<ModelCategory[]> {
   const response = await testingClient.get<{ data: PagedResponse<ModelCategory> }>(
-    '/v1/models/categories'
+    '/models/categories'
   )
   const categories = normalizeModelCategories(response.data.items)
   return categories.length > 0 ? categories : DEFAULT_MODEL_CATEGORIES
@@ -77,7 +81,7 @@ export async function getModels(params?: {
   if (params?.page_size) searchParams.set('page_size', String(params.page_size))
 
   const queryString = searchParams.toString()
-  const url = queryString ? `/v1/models/?${queryString}` : '/v1/models/'
+  const url = queryString ? `/models?${queryString}` : '/models'
 
   const response = await testingClient.get<{ data: PagedResponse<ModelListItem> }>(url)
   return {
@@ -90,10 +94,10 @@ export async function getBenchmarkStatsSummary(n: number = 5): Promise<Benchmark
   try {
     const response = await testingClient.get<
       ApiResponse<{ items: BenchmarkModelSummary[]; total: number }>
-    >(`/v1/benchmark/stats/summary?n=${n}`)
+    >(`/benchmark/stats/summary?n=${n}`)
     return response.data.items
   } catch (error) {
-    if (isProtectedBenchmarkError(error)) {
+    if (isUnavailableBenchmarkError(error)) {
       return []
     }
     throw error
@@ -101,7 +105,7 @@ export async function getBenchmarkStatsSummary(n: number = 5): Promise<Benchmark
 }
 
 export async function getModelBySlug(slug: string, n: number = 5): Promise<ModelDetail> {
-  const response = await testingClient.get<{ data: ModelDetail }>(`/v1/models/${slug}?n=${n}`)
+  const response = await testingClient.get<{ data: ModelDetail }>(`/models/${slug}?n=${n}`)
   return normalizeModelDetail(response.data)
 }
 
@@ -111,11 +115,11 @@ export async function getBenchmarkTrends(
 ): Promise<BenchmarkTrendResponse> {
   try {
     const response = await testingClient.get<ApiResponse<BenchmarkTrendResponse>>(
-      `/v1/benchmark/trends?model_slug=${encodeURIComponent(modelSlug)}&days=${days}`
+      `/benchmark/trends?model_slug=${encodeURIComponent(modelSlug)}&days=${days}`
     )
     return response.data
   } catch (error) {
-    if (isProtectedBenchmarkError(error)) {
+    if (isUnavailableBenchmarkError(error)) {
       return {
         ...EMPTY_BENCHMARK_TRENDS,
         model_slug: modelSlug,
