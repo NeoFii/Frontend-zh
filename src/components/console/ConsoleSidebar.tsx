@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { ReactNode } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { useTranslation } from '@/hooks/useTranslation'
 import { useAuthStore } from '@/stores/auth'
 
@@ -20,12 +21,6 @@ interface ConsoleSidebarProps {
   activeMenu: string
   onMenuChange: (menu: string) => void
 }
-
-const AccountIcon = () => (
-  <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-  </svg>
-)
 
 const ApiIcon = () => (
   <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -48,10 +43,13 @@ const FinanceIcon = () => (
 const developingItems = new Set(['recharge', 'voucher'])
 
 export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSidebarProps) {
+  const router = useRouter()
+  const pathname = usePathname()
   const { t } = useTranslation('console.menu')
   const { t: tHeader } = useTranslation('console.header')
   const user = useAuthStore((state) => state.user)
   const logoutAsync = useAuthStore((state) => state.logoutAsync)
+  const isAccountPage = pathname.endsWith('/console/account/basic-information')
 
   const getUserInitial = () => {
     if (user?.email) {
@@ -76,14 +74,6 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
       name: t('usage'),
       icon: <UsageIcon />,
       items: [{ id: 'usage-record', name: t('usageRecord') }],
-    },
-    {
-      id: 'account',
-      name: t('account'),
-      icon: <AccountIcon />,
-      items: [
-        { id: 'basic-information', name: t('accountInfo') },
-      ],
     },
     {
       id: 'api',
@@ -155,18 +145,29 @@ export default function ConsoleSidebar({ activeMenu, onMenuChange }: ConsoleSide
       </div>
 
       <div className="border-t border-gray-200 px-4 py-4">
-        <div className="flex items-center gap-3 rounded-lg px-3 py-2.5">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-950 text-sm font-medium text-white">
+        <div
+          onClick={() => router.push('/console/account/basic-information')}
+          className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition ${
+            isAccountPage ? 'bg-gray-950' : 'hover:bg-gray-50'
+          }`}
+        >
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-medium ${
+            isAccountPage ? 'bg-white text-gray-950' : 'bg-gray-950 text-white'
+          }`}>
             {getUserInitial()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-gray-900">{user?.email || '当前账户'}</p>
-            <p className="text-[11px] uppercase tracking-[0.14em] text-gray-400">Account</p>
+            <p className={`truncate text-sm font-medium ${isAccountPage ? 'text-white' : 'text-gray-900'}`}>{user?.email || '当前账户'}</p>
+            <p className={`text-[11px] uppercase tracking-[0.14em] ${isAccountPage ? 'text-slate-300' : 'text-gray-400'}`}>Account</p>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={(e) => { e.stopPropagation(); handleLogout() }}
             title={tHeader('logout')}
-            className="shrink-0 rounded-xl p-2 text-gray-400 transition hover:bg-red-50 hover:text-red-600"
+            className={`shrink-0 rounded-xl p-2 transition ${
+              isAccountPage
+                ? 'text-slate-400 hover:text-red-400 hover:bg-white/10'
+                : 'text-gray-400 hover:bg-red-50 hover:text-red-600'
+            }`}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

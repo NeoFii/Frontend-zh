@@ -9,10 +9,8 @@ import { useAuthStore } from '@/stores/auth'
 
 // 统一的菜单路径映射常量
 export const MENU_PATH_MAP: Record<string, string> = {
-  'basic-information': '/console/account/basic-information',
-  'interface-key': '/console/account/interface-key',
-  'get-api': '/console/api/get-api',
   'usage-record': '/console/usage/record',
+  'get-api': '/console/api/get-api',
   'balance': '/console/payment/balance',
   'recharge': '/console/payment/recharge',
   'voucher': '/console/payment/voucher',
@@ -55,7 +53,7 @@ export default function ConsoleLayout({
   const getActiveMenuFromPath = (path: string): string => {
     // 剥离语言前缀（如 /zh/console/... -> /console/...）
     const pathWithoutLocale = path.replace(/^\/(zh|en)\//, '/')
-    return PATH_MENU_MAP[pathWithoutLocale] || 'basic-information'
+    return PATH_MENU_MAP[pathWithoutLocale] || 'usage-record'
   }
 
   const [activeMenu, setActiveMenu] = useState(() => getActiveMenuFromPath(pathname))
@@ -77,7 +75,7 @@ export default function ConsoleLayout({
     return (
       <div className="min-h-screen bg-gray-50">
         <ConsoleHeader />
-        <ConsoleSidebar activeMenu="basic-information" onMenuChange={() => {}} />
+        <ConsoleSidebar activeMenu="usage-record" onMenuChange={() => {}} />
         <main className="ml-72 pt-16 min-h-screen">
           <div className="w-full p-8">
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
@@ -96,7 +94,7 @@ export default function ConsoleLayout({
     return (
       <div className="min-h-screen bg-gray-50">
         <ConsoleHeader />
-        <ConsoleSidebar activeMenu="basic-information" onMenuChange={() => {}} />
+        <ConsoleSidebar activeMenu="usage-record" onMenuChange={() => {}} />
         <main className="ml-72 pt-16 min-h-screen">
           <div className="w-full p-8">
             {/* 骨架屏效果，减少感知延迟 */}

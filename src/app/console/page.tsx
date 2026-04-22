@@ -7,7 +7,7 @@ export default function ConsolePage() {
   const router = useRouter()
 
   useEffect(() => {
-    router.push('/console/account/basic-information')
+    router.push('/console/usage/record')
   }, [router])
 
   return null

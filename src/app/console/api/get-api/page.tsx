@@ -238,12 +238,12 @@ function PowerIcon(props: { active: boolean }) {
 export default function GetApiPage() {
   const { keys, isLoading, isError, create, update, disable, remove, mutate } = useRouterKeys()
   const [dialog, setDialog] = useState<DialogState | null>(null)
-  const [copiedKeyId, setCopiedKeyId] = useState<number | null>(null)
+  const [expandedKeyId, setExpandedKeyId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [baseUrl, setBaseUrl] = useState('/router-api/v1')
-  const [expandedKeyId, setExpandedKeyId] = useState<number | null>(null)
+  const [revealedKey, setRevealedKey] = useState<string | null>(null)
 
   useEffect(() => {
     setBaseUrl(resolveRouterOpenAIBaseUrl())
@@ -283,10 +283,7 @@ export default function GetApiPage() {
     setNoticeMessage(null)
     try {
       const result = await create(buildCreatePayload(data))
-      await navigator.clipboard.writeText(result.api_key)
-      setCopiedKeyId(result.item.id)
-      setNoticeMessage('新创建的完整 Key 已复制到剪贴板。页面不会缓存完整密钥，请立即保管。')
-      window.setTimeout(() => setCopiedKeyId((current) => (current === result.item.id ? null : current)), 1500)
+      setRevealedKey(result.api_key)
       setDialog(null)
     } catch (error) {
       setErrorMessage(extractErrorMessage(error))
@@ -346,32 +343,25 @@ export default function GetApiPage() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
             <h2 className="text-[1.75rem] tracking-tight text-gray-950">API</h2>
-            <p className="mt-4 text-xl leading-8 text-gray-900">
-              API Key 是你请求 Eucal Router 大模型服务的重要凭证。
-            </p>
             <p className="mt-4 text-sm leading-7 text-gray-500">
               API Key 长期有效。请勿把密钥公开到共享环境，妥善保管并定期轮换密钥，避免因未授权使用造成安全风险或资金损失。
             </p>
           </div>
-        </div>
-      </section>
-
-      <section className="rounded-2xl bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
-        <h3 className="text-[1.75rem] tracking-tight text-gray-950">BaseURL</h3>
-        <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
-          <p className="text-sm text-gray-900">OpenAI compatible baseURL:</p>
-          <div className="flex items-center gap-3">
-            <div className="min-w-0 rounded-2xl border border-[#cbd5e1] bg-[#eef3fa] px-4 py-3 text-sm text-gray-900 shadow-inner lg:min-w-[380px]">
-              <span className="block truncate">{baseUrl}</span>
+          <div className="shrink-0">
+            <p className="text-sm text-gray-500">OpenAI compatible baseURL</p>
+            <div className="mt-2 flex items-center gap-3">
+              <div className="min-w-0 rounded-2xl border border-[#cbd5e1] bg-[#eef3fa] px-4 py-3 text-sm text-gray-900 shadow-inner lg:min-w-[320px]">
+                <span className="block truncate">{baseUrl}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCopyBaseUrl}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50"
+                title="复制 BaseURL"
+              >
+                <CopyIcon />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleCopyBaseUrl}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50"
-              title="复制 BaseURL"
-            >
-              <CopyIcon />
-            </button>
           </div>
         </div>
       </section>
@@ -427,14 +417,13 @@ export default function GetApiPage() {
           <div className="overflow-hidden rounded-xl bg-white ring-1 ring-inset ring-gray-100">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="bg-[#edf2f7] text-gray-500">
+                <thead className="bg-[#f7f7f8] text-gray-500">
                   <tr>
                     <th className="px-6 py-4 font-medium">ID</th>
                     <th className="px-6 py-4 font-medium">密钥</th>
                     <th className="px-6 py-4 font-medium">备注</th>
                     <th className="px-6 py-4 font-medium">状态</th>
                     <th className="px-6 py-4 font-medium">配额</th>
-                    <th className="px-6 py-4 font-medium">最后使用</th>
                     <th className="px-6 py-4 font-medium">过期时间</th>
                     <th className="px-6 py-4 font-medium">操作</th>
                   </tr>
@@ -447,37 +436,26 @@ export default function GetApiPage() {
                       <React.Fragment key={item.id}>
                       <tr
                         key={item.id}
-                        className="border-t border-gray-100 text-gray-700 cursor-pointer hover:bg-gray-50/50"
+                        className="border-t border-gray-100 cursor-pointer hover:bg-gray-50/50"
                         onClick={() => setExpandedKeyId(expandedKeyId === item.id ? null : item.id)}
                       >
-                        <td className="px-6 py-5 align-middle text-sm text-gray-500">{index + 1}</td>
-                        <td className="px-6 py-5 align-middle">
-                          <div className="flex items-center gap-3">
-                            <span className="text-base text-[#5c6471]">
-                              {item.token_preview}
-                            </span>
-                            <span className={`text-xs ${copiedKeyId === item.id ? 'text-emerald-600' : 'text-gray-500'}`}>
-                              {copiedKeyId === item.id ? '已复制完整 Key' : '完整 Key 仅在创建时返回'}
-                            </span>
-                          </div>
+                        <td className="px-6 py-5 text-sm text-gray-500">{index + 1}</td>
+                        <td className="px-6 py-5">
+                          <span className="font-mono text-sm text-gray-600">{item.token_preview}</span>
                         </td>
-                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">
-                          <div className="font-medium text-gray-700">{item.name}</div>
-                        </td>
-                        <td className="px-6 py-5 align-middle">
+                        <td className="px-6 py-5 text-sm font-medium text-gray-900">{item.name}</td>
+                        <td className="px-6 py-5">
                           <span className={`rounded-full px-2.5 py-1 text-xs ${statusMeta.tone}`}>
                             {statusMeta.label}
                           </span>
                         </td>
-                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">{formatDateTime(item.created_at)}</td>
-                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">
+                        <td className="px-6 py-5 text-sm text-gray-600">
                           {item.billing_mode === 'limited'
                             ? `已用 ${item.quota_used.toFixed(2)} / ${item.quota_limit.toFixed(2)}`
                             : '不限额'}
                         </td>
-                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">{formatDateTime(item.last_used_at)}</td>
-                        <td className="px-6 py-5 align-middle text-sm text-[#5c6471]">{item.expires_at ? formatDateTime(item.expires_at) : '永不过期'}</td>
-                        <td className="px-6 py-5 align-middle">
+                        <td className="px-6 py-5 text-sm text-gray-600">{item.expires_at ? formatDateTime(item.expires_at) : '永不过期'}</td>
+                        <td className="px-6 py-5">
                           <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <IconButton
                               title={item.is_active ? '禁用 Key' : '已禁用，后端不支持重新启用'}
@@ -508,8 +486,8 @@ export default function GetApiPage() {
                         </td>
                       </tr>
                       {isExpanded && (
-                        <tr className="border-t border-gray-50 bg-gray-50/50">
-                          <td colSpan={8} className="px-6 py-4">
+                        <tr className="border-t border-gray-100 bg-[#f7f7f8]">
+                          <td colSpan={7} className="px-6 py-4">
                             <div className="grid gap-3 md:grid-cols-3">
                               <div>
                                 <p className="text-xs text-gray-400">允许的模型</p>
@@ -570,6 +548,36 @@ export default function GetApiPage() {
             }
           }}
         />
+      ) : null}
+
+      {revealedKey ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 px-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 className="text-xl text-gray-900">API Key 创建成功</h3>
+            <p className="mt-3 text-sm text-red-600 font-medium">
+              请立即复制并妥善保存。关闭此窗口后将无法再次查看完整密钥。
+            </p>
+            <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
+              <p className="break-all font-mono text-sm text-gray-900 select-all">{revealedKey}</p>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(revealedKey)
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-4 py-2 text-sm text-white transition hover:bg-gray-800"
+              >
+                <CopyIcon /> 复制密钥
+              </button>
+              <button
+                onClick={() => setRevealedKey(null)}
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-50"
+              >
+                我已保存，关闭
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
     </div>
   )
