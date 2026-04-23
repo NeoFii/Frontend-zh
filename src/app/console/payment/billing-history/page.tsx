@@ -11,6 +11,7 @@ import Pagination from '@/components/ui/Pagination'
 
 const CURRENCY = 'CNY'
 const PAGE_SIZE = 50
+const TX_TYPE_VOUCHER_REDEEM = 7
 
 const TYPE_TABS: Array<{ value: number | null; label: string }> = [
   { value: null, label: '全部' },
@@ -22,6 +23,17 @@ const TYPE_TABS: Array<{ value: number | null; label: string }> = [
   { value: 6, label: '调整' },
   { value: 7, label: '代金券' },
 ]
+
+function transactionDisplayTitle(item: { type: number; description: string | null }, fallback: string) {
+  if (item.type === TX_TYPE_VOUCHER_REDEEM) {
+    return '代金券兑换'
+  }
+  return item.description || fallback
+}
+
+function shouldShowTransactionReference(type: number) {
+  return type !== TX_TYPE_VOUCHER_REDEEM
+}
 
 export default function BillingHistoryPage() {
   const [page, setPage] = useState(0)
@@ -87,6 +99,7 @@ export default function BillingHistoryPage() {
               const meta = transactionTypeMeta(item.type)
               const isPositive = item.direction === 'credit' || (item.direction === 'adjust' && item.amount >= 0)
               const amountPrefix = isPositive ? '+' : '-'
+              const showReference = shouldShowTransactionReference(item.type)
 
               return (
                 <div key={item.id} className="flex flex-col gap-4 px-4 py-5 md:flex-row md:items-center md:justify-between">
@@ -96,13 +109,17 @@ export default function BillingHistoryPage() {
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-sm text-gray-900">{item.description || meta.label}</p>
+                        <p className="text-sm text-gray-900">{transactionDisplayTitle(item, meta.label)}</p>
                         <span className={`rounded-full px-2.5 py-1 text-xs ${meta.tone}`}>{meta.label}</span>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                         <span>{formatDateTime(item.created_at)}</span>
-                        <span>{item.ref_type || 'manual'}</span>
-                        <span>{item.ref_id || '-'}</span>
+                        {showReference && (
+                          <>
+                            <span>{item.ref_type || 'manual'}</span>
+                            <span>{item.ref_id || '-'}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
