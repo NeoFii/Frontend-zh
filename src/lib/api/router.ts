@@ -87,6 +87,16 @@ interface BackendBalanceTransactionItem {
   created_at: string
 }
 
+interface BackendVoucherRedemptionItem {
+  id: number
+  code_prefix: string
+  code_suffix: string
+  amount: number
+  status: number
+  redeemed_at: string | null
+  created_at: string
+}
+
 interface BackendPagedResponse<T> {
   items: T[]
   total: number
@@ -189,7 +199,7 @@ export interface RouterUsageSummary {
 
 export interface RouterBillingLedgerItem {
   id: number
-  /** 1=TOPUP, 2=CONSUME, 3=REFUND, 4=FREEZE, 5=UNFREEZE, 6=ADMIN_ADJUST */
+  /** 1=TOPUP, 2=CONSUME, 3=REFUND, 4=FREEZE, 5=UNFREEZE, 6=ADMIN_ADJUST, 7=VOUCHER_REDEEM */
   type: number
   direction: string
   amount: number
@@ -199,6 +209,16 @@ export interface RouterBillingLedgerItem {
   ref_type: string | null
   ref_id: string | null
   remark: string | null
+  created_at: string
+}
+
+export interface VoucherRedemptionItem {
+  id: number
+  code_prefix: string
+  code_suffix: string
+  amount: number
+  status: number
+  redeemed_at: string | null
   created_at: string
 }
 
@@ -225,6 +245,11 @@ export interface RouterBillingLedgerResponseData {
   total: number
 }
 
+export interface VoucherRedemptionsResponseData {
+  items: VoucherRedemptionItem[]
+  total: number
+}
+
 export interface RouterListParams {
   key_id?: number
   limit?: number
@@ -232,6 +257,7 @@ export interface RouterListParams {
   start?: string
   end?: string
   model_name?: string
+  type?: number
 }
 
 const CURRENCY = 'CNY'
@@ -240,6 +266,7 @@ const API_KEY_QUOTA_MODE_LIMITED = 2
 const TX_TYPE_TOPUP = 1
 const TX_TYPE_REFUND = 3
 const TX_TYPE_ADMIN_ADJUST = 6
+const TX_TYPE_VOUCHER_REDEEM = 7
 
 export function apiKeyStatusMeta(status: number) {
   switch (status) {
@@ -270,6 +297,8 @@ export function transactionTypeMeta(type: number) {
       return { label: '解冻', tone: 'bg-cyan-50 text-cyan-700', iconTone: 'bg-cyan-100 text-cyan-700' }
     case 6:
       return { label: '管理员调整', tone: 'bg-purple-50 text-purple-700', iconTone: 'bg-purple-100 text-purple-700' }
+    case 7:
+      return { label: '代金券', tone: 'bg-emerald-50 text-emerald-700', iconTone: 'bg-emerald-100 text-emerald-700' }
     default:
       return { label: '其他', tone: 'bg-gray-100 text-gray-500', iconTone: 'bg-gray-100 text-gray-500' }
   }
@@ -289,6 +318,7 @@ function toPagedParams(params?: RouterListParams) {
     ...(params?.start ? { start: params.start } : {}),
     ...(params?.end ? { end: params.end } : {}),
     ...(params?.model_name ? { model_name: params.model_name } : {}),
+    ...(typeof params?.type === 'number' ? { type: params.type } : {}),
   }
 }
 
@@ -382,7 +412,7 @@ function normalizeUsageSummary(items: BackendUsageStatItem[]): RouterUsageSummar
 }
 
 function transactionDirection(type: number) {
-  if (type === TX_TYPE_TOPUP || type === TX_TYPE_REFUND) {
+  if (type === TX_TYPE_TOPUP || type === TX_TYPE_REFUND || type === TX_TYPE_VOUCHER_REDEEM) {
     return 'credit'
   }
   if (type === TX_TYPE_ADMIN_ADJUST) {
@@ -413,6 +443,18 @@ function normalizeTransaction(item: BackendBalanceTransactionItem): RouterBillin
     ref_type: item.ref_type,
     ref_id: item.ref_id,
     remark: item.remark,
+    created_at: item.created_at,
+  }
+}
+
+function normalizeVoucherRedemption(item: BackendVoucherRedemptionItem): VoucherRedemptionItem {
+  return {
+    id: item.id,
+    code_prefix: item.code_prefix,
+    code_suffix: item.code_suffix,
+    amount: centsToCurrency(item.amount),
+    status: item.status,
+    redeemed_at: item.redeemed_at,
     created_at: item.created_at,
   }
 }
@@ -522,6 +564,23 @@ export function fetchRouterBillingLedger(params?: RouterListParams) {
       ...response,
       data: {
         items: response.data.items.map(normalizeTransaction),
+        total: response.data.total,
+      },
+    }))
+}
+
+export function fetchVoucherRedemptions(params?: RouterListParams) {
+  return http
+    .get<RouterApiResponse<BackendPagedResponse<BackendVoucherRedemptionItem>>>(
+      '/billing/vouchers/redemptions',
+      {
+        params: toPagedParams(params),
+      }
+    )
+    .then((response) => ({
+      ...response,
+      data: {
+        items: response.data.items.map(normalizeVoucherRedemption),
         total: response.data.total,
       },
     }))

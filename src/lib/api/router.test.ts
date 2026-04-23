@@ -221,4 +221,93 @@ describe('user-service backed router console API', () => {
       })
     )
   })
+
+  it('passes transaction type to the backend and treats voucher redemptions as credits', async () => {
+    mockGet.mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: {
+        items: [
+          {
+            id: 31,
+            type: 7,
+            amount: 800,
+            balance_before: 1000,
+            balance_after: 1800,
+            ref_type: 'voucher_code',
+            ref_id: '10',
+            remark: null,
+            created_at: '2026-04-21T12:30:00Z',
+          },
+        ],
+        total: 1,
+        page: 2,
+        page_size: 25,
+      },
+    })
+
+    const { fetchRouterBillingLedger, transactionTypeMeta } = await import('./router')
+    const response = await fetchRouterBillingLedger({ limit: 25, offset: 25, type: 7 })
+
+    expect(mockGet).toHaveBeenCalledWith('/billing/transactions', {
+      params: { page: 2, page_size: 25, type: 7 },
+    })
+    expect(transactionTypeMeta(7)).toEqual(
+      expect.objectContaining({
+        label: '代金券',
+        tone: expect.stringContaining('emerald'),
+      })
+    )
+    expect(response.data.items[0]).toEqual(
+      expect.objectContaining({
+        type: 7,
+        direction: 'credit',
+        amount: 8,
+        balance_before: 10,
+        balance_after: 18,
+      })
+    )
+  })
+
+  it('maps voucher redemption history and converts amounts to yuan', async () => {
+    mockGet.mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: {
+        items: [
+          {
+            id: 40,
+            code_prefix: 'VC-A',
+            code_suffix: '0001',
+            amount: 800,
+            status: 2,
+            redeemed_at: '2026-04-22T10:00:00Z',
+            created_at: '2026-04-21T10:00:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 20,
+      },
+    })
+
+    const { fetchVoucherRedemptions } = await import('./router')
+    const response = await fetchVoucherRedemptions({ limit: 20, offset: 0 })
+
+    expect(mockGet).toHaveBeenCalledWith('/billing/vouchers/redemptions', {
+      params: { page: 1, page_size: 20 },
+    })
+    expect(response.data.items).toEqual([
+      {
+        id: 40,
+        code_prefix: 'VC-A',
+        code_suffix: '0001',
+        amount: 8,
+        status: 2,
+        redeemed_at: '2026-04-22T10:00:00Z',
+        created_at: '2026-04-21T10:00:00Z',
+      },
+    ])
+    expect(response.data.total).toBe(1)
+  })
 })
