@@ -2,12 +2,14 @@ import React from 'react'
 import '@testing-library/jest-dom'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import UsageRecordPage from './page'
-import { buildUsageRecordTimeWindow } from '@/lib/usage-record-analytics'
+import { buildUsageRecordAnalyticsWindow, buildUsageRecordTimeWindow } from '@/lib/usage-record-analytics'
 
 const mockChartRender = jest.fn()
 const mockUseRouterBalance = jest.fn()
 const mockUseRouterUsageAnalytics = jest.fn()
+const mockUseRouterUsageEvents = jest.fn()
 const mockUseRouterUsageLogs = jest.fn()
+const mockUseRouterUsageStats = jest.fn()
 const mockUseRouterKeys = jest.fn()
 
 jest.mock('next/dynamic', () => ({
@@ -44,7 +46,9 @@ jest.mock('@/hooks/useRouterKeys', () => ({
 jest.mock('@/hooks/useRouterUsage', () => ({
   useRouterBalance: () => mockUseRouterBalance(),
   useRouterUsageAnalytics: (...args: unknown[]) => mockUseRouterUsageAnalytics(...args),
+  useRouterUsageEvents: (...args: unknown[]) => mockUseRouterUsageEvents(...args),
   useRouterUsageLogs: (...args: unknown[]) => mockUseRouterUsageLogs(...args),
+  useRouterUsageStats: (...args: unknown[]) => mockUseRouterUsageStats(...args),
 }))
 
 function createAnalyticsFixture() {
@@ -151,6 +155,21 @@ describe('UsageRecordPage', () => {
 
     mockUseRouterUsageAnalytics.mockReturnValue({
       analytics: createAnalyticsFixture(),
+      isLoading: false,
+      isError: null,
+      isUnsupported: false,
+      mutate: jest.fn(),
+    })
+
+    mockUseRouterUsageStats.mockReturnValue({
+      stats: [],
+      isLoading: false,
+      isError: null,
+      mutate: jest.fn(),
+    })
+
+    mockUseRouterUsageEvents.mockReturnValue({
+      events: [],
       isLoading: false,
       isError: null,
       mutate: jest.fn(),
@@ -329,6 +348,114 @@ describe('UsageRecordPage', () => {
     )
   })
 
+  it('keeps the full page layout and uses fallback analytics when the analytics endpoint returns 404', () => {
+    mockUseRouterUsageAnalytics.mockReturnValueOnce({
+      analytics: null,
+      isLoading: false,
+      isError: { response: { status: 404 } },
+      isUnsupported: true,
+      mutate: jest.fn(),
+    })
+    mockUseRouterUsageStats.mockReturnValueOnce({
+      stats: [
+        {
+          stat_hour: '2026-04-24T09:00:00',
+          request_count: 3,
+          success_count: 2,
+          error_count: 1,
+          prompt_tokens: 300,
+          completion_tokens: 90,
+          cached_tokens: 0,
+          total_tokens: 390,
+          total_cost: 6,
+        },
+      ],
+      isLoading: false,
+      isError: null,
+      mutate: jest.fn(),
+    })
+    mockUseRouterUsageEvents.mockReturnValueOnce({
+      events: [
+        {
+          id: 1,
+          request_id: 'req-1',
+          api_key_id: 1,
+          model_name: 'auto',
+          selected_model: 'gpt-4.1-mini-2026-04-14',
+          provider_slug: 'openai',
+          prompt_tokens: 100,
+          completion_tokens: 30,
+          cached_tokens: 0,
+          total_tokens: 130,
+          cost: 1.5,
+          status: 1,
+          duration_ms: 210,
+          is_stream: false,
+          routing_tier: null,
+          config_version: null,
+          config_source: null,
+          router_trace_id: null,
+          error_code: null,
+          error_msg: null,
+          created_at: '2026-04-24T09:05:00',
+        },
+        {
+          id: 2,
+          request_id: 'req-2',
+          api_key_id: 1,
+          model_name: 'claude-3-7-sonnet-2026-02-19',
+          selected_model: null,
+          provider_slug: 'anthropic',
+          prompt_tokens: 120,
+          completion_tokens: 40,
+          cached_tokens: 0,
+          total_tokens: 160,
+          cost: 3.5,
+          status: 2,
+          duration_ms: 260,
+          is_stream: false,
+          routing_tier: null,
+          config_version: null,
+          config_source: null,
+          router_trace_id: null,
+          error_code: 'rate_limit',
+          error_msg: 'rate limited',
+          created_at: '2026-04-24T09:35:00',
+        },
+      ],
+      isLoading: false,
+      isError: null,
+      mutate: jest.fn(),
+    })
+
+    render(<UsageRecordPage />)
+
+    const analyticsWindow = buildUsageRecordAnalyticsWindow('8h', new Date('2026-04-24T16:45:00+08:00'))
+
+    expect(screen.queryByText('使用记录加载失败。')).not.toBeInTheDocument()
+    expect(screen.getByText('当前余额')).toBeInTheDocument()
+    expect(screen.getByText('使用统计')).toBeInTheDocument()
+    expect(screen.getByText('花费')).toBeInTheDocument()
+    expect(screen.getByText('成功率')).toBeInTheDocument()
+    expect(screen.getByText('费用分布')).toBeInTheDocument()
+    expect(screen.getByText('请求占比')).toBeInTheDocument()
+    expect(screen.getByText('请求排行')).toBeInTheDocument()
+    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(mockUseRouterUsageStats).toHaveBeenLastCalledWith({
+      start: analyticsWindow.start,
+      end: analyticsWindow.end,
+    })
+    expect(mockUseRouterUsageEvents).toHaveBeenLastCalledWith({
+      enabled: true,
+      start: analyticsWindow.start,
+      end: analyticsWindow.end,
+      limit: 100,
+      maxPages: 20,
+    })
+    expect(screen.getByRole('combobox', { name: '实际模型' })).toHaveTextContent('gpt-4.1-mini-2026-04-14')
+    expect(screen.getAllByTestId('usage-chart')).toHaveLength(2)
+  })
+
   it('renders empty analytics and detail states without breaking the layout', () => {
     mockUseRouterUsageAnalytics.mockReturnValueOnce({
       analytics: {
@@ -344,6 +471,7 @@ describe('UsageRecordPage', () => {
       },
       isLoading: false,
       isError: null,
+      isUnsupported: false,
       mutate: jest.fn(),
     })
     mockUseRouterUsageLogs.mockReturnValueOnce({

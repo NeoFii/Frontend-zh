@@ -765,6 +765,9 @@ export async function fetchAllRouterUsageEvents(options?: {
   key_id?: number
   limit?: number
   maxPages?: number
+  start?: string
+  end?: string
+  effective_model?: string
 }) {
   const limit = options?.limit ?? 100
   const maxPages = options?.maxPages ?? 10
@@ -776,6 +779,9 @@ export async function fetchAllRouterUsageEvents(options?: {
       key_id: options?.key_id,
       limit,
       offset,
+      start: options?.start,
+      end: options?.end,
+      effective_model: options?.effective_model,
     })
     const batch = response.data.items
     items.push(...batch)
