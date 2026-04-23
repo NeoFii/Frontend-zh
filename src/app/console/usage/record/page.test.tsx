@@ -125,6 +125,13 @@ function createLogItem(index: number) {
   }
 }
 
+function chooseSelectOption(name: string, optionLabel: string) {
+  const trigger = screen.getByRole('combobox', { name })
+  fireEvent.click(trigger)
+  expect(trigger).toHaveAttribute('aria-expanded', 'true')
+  fireEvent.click(screen.getByRole('option', { name: optionLabel }))
+}
+
 describe('UsageRecordPage', () => {
   beforeAll(() => {
     jest.useFakeTimers()
@@ -310,9 +317,7 @@ describe('UsageRecordPage', () => {
       )
     )
 
-    fireEvent.change(screen.getByLabelText('实际模型'), {
-      target: { value: 'gpt-4.1-mini-2026-04-14' },
-    })
+    chooseSelectOption('实际模型', 'gpt-4.1-mini-2026-04-14')
 
     await waitFor(() =>
       expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith(
@@ -333,9 +338,7 @@ describe('UsageRecordPage', () => {
       )
     )
 
-    fireEvent.change(screen.getByLabelText('KEY'), {
-      target: { value: '2' },
-    })
+    chooseSelectOption('KEY', '批处理 (sk-batch...)')
 
     await waitFor(() =>
       expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith(
@@ -348,7 +351,7 @@ describe('UsageRecordPage', () => {
     )
   })
 
-  it('keeps the full page layout and uses fallback analytics when the analytics endpoint returns 404', () => {
+  it('keeps the full page layout and keeps the shared filters usable when the analytics endpoint returns 404', async () => {
     mockUseRouterUsageAnalytics.mockReturnValueOnce({
       analytics: null,
       isLoading: false,
@@ -452,6 +455,18 @@ describe('UsageRecordPage', () => {
       limit: 100,
       maxPages: 20,
     })
+
+    chooseSelectOption('实际模型', 'gpt-4.1-mini-2026-04-14')
+
+    await waitFor(() =>
+      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          page: 1,
+          effectiveModel: 'gpt-4.1-mini-2026-04-14',
+        })
+      )
+    )
+
     expect(screen.getByRole('combobox', { name: '实际模型' })).toHaveTextContent('gpt-4.1-mini-2026-04-14')
     expect(screen.getAllByTestId('usage-chart')).toHaveLength(2)
   })

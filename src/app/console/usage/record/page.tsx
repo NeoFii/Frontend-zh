@@ -20,6 +20,7 @@ import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
 import ErrorBanner from '@/components/ui/ErrorBanner'
 import EmptyState from '@/components/ui/EmptyState'
 import Pagination from '@/components/ui/Pagination'
+import { Select } from '@/components/ui/Select'
 import { formatCompactNumber, formatCurrency, formatDateTime } from '@/lib/router-analytics'
 import {
   buildUsageRecordAnalyticsWindow,
@@ -177,6 +178,23 @@ export default function UsageRecordPage() {
   const modelOptions = useMemo(
     () => Array.from(new Set(analyticsData?.models.map((item) => item.effective_model) ?? [])),
     [analyticsData?.models]
+  )
+  const effectiveModelOptions = useMemo(
+    () => [
+      { value: '', label: '全部' },
+      ...modelOptions.map((item) => ({ value: item, label: item })),
+    ],
+    [modelOptions]
+  )
+  const keyOptions = useMemo(
+    () => [
+      { value: '', label: '全部' },
+      ...keys.map((item) => ({
+        value: String(item.id),
+        label: `${item.name} (${item.token_preview})`,
+      })),
+    ],
+    [keys]
   )
   const analyticsAreaLoading = !analytics && fallbackEnabled && fallbackEventsLoading
   const analyticsAreaError = !analytics && !analyticsAreaLoading && Boolean(analyticsError) && Boolean(fallbackEventsError)
@@ -486,48 +504,38 @@ export default function UsageRecordPage() {
             />
           </div>
           <div>
-            <label htmlFor="usage-record-model" className="mb-1 block text-xs text-gray-500">
+            <label id="usage-record-model-label" className="mb-1 block text-xs text-gray-500">
               实际模型
             </label>
-            <select
-              id="usage-record-model"
-              aria-label="实际模型"
+            <Select
               value={effectiveModel}
-              onChange={(event) => {
-                setEffectiveModel(event.target.value)
+              onChange={(nextValue) => {
+                setEffectiveModel(nextValue)
                 setPage(1)
               }}
-              className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-gray-950"
-            >
-              <option value="">全部</option>
-              {modelOptions.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
+              options={effectiveModelOptions}
+              className="w-full"
+              ariaLabelledBy="usage-record-model-label"
+              triggerClassName="rounded-2xl"
+              menuClassName="rounded-2xl"
+            />
           </div>
           <div>
-            <label htmlFor="usage-record-key" className="mb-1 block text-xs text-gray-500">
+            <label id="usage-record-key-label" className="mb-1 block text-xs text-gray-500">
               KEY
             </label>
-            <select
-              id="usage-record-key"
-              aria-label="KEY"
+            <Select
               value={keyId}
-              onChange={(event) => {
-                setKeyId(event.target.value)
+              onChange={(nextValue) => {
+                setKeyId(nextValue)
                 setPage(1)
               }}
-              className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-gray-950"
-            >
-              <option value="">全部</option>
-              {keys.map((item) => (
-                <option key={item.id} value={String(item.id)}>
-                  {item.name} ({item.token_preview})
-                </option>
-              ))}
-            </select>
+              options={keyOptions}
+              className="w-full"
+              ariaLabelledBy="usage-record-key-label"
+              triggerClassName="rounded-2xl"
+              menuClassName="rounded-2xl"
+            />
           </div>
           <div className="flex items-end">
             <button
