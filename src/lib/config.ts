@@ -1,4 +1,6 @@
-export const DEFAULT_USER_API_BASE_URL = 'http://localhost:8000/api/v1'
+import proxyConfig from '@/lib/proxy-config'
+
+export const DEFAULT_USER_API_BASE_URL = proxyConfig.DEFAULT_PUBLIC_API_BASE_URL
 
 // 站点配置
 export const siteConfig = {

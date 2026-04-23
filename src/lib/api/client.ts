@@ -2,6 +2,7 @@ import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { clearAllTokens, getAccessToken, isAccessTokenExpiringSoon, setAccessToken } from '@/lib/token'
 import { DEFAULT_USER_API_BASE_URL } from '@/lib/config'
+import proxyConfig from '@/lib/proxy-config'
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean
@@ -126,7 +127,7 @@ export function createApiClient(
   }
 ): AxiosInstance {
   const refreshBaseURL =
-    options?.refreshBaseURL || process.env.NEXT_PUBLIC_API_BASE_URL || DEFAULT_USER_API_BASE_URL
+    options?.refreshBaseURL || proxyConfig.resolvePublicApiBaseUrl() || DEFAULT_USER_API_BASE_URL
   const apiClient = axios.create({
     baseURL,
     timeout: 10000,

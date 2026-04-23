@@ -1,5 +1,6 @@
 ﻿import path from 'path'
 import { fileURLToPath } from 'url'
+import proxyConfig from './src/lib/proxy-config.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const useStandalone = process.env.NEXT_STANDALONE === 'true'
@@ -7,7 +8,6 @@ const imageHostnames = (process.env.NEXT_PUBLIC_IMAGE_HOSTS || 'eucal.ai,www.euc
   .split(',')
   .map((item) => item.trim())
   .filter(Boolean)
-const isDevelopment = process.env.NODE_ENV !== 'production'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -28,9 +28,7 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   async rewrites() {
-    const apiUrl = process.env.API_URL || (isDevelopment ? 'http://127.0.0.1:8000' : '')
-    const testingApiUrl = process.env.TESTING_API_URL || (isDevelopment ? 'http://127.0.0.1:8002' : '')
-    const routerApiUrl = process.env.ROUTER_API_URL || (isDevelopment ? 'http://127.0.0.1:8003' : '')
+    const { apiUrl, testingApiUrl, routerApiUrl } = proxyConfig.resolveProxyTargets()
     const rewrites = []
 
     if (testingApiUrl) {

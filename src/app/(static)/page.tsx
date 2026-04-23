@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef, type Dispatch, type SetStateAction } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/hooks/useUser'
 import Reveal from '@/components/Reveal'
 import { useAuthStore } from '@/stores/auth'
 import Image from 'next/image'
-import Chart from 'chart.js/auto'
 
 const BASE_URL = 'https://api.eucal.ai/v1/chat/completions'
 
@@ -34,18 +33,6 @@ export default function Home() {
 
   const [copied, setCopied] = useState(false)
   const [typedText, setTypedText] = useState('')
-
-  // 图表和数值动画 Refs
-  const chartCanvasRef1 = useRef<HTMLCanvasElement>(null)
-  const chartCanvasRef2 = useRef<HTMLCanvasElement>(null)
-  const statsRef = useRef<HTMLDivElement>(null)
-
-  // 使用 ref 保存 chart 实例，防止 React 严格模式导致二次渲染画布报错
-  const priceChartRef = useRef<Chart | null>(null)
-  const lifecycleChartRef = useRef<Chart | null>(null)
-
-  const [oldCost, setOldCost] = useState(0)
-  const [newCost, setNewCost] = useState(0)
 
   const handleCtaClick = () => {
     const targetUrl = isLoggedIn ? '/console/account/basic-information' : '/login'
@@ -95,80 +82,6 @@ export default function Home() {
 
     timer = setTimeout(type, 1000)
     return () => clearTimeout(timer)
-  }, [])
-
-  useEffect(() => {
-    const dataOld = [12.5, 18.2, 25.5, 10.8]
-    const dataNew = [2.5, 18.0, 4.2, 1.5]
-    const sumOld = dataOld.reduce((a, b) => a + b, 0)
-    const sumNew = dataNew.reduce((a, b) => a + b, 0)
-
-    const animateValue = (setter: Dispatch<SetStateAction<number>>, end: number, duration: number) => {
-      let startTimestamp: number | null = null
-      const step = (timestamp: number) => {
-        if (!startTimestamp) startTimestamp = timestamp
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1)
-        const easeOut = 1 - Math.pow(1 - progress, 4)
-        setter(Number((easeOut * end).toFixed(2)))
-        if (progress < 1) window.requestAnimationFrame(step)
-      }
-      window.requestAnimationFrame(step)
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          document.querySelectorAll<HTMLElement>('.progress-bar-custom').forEach((bar) => {
-            const width = bar.dataset.width
-            if (width) {
-              bar.style.width = width
-            }
-          })
-
-          if (chartCanvasRef1.current) {
-            if (priceChartRef.current) priceChartRef.current.destroy()
-            priceChartRef.current = new Chart(chartCanvasRef1.current, {
-              type: 'bar',
-              data: {
-                labels: ['GPT-4o', 'Gemini 1.5', 'DeepSeek-V3', '豆包 Pro'],
-                datasets: [
-                  { label: '输入价格', data: [5.0, 3.5, 0.14, 0.08], backgroundColor: 'rgba(59, 130, 246, 0.8)', borderRadius: 4 },
-                  { label: '输出价格', data: [15.0, 10.5, 0.28, 0.16], backgroundColor: 'rgba(139, 92, 246, 0.8)', borderRadius: 4 }
-                ]
-              },
-              options: { responsive: true, maintainAspectRatio: false, scales: { y: { stacked: true }, x: { stacked: true, grid: { display: false } } } }
-            })
-          }
-
-          if (chartCanvasRef2.current) {
-            if (lifecycleChartRef.current) lifecycleChartRef.current.destroy()
-            lifecycleChartRef.current = new Chart(chartCanvasRef2.current, {
-              type: 'line',
-              data: {
-                labels: ['需求文档', '架构设计', '业务编码', '营销文案'],
-                datasets: [
-                  { label: '单一昂贵大模型', data: dataOld, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.05)', borderWidth: 2, borderDash: [5, 5], pointBackgroundColor: '#ef4444', fill: true, tension: 0.4 },
-                  { label: 'Nexus 自适应 API', data: dataNew, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.15)', borderWidth: 3, pointBackgroundColor: '#10b981', fill: true, tension: 0.4 }
-                ]
-              },
-              options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
-            })
-          }
-
-          animateValue(setOldCost, sumOld, 2000)
-          animateValue(setNewCost, sumNew, 2000)
-          observer.unobserve(entry.target)
-        }
-      })
-    }, { threshold: 0.2 })
-
-    if (statsRef.current) observer.observe(statsRef.current)
-
-    return () => {
-      if (priceChartRef.current) priceChartRef.current.destroy()
-      if (lifecycleChartRef.current) lifecycleChartRef.current.destroy()
-      observer.disconnect()
-    }
   }, [])
 
   return (
@@ -464,65 +377,6 @@ export default function Home() {
                     <span className="font-bold text-slate-700 whitespace-nowrap">{p.name}</span>
                   </div>
                 ))}
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section id="benchmarks" className="py-24 relative border-t border-slate-200/60" ref={statsRef}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="text-center mb-16">
-              <span className="text-[#2563eb] font-semibold tracking-wider text-sm uppercase mb-2 block">Provider Benchmarks</span>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-slate-900">让数据说话，揭示真实优劣</h2>
-              <p className="text-slate-500 text-lg max-w-2xl mx-auto">监控全网主流厂商的实时性能，作为自动路由和故障转移的重要依据。</p>
-            </div>
-          </Reveal>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            <Reveal delay={100}>
-              <div className="glass-card p-6 sm:p-8 bg-white">
-                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#3b82f6]"><path fillRule="evenodd" d="M12.963 2.286a.75.75 0 00-1.071-.136 9.742 9.742 0 00-3.539 6.177A7.547 7.547 0 016.648 6.61a.75.75 0 00-1.152-.082A9 9 0 1015.68 4.534a7.46 7.46 0 01-2.717-2.248zM15.75 14.25a3.75 3.75 0 11-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 011.925-3.545 3.75 3.75 0 013.255 3.717z" clipRule="evenodd" /></svg>
-                  平均生成速度 (Tokens/s)
-                </h3>
-                <div className="space-y-5">
-                  {[{ n: 'DeepSeek-V3', v: 85, c: 'bg-[#4d6bfe]' }, { n: '豆包 Doubao-Pro', v: 90, c: 'bg-[#ff7d00]' }, { n: 'Gemini 1.5 Pro', v: 60, c: 'bg-[#1a73e8]' }, { n: 'GPT-4o', v: 55, c: 'bg-[#10a37f]' }].map(item => (
-                    <div key={item.n} className="relative">
-                      <div className="flex justify-between text-sm mb-1"><span className="font-medium text-slate-700">{item.n}</span><span className="text-slate-500 font-mono">{item.v} t/s</span></div>
-                      <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                        <div className={`${item.c} h-2.5 rounded-full progress-bar-custom w-0`} data-width={`${item.v}%`}></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-
-            <Reveal delay={200}>
-              <div className="glass-card p-6 sm:p-8 bg-white h-full flex flex-col">
-                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#3b82f6]"><path d="M12 7.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" /><path fillRule="evenodd" d="M1.5 4.875C1.5 3.839 2.34 3 3.375 3h17.25c1.035 0 1.875.84 1.875 1.875v9.75c0 1.036-.84 1.875-1.875 1.875H3.375A1.875 1.875 0 011.5 14.625v-9.75zM8.25 9.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM18.75 9a.75.75 0 00-.75.75v.008c0 .414.336.75.75.75h.008a.75.75 0 00.75-.75V9.75a.75.75 0 00-.75-.75h-.008zM4.5 9.75A.75.75 0 015.25 9h.008a.75.75 0 01.75.75v.008a.75.75 0 01-.75.75H5.25a.75.75 0 01-.75-.75V9.75z" clipRule="evenodd" /><path d="M2.25 18a.75.75 0 000 1.5c5.4 0 10.63.722 15.6 2.075 1.19.324 2.4-.558 2.4-1.82V18.75a.75.75 0 00-.75-.75H2.25z" /></svg>
-                  API 价格对比 ($ / 1M Tokens)
-                </h3>
-                <div className="relative flex-1 w-full min-h-[250px]"><canvas ref={chartCanvasRef1}></canvas></div>
-              </div>
-            </Reveal>
-          </div>
-
-          <Reveal delay={300}>
-            <div className="bg-white rounded-2xl p-6 sm:p-10 border border-slate-200 shadow-sm">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-center">
-                <div className="lg:col-span-1">
-                  <h3 className="text-2xl font-bold text-slate-900 mb-4">综合项目成本模拟</h3>
-                  <p className="text-slate-500 mb-6 text-sm">以开发一个“AI 导购小程序”为例，涵盖从架构设计到描述生成全流程（约 500万 Tokens）。</p>
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-lg bg-red-50 border border-red-100"><div className="text-xs text-red-500 font-bold mb-1">单一昂贵模型</div><div className="text-2xl font-extrabold text-red-600 flex items-baseline gap-1"><span>$</span><span>{oldCost.toFixed(2)}</span></div></div>
-                    <div className="p-4 rounded-lg bg-green-50 border border-green-100 relative overflow-hidden"><div className="text-xs text-green-600 font-bold mb-1">使用自适应动态路由</div><div className="text-3xl font-extrabold text-green-600 flex items-baseline gap-1"><span>$</span><span>{newCost.toFixed(2)}</span></div><div className="absolute right-4 top-1/2 -translate-y-1/2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-md animate-pulse">省 82%</div></div>
-                  </div>
-                </div>
-                <div className="lg:col-span-2 relative h-[300px] w-full"><canvas ref={chartCanvasRef2}></canvas></div>
               </div>
             </div>
           </Reveal>

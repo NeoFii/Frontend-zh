@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
 import { extractErrorMessage } from '@/lib/error'
 import { apiKeyStatusMeta } from '@/lib/api/router'
+import proxyConfig from '@/lib/proxy-config'
 import {
   formatDateTime,
 } from '@/lib/router-analytics'
@@ -20,15 +21,6 @@ interface DialogState {
   allowed_models: string
   allow_ips: string
   expires_at: string
-}
-
-function resolveRouterOpenAIBaseUrl() {
-  const configuredBaseUrl = process.env.NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL?.trim()
-  if (configuredBaseUrl) {
-    return configuredBaseUrl.replace(/\/+$/, '')
-  }
-
-  return 'http://localhost:8003/v1'
 }
 
 function IconButton(props: {
@@ -246,7 +238,7 @@ export default function GetApiPage() {
   const [revealedKey, setRevealedKey] = useState<string | null>(null)
 
   useEffect(() => {
-    setBaseUrl(resolveRouterOpenAIBaseUrl())
+    setBaseUrl(proxyConfig.resolveRouterOpenAIBaseUrl())
   }, [])
 
   const visibleKeys = useMemo(() => [...keys].sort((left, right) => left.id - right.id), [keys])

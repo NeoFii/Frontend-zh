@@ -41,6 +41,8 @@ interface BackendUsageLogItem {
   request_id: string
   api_key_id: number | null
   model_name: string
+  selected_model: string | null
+  provider_slug: string | null
   prompt_tokens: number
   completion_tokens: number
   cached_tokens: number
@@ -49,6 +51,10 @@ interface BackendUsageLogItem {
   status: number
   duration_ms: number | null
   is_stream: boolean
+  routing_tier: number | null
+  config_version: number | null
+  config_source: string | null
+  router_trace_id: string | null
   error_code: string | null
   error_msg: string | null
   created_at: string
@@ -151,6 +157,8 @@ export interface RouterUsageEvent {
   request_id: string
   api_key_id: number | null
   model_name: string
+  selected_model: string | null
+  provider_slug: string | null
   prompt_tokens: number
   completion_tokens: number
   cached_tokens: number
@@ -160,6 +168,10 @@ export interface RouterUsageEvent {
   status: number
   duration_ms: number | null
   is_stream: boolean
+  routing_tier: number | null
+  config_version: number | null
+  config_source: string | null
+  router_trace_id: string | null
   error_code: string | null
   error_msg: string | null
   created_at: string
@@ -326,6 +338,8 @@ function normalizeUsageLog(item: BackendUsageLogItem): RouterUsageEvent {
     request_id: item.request_id,
     api_key_id: item.api_key_id,
     model_name: item.model_name,
+    selected_model: item.selected_model,
+    provider_slug: item.provider_slug,
     prompt_tokens: item.prompt_tokens,
     completion_tokens: item.completion_tokens,
     cached_tokens: item.cached_tokens,
@@ -334,6 +348,10 @@ function normalizeUsageLog(item: BackendUsageLogItem): RouterUsageEvent {
     status: item.status,
     duration_ms: item.duration_ms,
     is_stream: item.is_stream,
+    routing_tier: item.routing_tier,
+    config_version: item.config_version,
+    config_source: item.config_source,
+    router_trace_id: item.router_trace_id,
     error_code: item.error_code,
     error_msg: item.error_msg,
     created_at: item.created_at,
@@ -550,4 +568,28 @@ export async function fetchAllRouterUsageEvents(options?: {
   }
 
   return items
+}
+
+export interface VoucherRedeemResult {
+  id: number
+  amount: number
+  status: number
+  redeemed_at: string | null
+}
+
+export function redeemVoucher(code: string) {
+  return http
+    .post<RouterApiResponse<{ id: number; amount: number; status: number; redeemed_at: string | null }>>(
+      '/billing/vouchers/redeem',
+      { code }
+    )
+    .then((response) => ({
+      ...response,
+      data: {
+        id: response.data.id,
+        amount: centsToCurrency(response.data.amount),
+        status: response.data.status,
+        redeemed_at: response.data.redeemed_at,
+      } as VoucherRedeemResult,
+    }))
 }

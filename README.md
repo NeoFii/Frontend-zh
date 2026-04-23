@@ -63,17 +63,20 @@ cp .env.example .env
 根据实际后端地址修改 `.env`：
 
 ```env
-# 主 API（认证、用户）
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+# 浏览器侧统一走同源代理
+NEXT_PUBLIC_API_BASE_URL=/api/v1
+NEXT_PUBLIC_TESTING_API_URL=/testing-api
+NEXT_PUBLIC_TESTING_API_BASE_URL=/testing-api
+NEXT_PUBLIC_ROUTER_API_BASE_URL=/router-api/api/v1
+NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL=/router-api/v1
+
+# Next.js 服务端反代到本机后端
 API_URL=http://127.0.0.1:8000
-
-# Router API（API Key、计费、用量）
-NEXT_PUBLIC_ROUTER_API_BASE_URL=http://localhost:8003/api/v1
+TESTING_API_URL=http://127.0.0.1:8002
 ROUTER_API_URL=http://127.0.0.1:8003
-
-# 模型目录 API
-NEXT_PUBLIC_TESTING_API_URL=http://localhost:8002
 ```
+
+生产模式下只需要对外暴露前端端口；浏览器访问 `/api`、`/testing-api`、`/router-api` 时会由 Next.js 转发到本机后端服务。
 
 ### 4. 启动开发服务器
 

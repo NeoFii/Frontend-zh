@@ -589,6 +589,8 @@ export default function UsageRecordPage() {
                   <tr className="border-b border-gray-100 text-gray-400">
                     <th className="px-3 py-3 font-normal">时间</th>
                     <th className="px-3 py-3 font-normal">模型</th>
+                    <th className="px-3 py-3 font-normal">实际模型</th>
+                    <th className="px-3 py-3 font-normal">服务商</th>
                     <th className="px-3 py-3 font-normal">Tokens</th>
                     <th className="px-3 py-3 font-normal">费用</th>
                     <th className="px-3 py-3 font-normal">耗时</th>
@@ -600,6 +602,8 @@ export default function UsageRecordPage() {
                     <tr key={event.id} className="border-b border-gray-50 text-gray-700">
                       <td className="px-3 py-3">{formatDateTime(event.created_at)}</td>
                       <td className="px-3 py-3">{event.model_name}</td>
+                      <td className="px-3 py-3">{event.selected_model || '-'}</td>
+                      <td className="px-3 py-3">{event.provider_slug || '-'}</td>
                       <td className="px-3 py-3">{formatCompactNumber(event.total_tokens)}</td>
                       <td className="px-3 py-3">{formatCurrency(event.cost, dashboard.currency)}</td>
                       <td className="px-3 py-3">{event.duration_ms != null ? `${event.duration_ms}ms` : '-'}</td>

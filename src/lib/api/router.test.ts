@@ -102,6 +102,8 @@ describe('user-service backed router console API', () => {
             request_id: 'req-1',
             api_key_id: 10,
             model_name: 'gpt-4o',
+            selected_model: 'gpt-4o-2024-08-06',
+            provider_slug: 'openai',
             prompt_tokens: 100,
             completion_tokens: 50,
             cached_tokens: 0,
@@ -110,6 +112,10 @@ describe('user-service backed router console API', () => {
             status: 200,
             duration_ms: 345,
             is_stream: false,
+            routing_tier: 1,
+            config_version: 3,
+            config_source: 'db',
+            router_trace_id: 'trace-abc',
             error_code: null,
             error_msg: null,
             created_at: '2026-04-21T11:00:00Z',
@@ -131,10 +137,16 @@ describe('user-service backed router console API', () => {
       expect.objectContaining({
         api_key_id: 10,
         model_name: 'gpt-4o',
+        selected_model: 'gpt-4o-2024-08-06',
+        provider_slug: 'openai',
         total_tokens: 150,
         cost: 1.23,
         status: 200,
         duration_ms: 345,
+        routing_tier: 1,
+        config_version: 3,
+        config_source: 'db',
+        router_trace_id: 'trace-abc',
       })
     )
   })
