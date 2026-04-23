@@ -26,7 +26,6 @@ type ApiError = {
 }
 
 type FormData = {
-  invitationCode: string
   email: string
   code: string
   password: string
@@ -44,7 +43,6 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
   const [codeLoading, setCodeLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState<FormData>({
-    invitationCode: '',
     email: '',
     code: '',
     password: '',
@@ -91,11 +89,6 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
   }
 
   const validateForm = (): boolean => {
-    if (!form.invitationCode.trim()) {
-      setError('请输入邀请码')
-      return false
-    }
-
     if (!form.email) {
       setError('请先输入邮箱')
       return false
@@ -143,7 +136,6 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
 
     try {
       const res = await register({
-        invitation_code: form.invitationCode.trim(),
         email: form.email,
         verification_code: form.code,
         password: form.password,
@@ -180,27 +172,11 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
     <div>
       <div className="mb-7">
         <h1 className="mb-2 text-[28px] font-semibold tracking-[-0.015em] text-[#111827]">创建账户</h1>
-        <p className="m-0 text-sm text-[#6b7280]">使用邀请码开通你的 TierFlow 控制台。</p>
+        <p className="m-0 text-sm text-[#6b7280]">通过邮箱注册你的 TierFlow 控制台。</p>
       </div>
 
       <form onSubmit={handleRegister} className="space-y-4">
         <FormAlert error={error} />
-
-        <div>
-          <label htmlFor="invitationCode" className={labelClass}>
-            {'邀请码'}
-          </label>
-          <input
-            id="invitationCode"
-            name="invitationCode"
-            type="text"
-            required
-            value={form.invitationCode}
-            onChange={handleChange}
-            className={inputClass}
-            placeholder={'请输入邀请码'}
-          />
-        </div>
 
         <div>
           <label htmlFor="email" className={labelClass}>

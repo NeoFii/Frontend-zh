@@ -20,8 +20,7 @@ describe('RegisterForm', () => {
     render(React.createElement(RegisterForm))
 
     expect(screen.getByRole('heading', { name: '创建账户' })).toBeInTheDocument()
-    expect(screen.getByText('使用邀请码开通你的 TierFlow 控制台。')).toBeInTheDocument()
-    expect(screen.getByLabelText('邀请码')).toHaveAttribute('placeholder', '请输入邀请码')
+    expect(screen.getByText('通过邮箱注册你的 TierFlow 控制台。')).toBeInTheDocument()
     expect(screen.getByLabelText('邮箱')).toHaveAttribute('placeholder', '请输入邮箱')
     expect(screen.getByLabelText('验证码')).toHaveAttribute('placeholder', '请输入验证码')
     expect(screen.getByLabelText('密码')).toHaveAttribute('placeholder', '请设置密码（至少8位，含大小写字母、数字和特殊符号）')
@@ -34,7 +33,6 @@ describe('RegisterForm', () => {
   it('blocks registration when password misses the backend complexity rules', () => {
     render(React.createElement(RegisterForm))
 
-    fireEvent.change(screen.getByLabelText('邀请码'), { target: { value: 'invite-live' } })
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'user@example.com' } })
     fireEvent.change(screen.getByLabelText('验证码'), { target: { value: '123456' } })
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'Password1' } })

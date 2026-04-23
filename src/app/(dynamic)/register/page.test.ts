@@ -15,7 +15,7 @@ describe('Register page', () => {
     render(React.createElement(Register))
 
     expect(screen.getAllByText('TierFlow').length).toBeGreaterThan(0)
-    expect(screen.getByRole('heading', { name: '用邀请制开通 TierFlow 账户' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '开通 TierFlow 账户' })).toBeInTheDocument()
     expect(screen.getByText('已有账户？')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '登录' })).toHaveAttribute('href', '/login')
     expect(screen.getByText('Secure signup')).toBeInTheDocument()

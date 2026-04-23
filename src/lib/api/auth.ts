@@ -7,7 +7,6 @@ export interface LoginParams {
 }
 
 export interface RegisterParams {
-  invitation_code: string
   email: string
   verification_code: string
   password: string
