@@ -8,7 +8,13 @@ import { BarChart, PieChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
 import type { RouterUsageAnalyticsRange } from '@/lib/api/router'
-import { useRouterBalance, useRouterUsageAnalytics, useRouterUsageLogs } from '@/hooks/useRouterUsage'
+import {
+  useRouterBalance,
+  useRouterUsageAnalytics,
+  useRouterUsageEvents,
+  useRouterUsageLogs,
+  useRouterUsageStats,
+} from '@/hooks/useRouterUsage'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
 import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
 import ErrorBanner from '@/components/ui/ErrorBanner'
@@ -16,7 +22,10 @@ import EmptyState from '@/components/ui/EmptyState'
 import Pagination from '@/components/ui/Pagination'
 import { formatCompactNumber, formatCurrency, formatDateTime } from '@/lib/router-analytics'
 import {
+  buildUsageRecordAnalyticsWindow,
   buildUsageRecordAnalyticsViewModel,
+  buildUsageRecordFallbackAnalytics,
+  buildUsageRecordFallbackOverview,
   buildUsageRecordTimeWindow,
   normalizeSuccessRateToPercent,
   resolveUsageEventEffectiveModel,
@@ -65,6 +74,10 @@ function PanelEmptyState(props: { title: string }) {
   )
 }
 
+function PanelLoadingState() {
+  return <div className="h-[320px] animate-pulse rounded-2xl bg-gray-100" />
+}
+
 function isSuccessStatus(status: number) {
   return status === 1 || status === 200
 }
@@ -77,11 +90,41 @@ export default function UsageRecordPage() {
   const [endInput, setEndInput] = useState(initialWindow.endInput)
   const [effectiveModel, setEffectiveModel] = useState('')
   const [keyId, setKeyId] = useState('')
+  const analyticsWindow = useMemo(() => buildUsageRecordAnalyticsWindow(range), [range])
 
   const { balance, isLoading: balanceLoading, isError: balanceError, mutate: mutateBalance } = useRouterBalance()
-  const { analytics, isLoading: analyticsLoading, isError: analyticsError, mutate: mutateAnalytics } =
-    useRouterUsageAnalytics(range)
+  const {
+    analytics,
+    isLoading: analyticsLoading,
+    isError: analyticsError,
+    isUnsupported: analyticsUnsupported,
+    mutate: mutateAnalytics,
+  } = useRouterUsageAnalytics(range)
   const { keys, isLoading: keysLoading, isError: keysError, mutate: mutateKeys } = useRouterKeys()
+  const fallbackEnabled = analyticsUnsupported || Boolean(analyticsError)
+  const {
+    stats: fallbackStats,
+    mutate: mutateFallbackStats,
+  } = useRouterUsageStats(
+    fallbackEnabled
+      ? {
+          start: analyticsWindow.start,
+          end: analyticsWindow.end,
+        }
+      : undefined
+  )
+  const {
+    events: fallbackEvents,
+    isLoading: fallbackEventsLoading,
+    isError: fallbackEventsError,
+    mutate: mutateFallbackEvents,
+  } = useRouterUsageEvents({
+    enabled: fallbackEnabled,
+    start: analyticsWindow.start,
+    end: analyticsWindow.end,
+    limit: 100,
+    maxPages: 20,
+  })
 
   useEffect(() => {
     const nextWindow = buildUsageRecordTimeWindow(range)
@@ -105,18 +148,38 @@ export default function UsageRecordPage() {
   const { items: logItems, total: logTotal, isLoading: logsLoading, isError: logsError, mutate: mutateLogs } =
     useRouterUsageLogs(logsFilter)
 
-  const analyticsViewModel = useMemo(() => buildUsageRecordAnalyticsViewModel(analytics), [analytics])
-  const currency = analytics?.currency || balance?.currency || 'CNY'
-  const successRate = normalizeSuccessRateToPercent(analytics?.overview.success_rate ?? 0)
+  const fallbackOverview = useMemo(
+    () => buildUsageRecordFallbackOverview(fallbackStats, fallbackEvents),
+    [fallbackEvents, fallbackStats]
+  )
+  const fallbackAnalytics = useMemo(() => {
+    if (!fallbackEnabled || fallbackEventsLoading || fallbackEventsError) {
+      return null
+    }
+
+    return buildUsageRecordFallbackAnalytics({
+      range,
+      stats: fallbackStats,
+      events: fallbackEvents,
+      currency: balance?.currency || 'CNY',
+    })
+  }, [balance?.currency, fallbackEnabled, fallbackEvents, fallbackEventsError, fallbackEventsLoading, fallbackStats, range])
+  const analyticsData = analytics ?? fallbackAnalytics
+  const analyticsViewModel = useMemo(() => buildUsageRecordAnalyticsViewModel(analyticsData), [analyticsData])
+  const currency = analyticsData?.currency || balance?.currency || 'CNY'
+  const summaryOverview = analyticsData?.overview ?? fallbackOverview
+  const successRate = normalizeSuccessRateToPercent(summaryOverview.success_rate)
   const totalPages = Math.ceil(logTotal / 20)
   const keyMap = useMemo(
     () => new Map(keys.map((item) => [item.id, `${item.name} (${item.token_preview})`])),
     [keys]
   )
   const modelOptions = useMemo(
-    () => Array.from(new Set(analytics?.models.map((item) => item.effective_model) ?? [])),
-    [analytics?.models]
+    () => Array.from(new Set(analyticsData?.models.map((item) => item.effective_model) ?? [])),
+    [analyticsData?.models]
   )
+  const analyticsAreaLoading = !analytics && fallbackEnabled && fallbackEventsLoading
+  const analyticsAreaError = !analytics && !analyticsAreaLoading && Boolean(analyticsError) && Boolean(fallbackEventsError)
 
   const stackedBarOption = useMemo(
     () => ({
@@ -225,7 +288,7 @@ export default function UsageRecordPage() {
     )
   }
 
-  if (balanceError || analyticsError || keysError) {
+  if (balanceError || keysError) {
     return (
       <ErrorBanner
         message="使用记录加载失败。"
@@ -284,12 +347,12 @@ export default function UsageRecordPage() {
         />
         <SummaryCard
           label="使用统计"
-          value={formatCompactNumber(analytics?.overview.total_requests ?? 0)}
-          hint={`成功 ${formatCompactNumber(analytics?.overview.success_requests ?? 0)} 次`}
+          value={formatCompactNumber(summaryOverview.total_requests)}
+          hint={`成功 ${formatCompactNumber(summaryOverview.success_requests)} 次`}
         />
         <SummaryCard
           label="花费"
-          value={formatCurrency(analytics?.overview.total_cost ?? 0, currency)}
+          value={formatCurrency(summaryOverview.total_cost, currency)}
           hint={`${range} 内累计消费`}
         />
         <SummaryCard
@@ -301,7 +364,18 @@ export default function UsageRecordPage() {
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr_1fr]">
         <PanelShell title="费用分布" description="按时间桶查看各实际模型的花费堆叠。">
-          {analyticsViewModel.hasData ? (
+          {analyticsAreaLoading ? (
+            <PanelLoadingState />
+          ) : analyticsAreaError ? (
+            <ErrorBanner
+              message="模型分析暂时不可用。"
+              onRetry={() => {
+                void mutateAnalytics()
+                void mutateFallbackStats()
+                void mutateFallbackEvents()
+              }}
+            />
+          ) : analyticsViewModel.hasData ? (
             <ReactECharts option={stackedBarOption} style={{ height: '320px', width: '100%' }} />
           ) : (
             <PanelEmptyState title="所选时间范围暂无模型花费分布" />
@@ -309,7 +383,18 @@ export default function UsageRecordPage() {
         </PanelShell>
 
         <PanelShell title="请求占比" description="按请求量观察模型份额结构。">
-          {analyticsViewModel.hasData ? (
+          {analyticsAreaLoading ? (
+            <PanelLoadingState />
+          ) : analyticsAreaError ? (
+            <ErrorBanner
+              message="模型分析暂时不可用。"
+              onRetry={() => {
+                void mutateAnalytics()
+                void mutateFallbackStats()
+                void mutateFallbackEvents()
+              }}
+            />
+          ) : analyticsViewModel.hasData ? (
             <ReactECharts option={donutOption} style={{ height: '320px', width: '100%' }} />
           ) : (
             <PanelEmptyState title="所选时间范围暂无模型请求占比" />
@@ -317,7 +402,18 @@ export default function UsageRecordPage() {
         </PanelShell>
 
         <PanelShell title="请求排行" description="同一颜色映射在三张分析卡中保持一致。">
-          {analyticsViewModel.hasData ? (
+          {analyticsAreaLoading ? (
+            <PanelLoadingState />
+          ) : analyticsAreaError ? (
+            <ErrorBanner
+              message="模型分析暂时不可用。"
+              onRetry={() => {
+                void mutateAnalytics()
+                void mutateFallbackStats()
+                void mutateFallbackEvents()
+              }}
+            />
+          ) : analyticsViewModel.hasData ? (
             <div className="space-y-3">
               {analyticsViewModel.ranking.map((item, index) => (
                 <div

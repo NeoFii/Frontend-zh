@@ -1,4 +1,10 @@
-import type { RouterUsageAnalytics, RouterUsageAnalyticsRange, RouterUsageEvent } from '@/lib/api/router'
+import type {
+  RouterUsageAnalytics,
+  RouterUsageAnalyticsOverview,
+  RouterUsageAnalyticsRange,
+  RouterUsageEvent,
+  RouterUsageStat,
+} from '@/lib/api/router'
 
 const MODEL_COLOR_PALETTE = ['#0f172a', '#2563eb', '#ea580c', '#059669', '#7c3aed', '#dc2626', '#0891b2', '#ca8a04']
 const OTHER_MODEL_LABEL = '其他'
@@ -12,6 +18,12 @@ export interface UsageRecordTimeWindow {
   end: string
   startInput: string
   endInput: string
+}
+
+export interface UsageRecordAnalyticsWindow {
+  start: string
+  end: string
+  granularity: 'hour' | 'day'
 }
 
 export interface UsageRecordModelBreakdown {
@@ -43,6 +55,18 @@ export interface UsageRecordAnalyticsViewModel {
 function truncateToMinute(date: Date) {
   const next = new Date(date)
   next.setSeconds(0, 0)
+  return next
+}
+
+function truncateToHour(date: Date) {
+  const next = new Date(date)
+  next.setMinutes(0, 0, 0)
+  return next
+}
+
+function truncateToDay(date: Date) {
+  const next = new Date(date)
+  next.setHours(0, 0, 0, 0)
   return next
 }
 
@@ -85,6 +109,62 @@ function sumCostByModel(
   }, 0)
 }
 
+function isUsageEventSuccess(status: number) {
+  return status === 1 || status === 200
+}
+
+function addGranularity(date: Date, granularity: UsageRecordAnalyticsWindow['granularity']) {
+  return granularity === 'hour' ? addHours(date, 1) : addDays(date, 1)
+}
+
+function toAnalyticsBucketStart(value: Date, granularity: UsageRecordAnalyticsWindow['granularity']) {
+  return granularity === 'hour' ? truncateToHour(value) : truncateToDay(value)
+}
+
+function formatAnalyticsBucketLabel(value: Date, granularity: UsageRecordAnalyticsWindow['granularity']) {
+  if (granularity === 'hour') {
+    return `${pad2(value.getHours())}:00`
+  }
+
+  return `${pad2(value.getMonth() + 1)}-${pad2(value.getDate())}`
+}
+
+function buildUsageRecordOverviewFromStats(stats: RouterUsageStat[]): RouterUsageAnalyticsOverview {
+  return stats.reduce<RouterUsageAnalyticsOverview>(
+    (overview, item) => {
+      overview.total_requests += item.request_count
+      overview.success_requests += item.success_count
+      overview.total_cost += item.total_cost
+      overview.success_rate = overview.total_requests > 0 ? overview.success_requests / overview.total_requests : 0
+      return overview
+    },
+    {
+      total_requests: 0,
+      success_requests: 0,
+      success_rate: 0,
+      total_cost: 0,
+    }
+  )
+}
+
+function buildUsageRecordOverviewFromEvents(events: RouterUsageEvent[]): RouterUsageAnalyticsOverview {
+  return events.reduce<RouterUsageAnalyticsOverview>(
+    (overview, item) => {
+      overview.total_requests += 1
+      overview.success_requests += isUsageEventSuccess(item.status) ? 1 : 0
+      overview.total_cost += item.cost
+      overview.success_rate = overview.total_requests > 0 ? overview.success_requests / overview.total_requests : 0
+      return overview
+    },
+    {
+      total_requests: 0,
+      success_requests: 0,
+      success_rate: 0,
+      total_cost: 0,
+    }
+  )
+}
+
 export function buildUsageRecordTimeWindow(
   range: RouterUsageAnalyticsRange,
   now: Date = new Date()
@@ -113,6 +193,39 @@ export function buildUsageRecordTimeWindow(
   }
 }
 
+export function buildUsageRecordAnalyticsWindow(
+  range: RouterUsageAnalyticsRange,
+  now: Date = new Date()
+): UsageRecordAnalyticsWindow {
+  switch (range) {
+    case '8h': {
+      const endDate = addHours(truncateToHour(now), 1)
+      const startDate = addHours(endDate, -8)
+      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'hour' }
+    }
+    case '24h': {
+      const endDate = addHours(truncateToHour(now), 1)
+      const startDate = addHours(endDate, -24)
+      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'hour' }
+    }
+    case '7d': {
+      const endDate = addDays(truncateToDay(now), 1)
+      const startDate = addDays(endDate, -7)
+      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'day' }
+    }
+    case '30d': {
+      const endDate = addDays(truncateToDay(now), 1)
+      const startDate = addDays(endDate, -30)
+      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'day' }
+    }
+    default: {
+      const endDate = addHours(truncateToHour(now), 1)
+      const startDate = addHours(endDate, -8)
+      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'hour' }
+    }
+  }
+}
+
 export function toUsageRecordQueryValue(value: string | undefined) {
   if (!value) {
     return undefined
@@ -135,6 +248,106 @@ export function normalizeSuccessRateToPercent(value: number) {
     return 0
   }
   return value <= 1 ? value * 100 : value
+}
+
+export function buildUsageRecordFallbackOverview(
+  stats: RouterUsageStat[] = [],
+  events: RouterUsageEvent[] = []
+): RouterUsageAnalyticsOverview {
+  const statsOverview = buildUsageRecordOverviewFromStats(stats)
+  if (statsOverview.total_requests > 0 || statsOverview.total_cost > 0) {
+    return statsOverview
+  }
+
+  return buildUsageRecordOverviewFromEvents(events)
+}
+
+export function buildUsageRecordFallbackAnalytics(options: {
+  range: RouterUsageAnalyticsRange
+  stats?: RouterUsageStat[]
+  events?: RouterUsageEvent[]
+  now?: Date
+  currency?: string
+}): RouterUsageAnalytics {
+  const rangeWindow = buildUsageRecordAnalyticsWindow(options.range, options.now)
+  const startDate = new Date(rangeWindow.start)
+  const endDate = new Date(rangeWindow.end)
+  const bucketStarts: Date[] = []
+  const bucketCosts = new Map<string, Map<string, number>>()
+  const modelStats = new Map<string, { requestCount: number; totalCost: number }>()
+
+  for (let bucketStart = new Date(startDate); bucketStart < endDate; bucketStart = addGranularity(bucketStart, rangeWindow.granularity)) {
+    bucketStarts.push(new Date(bucketStart))
+    bucketCosts.set(bucketStart.toISOString(), new Map())
+  }
+
+  const overview = buildUsageRecordFallbackOverview(options.stats ?? [], options.events ?? [])
+
+  for (const event of options.events ?? []) {
+    const createdAt = new Date(event.created_at)
+    if (Number.isNaN(createdAt.getTime())) {
+      continue
+    }
+
+    const effectiveModel = resolveUsageEventEffectiveModel(event)
+    const bucketStart = toAnalyticsBucketStart(createdAt, rangeWindow.granularity)
+    const bucketKey = bucketStart.toISOString()
+    const costs = bucketCosts.get(bucketKey)
+    const currentModel = modelStats.get(effectiveModel) ?? { requestCount: 0, totalCost: 0 }
+
+    currentModel.requestCount += 1
+    currentModel.totalCost += event.cost
+    modelStats.set(effectiveModel, currentModel)
+
+    if (costs) {
+      costs.set(effectiveModel, (costs.get(effectiveModel) ?? 0) + event.cost)
+    }
+  }
+
+  const models = Array.from(modelStats.entries())
+    .sort((left, right) => {
+      if (right[1].requestCount !== left[1].requestCount) {
+        return right[1].requestCount - left[1].requestCount
+      }
+      if (right[1].totalCost !== left[1].totalCost) {
+        return right[1].totalCost - left[1].totalCost
+      }
+      return left[0].localeCompare(right[0])
+    })
+    .map(([effectiveModel, stats]) => ({
+      effective_model: effectiveModel,
+      request_count: stats.requestCount,
+      request_share: overview.total_requests > 0 ? stats.requestCount / overview.total_requests : 0,
+      total_cost: Number(stats.totalCost.toFixed(6)),
+    }))
+
+  return {
+    range: options.range,
+    granularity: rangeWindow.granularity,
+    start: rangeWindow.start,
+    end: rangeWindow.end,
+    currency: options.currency ?? 'CNY',
+    overview: {
+      ...overview,
+      total_cost: Number(overview.total_cost.toFixed(6)),
+    },
+    models,
+    buckets: bucketStarts.map((bucketStart) => ({
+      bucket_start: bucketStart.toISOString(),
+      label: formatAnalyticsBucketLabel(bucketStart, rangeWindow.granularity),
+      costs: Array.from(bucketCosts.get(bucketStart.toISOString())?.entries() ?? [])
+        .sort((left, right) => {
+          if (right[1] !== left[1]) {
+            return right[1] - left[1]
+          }
+          return left[0].localeCompare(right[0])
+        })
+        .map(([effectiveModel, totalCost]) => ({
+          effective_model: effectiveModel,
+          total_cost: Number(totalCost.toFixed(6)),
+        })),
+    })),
+  }
 }
 
 export function buildUsageRecordAnalyticsViewModel(

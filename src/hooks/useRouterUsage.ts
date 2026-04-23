@@ -11,6 +11,20 @@ import {
 } from '@/lib/api/router'
 import type { RouterUsageAnalyticsRange } from '@/lib/api/router'
 
+type ErrorWithStatus = {
+  response?: {
+    status?: number
+  }
+}
+
+function getResponseStatus(error: unknown): number | undefined {
+  if (typeof error !== 'object' || error === null || !('response' in error)) {
+    return undefined
+  }
+
+  return Number((error as ErrorWithStatus).response?.status)
+}
+
 export function useRouterBalance() {
   const { data, error, isLoading, mutate } = useSWR('router-balance', fetchRouterBalance, {
     revalidateOnFocus: false,
@@ -45,12 +59,22 @@ export function useRouterUsageAnalytics(range: RouterUsageAnalyticsRange) {
   const { data, error, isLoading, mutate } = useSWR(cacheKey, () => fetchRouterUsageAnalytics(range), {
     revalidateOnFocus: false,
     dedupingInterval: 15000,
+    onErrorRetry: (fetchError, _key, _config, revalidate, context) => {
+      if (getResponseStatus(fetchError) === 404 || context.retryCount >= 3) {
+        return
+      }
+
+      setTimeout(() => revalidate({ retryCount: context.retryCount }), 5000)
+    },
   })
+  const status = getResponseStatus(error)
 
   return {
     analytics: data?.data ?? null,
     isLoading,
     isError: error,
+    isUnsupported: status === 404,
+    status,
     mutate,
   }
 }
@@ -82,8 +106,27 @@ export function useRouterUsageStats(options?: { start?: string; end?: string; ap
   }
 }
 
-export function useRouterUsageEvents(options?: { keyId?: number; limit?: number; maxPages?: number }) {
-  const cacheKey = ['router-usage-events', options?.keyId ?? 'all', options?.limit ?? 100, options?.maxPages ?? 10]
+export function useRouterUsageEvents(options?: {
+  keyId?: number
+  limit?: number
+  maxPages?: number
+  start?: string
+  end?: string
+  effectiveModel?: string
+  enabled?: boolean
+}) {
+  const enabled = options?.enabled ?? true
+  const cacheKey = enabled
+    ? [
+        'router-usage-events',
+        options?.keyId ?? 'all',
+        options?.limit ?? 100,
+        options?.maxPages ?? 10,
+        options?.start ?? '',
+        options?.end ?? '',
+        options?.effectiveModel ?? '',
+      ]
+    : null
   const { data, error, isLoading, mutate } = useSWR(
     cacheKey,
     () =>
@@ -91,6 +134,9 @@ export function useRouterUsageEvents(options?: { keyId?: number; limit?: number;
         key_id: options?.keyId,
         limit: options?.limit,
         maxPages: options?.maxPages,
+        start: options?.start,
+        end: options?.end,
+        effective_model: options?.effectiveModel,
       }),
     {
       revalidateOnFocus: false,

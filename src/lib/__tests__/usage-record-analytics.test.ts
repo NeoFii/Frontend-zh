@@ -1,5 +1,9 @@
-import { buildUsageRecordAnalyticsViewModel, buildUsageRecordTimeWindow } from '@/lib/usage-record-analytics'
-import type { RouterUsageAnalytics } from '@/lib/api/router'
+import {
+  buildUsageRecordAnalyticsViewModel,
+  buildUsageRecordFallbackAnalytics,
+  buildUsageRecordTimeWindow,
+} from '@/lib/usage-record-analytics'
+import type { RouterUsageAnalytics, RouterUsageEvent, RouterUsageStat } from '@/lib/api/router'
 
 function createAnalyticsFixture(): RouterUsageAnalytics {
   return {
@@ -88,5 +92,132 @@ describe('usage record analytics helpers', () => {
     expect(window.endInput).toBe('2026-04-24T16:45')
     expect(window.start).toBe('2026-04-24T00:45:00.000Z')
     expect(window.end).toBe('2026-04-24T08:45:00.000Z')
+  })
+
+  it('builds fallback analytics from usage stats and raw events when the analytics endpoint is unavailable', () => {
+    const stats: RouterUsageStat[] = [
+      {
+        stat_hour: '2026-04-24T09:00:00',
+        request_count: 3,
+        success_count: 2,
+        error_count: 1,
+        prompt_tokens: 300,
+        completion_tokens: 90,
+        cached_tokens: 0,
+        total_tokens: 390,
+        total_cost: 6,
+      },
+    ]
+    const events: RouterUsageEvent[] = [
+      {
+        id: 1,
+        request_id: 'req-1',
+        api_key_id: 1,
+        model_name: 'auto',
+        selected_model: 'gpt-4.1-mini-2026-04-14',
+        provider_slug: 'openai',
+        prompt_tokens: 100,
+        completion_tokens: 30,
+        cached_tokens: 0,
+        total_tokens: 130,
+        cost: 1.5,
+        status: 1,
+        duration_ms: 210,
+        is_stream: false,
+        routing_tier: null,
+        config_version: null,
+        config_source: null,
+        router_trace_id: null,
+        error_code: null,
+        error_msg: null,
+        created_at: '2026-04-24T09:05:00',
+      },
+      {
+        id: 2,
+        request_id: 'req-2',
+        api_key_id: 1,
+        model_name: 'claude-3-7-sonnet-2026-02-19',
+        selected_model: null,
+        provider_slug: 'anthropic',
+        prompt_tokens: 120,
+        completion_tokens: 40,
+        cached_tokens: 0,
+        total_tokens: 160,
+        cost: 3.5,
+        status: 2,
+        duration_ms: 260,
+        is_stream: false,
+        routing_tier: null,
+        config_version: null,
+        config_source: null,
+        router_trace_id: null,
+        error_code: 'rate_limit',
+        error_msg: 'rate limited',
+        created_at: '2026-04-24T09:35:00',
+      },
+      {
+        id: 3,
+        request_id: 'req-3',
+        api_key_id: 2,
+        model_name: 'auto',
+        selected_model: 'gpt-4.1-mini-2026-04-14',
+        provider_slug: 'openai',
+        prompt_tokens: 90,
+        completion_tokens: 20,
+        cached_tokens: 0,
+        total_tokens: 110,
+        cost: 1,
+        status: 1,
+        duration_ms: 190,
+        is_stream: false,
+        routing_tier: null,
+        config_version: null,
+        config_source: null,
+        router_trace_id: null,
+        error_code: null,
+        error_msg: null,
+        created_at: '2026-04-24T15:10:00',
+      },
+    ]
+
+    const analytics = buildUsageRecordFallbackAnalytics({
+      range: '8h',
+      stats,
+      events,
+      now: new Date('2026-04-24T16:45:00+08:00'),
+      currency: 'CNY',
+    })
+
+    expect(analytics.granularity).toBe('hour')
+    expect(analytics.overview).toEqual({
+      total_requests: 3,
+      success_requests: 2,
+      success_rate: 2 / 3,
+      total_cost: 6,
+    })
+    expect(analytics.models).toEqual([
+      {
+        effective_model: 'gpt-4.1-mini-2026-04-14',
+        request_count: 2,
+        request_share: 2 / 3,
+        total_cost: 2.5,
+      },
+      {
+        effective_model: 'claude-3-7-sonnet-2026-02-19',
+        request_count: 1,
+        request_share: 1 / 3,
+        total_cost: 3.5,
+      },
+    ])
+    expect(analytics.buckets).toHaveLength(8)
+    expect(analytics.buckets[0].label).toBe('09:00')
+    expect(analytics.buckets[0].costs).toEqual([
+      { effective_model: 'claude-3-7-sonnet-2026-02-19', total_cost: 3.5 },
+      { effective_model: 'gpt-4.1-mini-2026-04-14', total_cost: 1.5 },
+    ])
+    expect(analytics.buckets[1].costs).toEqual([])
+    expect(analytics.buckets[6].costs).toEqual([
+      { effective_model: 'gpt-4.1-mini-2026-04-14', total_cost: 1 },
+    ])
   })
 })
