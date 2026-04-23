@@ -197,6 +197,18 @@ export interface RouterUsageSummary {
   currency: string
 }
 
+export interface RouterUsageStat {
+  stat_hour: string
+  request_count: number
+  success_count: number
+  error_count: number
+  prompt_tokens: number
+  completion_tokens: number
+  cached_tokens: number
+  total_tokens: number
+  total_cost: number
+}
+
 export interface RouterBillingLedgerItem {
   id: number
   /** 1=TOPUP, 2=CONSUME, 3=REFUND, 4=FREEZE, 5=UNFREEZE, 6=ADMIN_ADJUST, 7=VOUCHER_REDEEM */
@@ -388,7 +400,21 @@ function normalizeUsageLog(item: BackendUsageLogItem): RouterUsageEvent {
   }
 }
 
-function normalizeUsageSummary(items: BackendUsageStatItem[]): RouterUsageSummary {
+function normalizeUsageStat(item: BackendUsageStatItem): RouterUsageStat {
+  return {
+    stat_hour: item.stat_hour,
+    request_count: item.request_count,
+    success_count: item.success_count,
+    error_count: item.error_count,
+    prompt_tokens: item.prompt_tokens,
+    completion_tokens: item.completion_tokens,
+    cached_tokens: item.cached_tokens,
+    total_tokens: item.total_tokens,
+    total_cost: centsToCurrency(item.total_cost),
+  }
+}
+
+function normalizeUsageSummary(items: RouterUsageStat[]): RouterUsageSummary {
   return items.reduce<RouterUsageSummary>(
     (summary, item) => {
       summary.total_requests += item.request_count
@@ -396,7 +422,7 @@ function normalizeUsageSummary(items: BackendUsageStatItem[]): RouterUsageSummar
       summary.prompt_tokens += item.prompt_tokens
       summary.completion_tokens += item.completion_tokens
       summary.total_tokens += item.total_tokens
-      summary.total_cost += centsToCurrency(item.total_cost)
+      summary.total_cost += item.total_cost
       return summary
     },
     {
@@ -534,7 +560,22 @@ export function fetchRouterUsageSummary(keyId?: number) {
     })
     .then((response) => ({
       ...response,
-      data: normalizeUsageSummary(response.data),
+      data: normalizeUsageSummary(response.data.map(normalizeUsageStat)),
+    }))
+}
+
+export function fetchRouterUsageStats(params: { start: string; end: string; apiKeyId?: number }) {
+  return http
+    .get<RouterApiResponse<BackendUsageStatItem[]>>('/billing/usage', {
+      params: {
+        start: params.start,
+        end: params.end,
+        ...(typeof params.apiKeyId === 'number' ? { api_key_id: params.apiKeyId } : {}),
+      },
+    })
+    .then((response) => ({
+      ...response,
+      data: response.data.map(normalizeUsageStat),
     }))
 }
 

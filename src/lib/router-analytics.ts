@@ -1,6 +1,7 @@
-import type { RouterApiKey, RouterUsageEvent, RouterUsageSummary } from '@/lib/api/router'
+import type { RouterApiKey, RouterUsageEvent, RouterUsageStat, RouterUsageSummary } from '@/lib/api/router'
 
 export type UsageRange = '24h' | '7d' | '30d' | '90d'
+export type BalanceTokenTrendRange = '24h' | '7d' | '30d'
 
 export interface UsageAggregate {
   totalRequests: number
@@ -54,8 +55,190 @@ export interface DailyTrendPoint {
   totalCost: number
 }
 
+export interface BalanceTokenTrendPoint {
+  bucketStart: string
+  label: string
+  promptTokens: number
+  completionTokens: number
+  cachedTokens: number
+}
+
+export interface BalanceTokenTrendViewModel {
+  start: string
+  end: string
+  points: BalanceTokenTrendPoint[]
+  xAxis: string[]
+  legend: string[]
+  series: Array<{ name: string; data: number[] }>
+  hasData: boolean
+}
+
 function toDate(value: string): Date {
   return new Date(value)
+}
+
+function startOfHour(date: Date) {
+  const next = new Date(date)
+  next.setMinutes(0, 0, 0)
+  return next
+}
+
+function startOfDay(date: Date) {
+  const next = new Date(date)
+  next.setHours(0, 0, 0, 0)
+  return next
+}
+
+function addHours(date: Date, hours: number) {
+  const next = new Date(date)
+  next.setHours(next.getHours() + hours)
+  return next
+}
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+function pad2(value: number) {
+  return String(value).padStart(2, '0')
+}
+
+function formatHourLabel(date: Date) {
+  return `${pad2(date.getHours())}:00`
+}
+
+function formatMonthDayLabel(date: Date) {
+  return `${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+function formatLocalDayKey(date: Date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`
+}
+
+const BALANCE_TOKEN_TREND_LEGEND = ['输入 Tokens', '输出 Tokens', '缓存 Tokens'] as const
+
+export function getBalanceTokenTrendQueryWindow(range: BalanceTokenTrendRange, now: Date = new Date()) {
+  const endDate = startOfHour(now)
+
+  if (range === '24h') {
+    return {
+      start: addHours(endDate, -24).toISOString(),
+      end: endDate.toISOString(),
+    }
+  }
+
+  const days = range === '7d' ? 7 : 30
+
+  return {
+    start: startOfDay(addDays(endDate, -(days - 1))).toISOString(),
+    end: endDate.toISOString(),
+  }
+}
+
+function mergeUsageStatsByHour(stats: RouterUsageStat[]) {
+  const buckets = new Map<number, BalanceTokenTrendPoint>()
+
+  stats.forEach((item) => {
+    const hourStart = startOfHour(toDate(item.stat_hour))
+    const key = hourStart.getTime()
+    const current = buckets.get(key) ?? {
+      bucketStart: hourStart.toISOString(),
+      label: formatHourLabel(hourStart),
+      promptTokens: 0,
+      completionTokens: 0,
+      cachedTokens: 0,
+    }
+
+    current.promptTokens += item.prompt_tokens
+    current.completionTokens += item.completion_tokens
+    current.cachedTokens += item.cached_tokens
+    buckets.set(key, current)
+  })
+
+  return buckets
+}
+
+export function buildBalanceTokenTrendViewModel(
+  stats: RouterUsageStat[],
+  range: BalanceTokenTrendRange,
+  now: Date = new Date()
+): BalanceTokenTrendViewModel {
+  const { start, end } = getBalanceTokenTrendQueryWindow(range, now)
+  const startDate = toDate(start)
+  const endDate = toDate(end)
+  const hourlyBuckets = mergeUsageStatsByHour(stats)
+  const points: BalanceTokenTrendPoint[] = []
+
+  if (range === '24h') {
+    for (let index = 0; index < 24; index += 1) {
+      const bucketDate = addHours(startDate, index)
+      const bucket = hourlyBuckets.get(bucketDate.getTime()) ?? {
+        bucketStart: bucketDate.toISOString(),
+        label: formatHourLabel(bucketDate),
+        promptTokens: 0,
+        completionTokens: 0,
+        cachedTokens: 0,
+      }
+      points.push(bucket)
+    }
+  } else {
+    const dailyTotals = new Map<string, Pick<BalanceTokenTrendPoint, 'promptTokens' | 'completionTokens' | 'cachedTokens'>>()
+
+    hourlyBuckets.forEach((bucket) => {
+      const bucketDate = toDate(bucket.bucketStart)
+      if (bucketDate < startDate || bucketDate >= endDate) {
+        return
+      }
+
+      const dayKey = formatLocalDayKey(bucketDate)
+      const current = dailyTotals.get(dayKey) ?? {
+        promptTokens: 0,
+        completionTokens: 0,
+        cachedTokens: 0,
+      }
+
+      current.promptTokens += bucket.promptTokens
+      current.completionTokens += bucket.completionTokens
+      current.cachedTokens += bucket.cachedTokens
+      dailyTotals.set(dayKey, current)
+    })
+
+    const days = range === '7d' ? 7 : 30
+
+    for (let index = 0; index < days; index += 1) {
+      const dayDate = addDays(startDate, index)
+      const dayKey = formatLocalDayKey(dayDate)
+      const total = dailyTotals.get(dayKey)
+
+      points.push({
+        bucketStart: dayDate.toISOString(),
+        label: formatMonthDayLabel(dayDate),
+        promptTokens: total?.promptTokens ?? 0,
+        completionTokens: total?.completionTokens ?? 0,
+        cachedTokens: total?.cachedTokens ?? 0,
+      })
+    }
+  }
+
+  const promptSeries = points.map((point) => point.promptTokens)
+  const completionSeries = points.map((point) => point.completionTokens)
+  const cachedSeries = points.map((point) => point.cachedTokens)
+
+  return {
+    start,
+    end,
+    points,
+    xAxis: points.map((point) => point.label),
+    legend: [...BALANCE_TOKEN_TREND_LEGEND],
+    series: [
+      { name: BALANCE_TOKEN_TREND_LEGEND[0], data: promptSeries },
+      { name: BALANCE_TOKEN_TREND_LEGEND[1], data: completionSeries },
+      { name: BALANCE_TOKEN_TREND_LEGEND[2], data: cachedSeries },
+    ],
+    hasData: [...promptSeries, ...completionSeries, ...cachedSeries].some((value) => value > 0),
+  }
 }
 
 export function filterUsageEventsByRange(
@@ -365,6 +548,16 @@ export function formatCompactNumber(value: number) {
     notation: value >= 10000 ? 'compact' : 'standard',
     maximumFractionDigits: 1,
   }).format(value)
+}
+
+export function formatTokenAxisValue(value: number) {
+  if (Math.abs(value) >= 1000000) {
+    return `${Number((value / 1000000).toFixed(1)).toString()}m`
+  }
+  if (Math.abs(value) >= 1000) {
+    return `${Number((value / 1000).toFixed(1)).toString()}k`
+  }
+  return `${value}`
 }
 
 export function formatDateTime(value: string | null | undefined) {

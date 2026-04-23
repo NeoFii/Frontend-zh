@@ -151,6 +151,93 @@ describe('user-service backed router console API', () => {
     )
   })
 
+  it('maps raw usage stats from /billing/usage and forwards query params', async () => {
+    mockGet.mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: [
+        {
+          id: 40,
+          api_key_id: 10,
+          model_name: 'gpt-4o',
+          stat_hour: '2026-04-22T10:00:00Z',
+          request_count: 12,
+          success_count: 11,
+          error_count: 1,
+          prompt_tokens: 1200,
+          completion_tokens: 600,
+          cached_tokens: 300,
+          total_tokens: 2100,
+          total_cost: 345,
+        },
+      ],
+    })
+
+    const { fetchRouterUsageStats } = await import('./router')
+    const response = await fetchRouterUsageStats({
+      start: '2026-04-22T00:00:00.000Z',
+      end: '2026-04-23T00:00:00.000Z',
+      apiKeyId: 10,
+    })
+
+    expect(mockGet).toHaveBeenCalledWith('/billing/usage', {
+      params: {
+        start: '2026-04-22T00:00:00.000Z',
+        end: '2026-04-23T00:00:00.000Z',
+        api_key_id: 10,
+      },
+    })
+    expect(response.data).toEqual([
+      {
+        stat_hour: '2026-04-22T10:00:00Z',
+        request_count: 12,
+        success_count: 11,
+        error_count: 1,
+        prompt_tokens: 1200,
+        completion_tokens: 600,
+        cached_tokens: 300,
+        total_tokens: 2100,
+        total_cost: 3.45,
+      },
+    ])
+  })
+
+  it('reduces usage summary totals without double converting total cost', async () => {
+    mockGet.mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: [
+        {
+          id: 41,
+          api_key_id: null,
+          model_name: 'gpt-4o',
+          stat_hour: '2026-04-22T10:00:00Z',
+          request_count: 5,
+          success_count: 4,
+          error_count: 1,
+          prompt_tokens: 500,
+          completion_tokens: 200,
+          cached_tokens: 50,
+          total_tokens: 750,
+          total_cost: 345,
+        },
+      ],
+    })
+
+    const { fetchRouterUsageSummary } = await import('./router')
+    const response = await fetchRouterUsageSummary()
+
+    expect(response.data).toEqual({
+      total_requests: 5,
+      success_requests: 4,
+      prompt_tokens: 500,
+      completion_tokens: 200,
+      total_tokens: 750,
+      total_cost: 3.45,
+      currency: 'CNY',
+    })
+  })
+
   it('maps account balance from /billing/balance and falls back to balance minus frozen amount', async () => {
     mockGet.mockResolvedValueOnce({
       code: 200,

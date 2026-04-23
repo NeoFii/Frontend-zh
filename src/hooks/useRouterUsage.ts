@@ -4,6 +4,7 @@ import {
   fetchRouterBalance,
   fetchRouterBillingLedger,
   fetchRouterUsageEvents,
+  fetchRouterUsageStats,
   fetchRouterUsageSummary,
   fetchVoucherRedemptions,
 } from '@/lib/api/router'
@@ -31,6 +32,33 @@ export function useRouterUsageSummary(keyId?: number) {
 
   return {
     summary: data?.data ?? null,
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
+
+export function useRouterUsageStats(options?: { start?: string; end?: string; apiKeyId?: number }) {
+  const cacheKey = options?.start && options?.end
+    ? ['router-usage-stats', options.start, options.end, options.apiKeyId ?? 'all']
+    : null
+
+  const { data, error, isLoading, mutate } = useSWR(
+    cacheKey,
+    () =>
+      fetchRouterUsageStats({
+        start: options!.start!,
+        end: options!.end!,
+        apiKeyId: options?.apiKeyId,
+      }),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 15000,
+    }
+  )
+
+  return {
+    stats: data?.data ?? [],
     isLoading,
     isError: error,
     mutate,

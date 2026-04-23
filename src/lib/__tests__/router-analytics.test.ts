@@ -1,16 +1,22 @@
 import {
   buildDailyTrend,
+  buildBalanceTokenTrendViewModel,
   buildModelUsageStats,
   calculateMonthlySpend,
   calculateSuccessRate,
   countActiveKeys,
   createUsageDashboardViewModel,
   filterUsageEventsByRange,
+  formatTokenAxisValue,
   formatCurrency,
+  getBalanceTokenTrendQueryWindow,
   normalizeModelLabel,
   summarizeUsageEvents,
   sumPrepaidBalance,
 } from '@/lib/router-analytics'
+import type { RouterUsageStat } from '@/lib/api/router'
+
+process.env.TZ = 'Asia/Shanghai'
 
 const baseEvent = {
   request_id: 'req_1',
@@ -108,5 +114,172 @@ describe('router analytics helpers', () => {
     expect(calculateSuccessRate({ totalRequests: 10, successRequests: 9 })).toBe(90)
     expect(calculateMonthlySpend(events, new Date('2026-03-11T00:00:00Z'))).toBeCloseTo(0.5)
     expect(formatCurrency(12.5, 'CNY')).toBe('CNY 12.50')
+  })
+
+  it('aligns the 24h query window to completed hourly buckets', () => {
+    const now = new Date('2026-04-23T10:35:00+08:00')
+
+    expect(getBalanceTokenTrendQueryWindow('24h', now)).toEqual({
+      start: '2026-04-22T02:00:00.000Z',
+      end: '2026-04-23T02:00:00.000Z',
+    })
+  })
+
+  it('merges multi-model rows into 24 hourly token buckets and fills gaps', () => {
+    const now = new Date('2026-04-23T10:35:00+08:00')
+    const stats: RouterUsageStat[] = [
+      {
+        stat_hour: '2026-04-22T10:00:00+08:00',
+        request_count: 3,
+        success_count: 3,
+        error_count: 0,
+        prompt_tokens: 120,
+        completion_tokens: 60,
+        cached_tokens: 30,
+        total_tokens: 210,
+        total_cost: 0.9,
+      },
+      {
+        stat_hour: '2026-04-22T10:00:00+08:00',
+        request_count: 2,
+        success_count: 2,
+        error_count: 0,
+        prompt_tokens: 80,
+        completion_tokens: 40,
+        cached_tokens: 20,
+        total_tokens: 140,
+        total_cost: 0.4,
+      },
+      {
+        stat_hour: '2026-04-23T09:00:00+08:00',
+        request_count: 4,
+        success_count: 4,
+        error_count: 0,
+        prompt_tokens: 200,
+        completion_tokens: 100,
+        cached_tokens: 50,
+        total_tokens: 350,
+        total_cost: 1.2,
+      },
+    ]
+
+    const viewModel = buildBalanceTokenTrendViewModel(stats, '24h', now)
+
+    expect(viewModel.points).toHaveLength(24)
+    expect(viewModel.points[0]).toMatchObject({
+      bucketStart: '2026-04-22T02:00:00.000Z',
+      promptTokens: 200,
+      completionTokens: 100,
+      cachedTokens: 50,
+    })
+    expect(viewModel.points[1]).toMatchObject({
+      promptTokens: 0,
+      completionTokens: 0,
+      cachedTokens: 0,
+    })
+    expect(viewModel.points[23]).toMatchObject({
+      bucketStart: '2026-04-23T01:00:00.000Z',
+      promptTokens: 200,
+      completionTokens: 100,
+      cachedTokens: 50,
+    })
+    expect(viewModel.xAxis).toHaveLength(24)
+    expect(viewModel.legend).toEqual(['输入 Tokens', '输出 Tokens', '缓存 Tokens'])
+  })
+
+  it('builds seven local-day buckets in ascending order', () => {
+    const now = new Date('2026-04-23T10:35:00+08:00')
+    const stats: RouterUsageStat[] = [
+      {
+        stat_hour: '2026-04-17T12:00:00+08:00',
+        request_count: 2,
+        success_count: 2,
+        error_count: 0,
+        prompt_tokens: 100,
+        completion_tokens: 50,
+        cached_tokens: 20,
+        total_tokens: 170,
+        total_cost: 0.4,
+      },
+      {
+        stat_hour: '2026-04-17T18:00:00+08:00',
+        request_count: 2,
+        success_count: 2,
+        error_count: 0,
+        prompt_tokens: 60,
+        completion_tokens: 30,
+        cached_tokens: 10,
+        total_tokens: 100,
+        total_cost: 0.2,
+      },
+      {
+        stat_hour: '2026-04-23T09:00:00+08:00',
+        request_count: 1,
+        success_count: 1,
+        error_count: 0,
+        prompt_tokens: 40,
+        completion_tokens: 20,
+        cached_tokens: 5,
+        total_tokens: 65,
+        total_cost: 0.1,
+      },
+    ]
+
+    const viewModel = buildBalanceTokenTrendViewModel(stats, '7d', now)
+
+    expect(viewModel.points).toHaveLength(7)
+    expect(viewModel.points[0].label).toBe('04-17')
+    expect(viewModel.points[0]).toMatchObject({
+      promptTokens: 160,
+      completionTokens: 80,
+      cachedTokens: 30,
+    })
+    expect(viewModel.points[6].label).toBe('04-23')
+    expect(viewModel.points[6]).toMatchObject({
+      promptTokens: 40,
+      completionTokens: 20,
+      cachedTokens: 5,
+    })
+    expect(viewModel.xAxis).toEqual([...viewModel.xAxis].sort())
+  })
+
+  it('builds thirty local-day buckets for the 30d range', () => {
+    const now = new Date('2026-04-23T10:35:00+08:00')
+    const stats: RouterUsageStat[] = [
+      {
+        stat_hour: '2026-03-25T12:00:00+08:00',
+        request_count: 2,
+        success_count: 2,
+        error_count: 0,
+        prompt_tokens: 70,
+        completion_tokens: 35,
+        cached_tokens: 10,
+        total_tokens: 115,
+        total_cost: 0.3,
+      },
+      {
+        stat_hour: '2026-04-23T08:00:00+08:00',
+        request_count: 1,
+        success_count: 1,
+        error_count: 0,
+        prompt_tokens: 90,
+        completion_tokens: 45,
+        cached_tokens: 15,
+        total_tokens: 150,
+        total_cost: 0.4,
+      },
+    ]
+
+    const viewModel = buildBalanceTokenTrendViewModel(stats, '30d', now)
+
+    expect(viewModel.points).toHaveLength(30)
+    expect(viewModel.points[0].label).toBe('03-25')
+    expect(viewModel.points[29].label).toBe('04-23')
+  })
+
+  it('formats token axis values with k and m suffixes', () => {
+    expect(formatTokenAxisValue(999)).toBe('999')
+    expect(formatTokenAxisValue(1500)).toBe('1.5k')
+    expect(formatTokenAxisValue(2500000)).toBe('2.5m')
   })
 })
