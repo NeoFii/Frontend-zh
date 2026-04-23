@@ -10,7 +10,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import Pagination from '@/components/ui/Pagination'
 
 const CURRENCY = 'CNY'
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 
 function orderStatusLabel(status: number) {
   switch (status) {

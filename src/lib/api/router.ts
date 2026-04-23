@@ -630,7 +630,7 @@ export function fetchVoucherRedemptions(params?: RouterListParams) {
 export function fetchTopupOrders(params?: { page?: number; page_size?: number }) {
   return http
     .get<RouterApiResponse<BackendPagedResponse<BackendTopupOrderItem>>>('/billing/topup-orders', {
-      params: { page: params?.page ?? 1, page_size: params?.page_size ?? 20 },
+      params: { page: params?.page ?? 1, page_size: params?.page_size ?? 10 },
     })
     .then((response) => ({
       ...response,

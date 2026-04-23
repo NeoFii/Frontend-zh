@@ -42,7 +42,7 @@ describe('BillingHistoryPage', () => {
     render(<BillingHistoryPage />)
 
     expect(mockUseRouterBillingLedger).toHaveBeenLastCalledWith({
-      limit: 50,
+      limit: 10,
       offset: 0,
       type: undefined,
     })
@@ -50,8 +50,8 @@ describe('BillingHistoryPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '下一页' }))
     await waitFor(() =>
       expect(mockUseRouterBillingLedger).toHaveBeenLastCalledWith({
-        limit: 50,
-        offset: 50,
+        limit: 10,
+        offset: 10,
         type: undefined,
       })
     )
@@ -59,7 +59,7 @@ describe('BillingHistoryPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '代金券' }))
     await waitFor(() =>
       expect(mockUseRouterBillingLedger).toHaveBeenLastCalledWith({
-        limit: 50,
+        limit: 10,
         offset: 0,
         type: 7,
       })

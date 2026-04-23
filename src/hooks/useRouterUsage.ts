@@ -90,11 +90,13 @@ export function useRouterUsageEvents(options?: { keyId?: number; limit?: number;
 }
 
 export function useRouterBillingLedger(options?: { keyId?: number; limit?: number; offset?: number; type?: number }) {
+  const limit = options?.limit ?? 10
+  const offset = options?.offset ?? 0
   const cacheKey = [
     'router-billing-ledger',
     options?.keyId ?? 'all',
-    options?.limit ?? 50,
-    options?.offset ?? 0,
+    limit,
+    offset,
     options?.type ?? 'all',
   ]
   const { data, error, isLoading, mutate } = useSWR(
@@ -102,8 +104,8 @@ export function useRouterBillingLedger(options?: { keyId?: number; limit?: numbe
     () =>
       fetchRouterBillingLedger({
         key_id: options?.keyId,
-        limit: options?.limit,
-        offset: options?.offset,
+        limit,
+        offset,
         type: options?.type,
       }),
     {
@@ -122,13 +124,15 @@ export function useRouterBillingLedger(options?: { keyId?: number; limit?: numbe
 }
 
 export function useVoucherRedemptions(options?: { limit?: number; offset?: number }) {
-  const cacheKey = ['router-voucher-redemptions', options?.limit ?? 20, options?.offset ?? 0]
+  const limit = options?.limit ?? 10
+  const offset = options?.offset ?? 0
+  const cacheKey = ['router-voucher-redemptions', limit, offset]
   const { data, error, isLoading, mutate } = useSWR(
     cacheKey,
     () =>
       fetchVoucherRedemptions({
-        limit: options?.limit,
-        offset: options?.offset,
+        limit,
+        offset,
       }),
     {
       revalidateOnFocus: false,
