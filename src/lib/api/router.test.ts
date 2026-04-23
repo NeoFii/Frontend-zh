@@ -397,4 +397,46 @@ describe('user-service backed router console API', () => {
     ])
     expect(response.data.total).toBe(1)
   })
+
+  it('uses a 10-item default page size for /billing/topup-orders', async () => {
+    mockGet.mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: {
+        items: [
+          {
+            id: 51,
+            order_no: 'TP-20260422',
+            amount: 800,
+            status: 2,
+            payment_channel: 'alipay',
+            payment_no: 'pay-1',
+            paid_at: '2026-04-22T10:00:00Z',
+            remark: null,
+            created_at: '2026-04-22T09:50:00Z',
+            updated_at: '2026-04-22T10:00:00Z',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 10,
+      },
+    })
+
+    const { fetchTopupOrders } = await import('./router')
+    const response = await fetchTopupOrders()
+
+    expect(mockGet).toHaveBeenCalledWith('/billing/topup-orders', {
+      params: { page: 1, page_size: 10 },
+    })
+    expect(response.data.items).toEqual([
+      expect.objectContaining({
+        id: 51,
+        order_no: 'TP-20260422',
+        amount: 8,
+        status: 2,
+        payment_channel: 'alipay',
+      }),
+    ])
+  })
 })

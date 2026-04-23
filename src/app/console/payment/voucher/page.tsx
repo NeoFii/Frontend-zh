@@ -13,7 +13,7 @@ import ErrorBanner from '@/components/ui/ErrorBanner'
 import Pagination from '@/components/ui/Pagination'
 
 const CURRENCY = 'CNY'
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 
 function voucherStatusLabel(status: number) {
   switch (status) {

@@ -10,7 +10,7 @@ import EmptyState from '@/components/ui/EmptyState'
 import Pagination from '@/components/ui/Pagination'
 
 const CURRENCY = 'CNY'
-const PAGE_SIZE = 50
+const PAGE_SIZE = 10
 const TX_TYPE_VOUCHER_REDEEM = 7
 
 const TYPE_TABS: Array<{ value: number | null; label: string }> = [
