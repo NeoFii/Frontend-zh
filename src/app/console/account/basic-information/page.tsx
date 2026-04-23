@@ -141,7 +141,7 @@ function PasswordDialog(props: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <div className="w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-[0_30px_90px_-36px_rgba(15,23,42,0.45)]">
-        <div className="flex items-start justify-between gap-4">
+        <div>
           <div>
             <div className="inline-flex rounded-full bg-gray-950 px-3 py-1 text-[11px] font-medium tracking-[0.24em] text-white">
               PASSWORD
@@ -151,12 +151,6 @@ function PasswordDialog(props: {
               你可以通过当前密码完成修改，也可以通过邮箱验证码确认身份后重置密码。修改成功后需要重新登录。
             </p>
           </div>
-          <button
-            onClick={handleClose}
-            className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-gray-500 transition hover:bg-gray-50 hover:text-gray-900"
-          >
-            关闭
-          </button>
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">

@@ -1,6 +1,6 @@
 import React from 'react'
 import '@testing-library/jest-dom'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import BasicInformationPage from './page'
 
 const mockReplace = jest.fn()
@@ -58,5 +58,15 @@ describe('BasicInformationPage', () => {
     expect(screen.queryByText('总 Tokens')).not.toBeInTheDocument()
     expect(screen.queryByText('总费用')).not.toBeInTheDocument()
     expect(screen.queryByText('预付费余额')).not.toBeInTheDocument()
+  })
+
+  it('keeps a single cancel action in the change password dialog', () => {
+    render(<BasicInformationPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '修改密码' }))
+
+    expect(screen.getByRole('heading', { name: '修改登录密码' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '关闭' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '取消' })).toBeInTheDocument()
   })
 })
