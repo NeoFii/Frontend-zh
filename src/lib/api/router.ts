@@ -75,6 +75,42 @@ interface BackendUsageStatItem {
   total_cost: number
 }
 
+interface BackendUsageAnalyticsOverview {
+  total_requests: number
+  success_requests: number
+  success_rate: number
+  total_cost: number
+}
+
+interface BackendUsageAnalyticsModel {
+  effective_model: string
+  request_count: number
+  request_share: number
+  total_cost: number
+}
+
+interface BackendUsageAnalyticsBucketCost {
+  effective_model: string
+  total_cost: number
+}
+
+interface BackendUsageAnalyticsBucket {
+  bucket_start: string
+  label: string
+  costs: BackendUsageAnalyticsBucketCost[]
+}
+
+interface BackendUsageAnalyticsData {
+  range: RouterUsageAnalyticsRange
+  granularity: string
+  start: string
+  end: string
+  currency: string
+  overview: BackendUsageAnalyticsOverview
+  models: BackendUsageAnalyticsModel[]
+  buckets: BackendUsageAnalyticsBucket[]
+}
+
 interface BackendBalanceTransactionItem {
   id: number
   type: number
@@ -197,6 +233,44 @@ export interface RouterUsageSummary {
   currency: string
 }
 
+export type RouterUsageAnalyticsRange = '8h' | '24h' | '7d' | '30d'
+
+export interface RouterUsageAnalyticsOverview {
+  total_requests: number
+  success_requests: number
+  success_rate: number
+  total_cost: number
+}
+
+export interface RouterUsageAnalyticsModel {
+  effective_model: string
+  request_count: number
+  request_share: number
+  total_cost: number
+}
+
+export interface RouterUsageAnalyticsBucketCost {
+  effective_model: string
+  total_cost: number
+}
+
+export interface RouterUsageAnalyticsBucket {
+  bucket_start: string
+  label: string
+  costs: RouterUsageAnalyticsBucketCost[]
+}
+
+export interface RouterUsageAnalytics {
+  range: RouterUsageAnalyticsRange
+  granularity: string
+  start: string
+  end: string
+  currency: string
+  overview: RouterUsageAnalyticsOverview
+  models: RouterUsageAnalyticsModel[]
+  buckets: RouterUsageAnalyticsBucket[]
+}
+
 export interface RouterUsageStat {
   stat_hour: string
   request_count: number
@@ -269,6 +343,7 @@ export interface RouterListParams {
   start?: string
   end?: string
   model_name?: string
+  effective_model?: string
   type?: number
 }
 
@@ -330,6 +405,7 @@ function toPagedParams(params?: RouterListParams) {
     ...(params?.start ? { start: params.start } : {}),
     ...(params?.end ? { end: params.end } : {}),
     ...(params?.model_name ? { model_name: params.model_name } : {}),
+    ...(params?.effective_model ? { effective_model: params.effective_model } : {}),
     ...(typeof params?.type === 'number' ? { type: params.type } : {}),
   }
 }
@@ -435,6 +511,36 @@ function normalizeUsageSummary(items: RouterUsageStat[]): RouterUsageSummary {
       currency: CURRENCY,
     }
   )
+}
+
+function normalizeUsageAnalytics(data: BackendUsageAnalyticsData): RouterUsageAnalytics {
+  return {
+    range: data.range,
+    granularity: data.granularity,
+    start: data.start,
+    end: data.end,
+    currency: data.currency || CURRENCY,
+    overview: {
+      total_requests: data.overview.total_requests,
+      success_requests: data.overview.success_requests,
+      success_rate: data.overview.success_rate,
+      total_cost: centsToCurrency(data.overview.total_cost),
+    },
+    models: data.models.map((item) => ({
+      effective_model: item.effective_model,
+      request_count: item.request_count,
+      request_share: item.request_share,
+      total_cost: centsToCurrency(item.total_cost),
+    })),
+    buckets: data.buckets.map((bucket) => ({
+      bucket_start: bucket.bucket_start,
+      label: bucket.label,
+      costs: bucket.costs.map((cost) => ({
+        effective_model: cost.effective_model,
+        total_cost: centsToCurrency(cost.total_cost),
+      })),
+    })),
+  }
 }
 
 function transactionDirection(type: number) {
@@ -551,6 +657,17 @@ export function fetchRouterBalance() {
     ...response,
     data: normalizeBalance(response.data),
   }))
+}
+
+export function fetchRouterUsageAnalytics(range: RouterUsageAnalyticsRange) {
+  return http
+    .get<RouterApiResponse<BackendUsageAnalyticsData>>('/billing/usage/analytics', {
+      params: { range },
+    })
+    .then((response) => ({
+      ...response,
+      data: normalizeUsageAnalytics(response.data),
+    }))
 }
 
 export function fetchRouterUsageSummary(keyId?: number) {

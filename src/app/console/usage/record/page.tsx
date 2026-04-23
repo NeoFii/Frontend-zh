@@ -1,635 +1,514 @@
-﻿'use client'
+'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import * as echarts from 'echarts/core'
-import { BarChart, LineChart, PieChart } from 'echarts/charts'
+import { BarChart, PieChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
-import { useRouterUsageEvents, useRouterUsageSummary, useRouterUsageLogs } from '@/hooks/useRouterUsage'
+import type { RouterUsageAnalyticsRange } from '@/lib/api/router'
+import { useRouterBalance, useRouterUsageAnalytics, useRouterUsageLogs } from '@/hooks/useRouterUsage'
 import { useRouterKeys } from '@/hooks/useRouterKeys'
-import { Select } from '@/components/ui/Select'
+import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
 import ErrorBanner from '@/components/ui/ErrorBanner'
 import EmptyState from '@/components/ui/EmptyState'
 import Pagination from '@/components/ui/Pagination'
+import { formatCompactNumber, formatCurrency, formatDateTime } from '@/lib/router-analytics'
 import {
-  USAGE_REFERENCE_MODELS,
-  createUsageDashboardViewModel,
-  formatCompactNumber,
-  formatCurrency,
-  formatDateTime,
-  type UsageRange,
-} from '@/lib/router-analytics'
+  buildUsageRecordAnalyticsViewModel,
+  buildUsageRecordTimeWindow,
+  normalizeSuccessRateToPercent,
+  resolveUsageEventEffectiveModel,
+  toUsageRecordQueryValue,
+  USAGE_RECORD_RANGES,
+} from '@/lib/usage-record-analytics'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), {
   ssr: false,
   loading: () => (
     <div className="flex h-full items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-primary-500"></div>
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-gray-950"></div>
     </div>
   ),
 })
 
-echarts.use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
+echarts.use([BarChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
 
-const RANGES: UsageRange[] = ['24h', '7d', '30d', '90d']
-const MODEL_COLORS = ['#0f172a', '#f97316', '#10b981', '#8b5cf6', '#06b6d4', '#ef4444', '#eab308']
-
-function MetricCard(props: { label: string; value: string; hint: string; accent?: string }) {
+function SummaryCard(props: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_20px_45px_-32px_rgba(15,23,42,0.35)]">
+    <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
       <p className="text-sm text-gray-500">{props.label}</p>
       <p className="mt-3 text-3xl tracking-tight text-gray-950">{props.value}</p>
-      <p className="mt-2 text-xs text-gray-400" style={props.accent ? { color: props.accent } : undefined}>
-        {props.hint}
-      </p>
+      <p className="mt-2 text-sm text-gray-500">{props.hint}</p>
     </div>
   )
 }
 
-function EmptyPanel(props: { title: string; description: string; compact?: boolean }) {
+function PanelShell(props: { title: string; description: string; children: ReactNode }) {
   return (
-    <div className="rounded-3xl border border-dashed border-gray-200 bg-[linear-gradient(180deg,#fafaf9_0%,#ffffff_100%)] p-6">
-      <div className="flex h-full min-h-[260px] flex-col justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-900">{props.title}</p>
-          <p className="mt-2 max-w-md text-sm leading-6 text-gray-500">{props.description}</p>
-        </div>
-        <div className={`grid gap-3 ${props.compact ? 'grid-cols-2' : 'grid-cols-3'}`}>
-          {Array.from({ length: props.compact ? 4 : 6 }).map((_, index) => (
-            <div key={index} className="overflow-hidden rounded-2xl bg-white/80 p-3 ring-1 ring-inset ring-gray-100">
-              <div className="h-2 w-16 rounded-full bg-gray-100"></div>
-              <div className="mt-3 h-14 rounded-2xl bg-[linear-gradient(90deg,#f3f4f6_0%,#fafafa_50%,#f3f4f6_100%)]"></div>
-            </div>
-          ))}
-        </div>
+    <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+      <div className="mb-4">
+        <h3 className="text-lg text-gray-950">{props.title}</h3>
+        <p className="mt-1 text-sm text-gray-500">{props.description}</p>
       </div>
+      {props.children}
+    </section>
+  )
+}
+
+function PanelEmptyState(props: { title: string }) {
+  return (
+    <div className="flex h-[320px] items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 text-center text-sm text-gray-500">
+      {props.title}
     </div>
   )
+}
+
+function isSuccessStatus(status: number) {
+  return status === 1 || status === 200
 }
 
 export default function UsageRecordPage() {
-  const [timeRange, setTimeRange] = useState<UsageRange>('7d')
-  const [referenceModelId, setReferenceModelId] = useState('claude-sonnet-4.6')
-  const { events, isLoading, isError, mutate } = useRouterUsageEvents({ limit: 100, maxPages: 10 })
-  const { summary } = useRouterUsageSummary()
-  const { keys } = useRouterKeys()
+  const initialWindow = useMemo(() => buildUsageRecordTimeWindow('8h'), [])
+  const [range, setRange] = useState<RouterUsageAnalyticsRange>('8h')
+  const [page, setPage] = useState(1)
+  const [startInput, setStartInput] = useState(initialWindow.startInput)
+  const [endInput, setEndInput] = useState(initialWindow.endInput)
+  const [effectiveModel, setEffectiveModel] = useState('')
+  const [keyId, setKeyId] = useState('')
 
-  // 服务端分页筛选状态
-  const [logsPage, setLogsPage] = useState(1)
-  const [filterModel, setFilterModel] = useState('')
-  const [filterKeyId, setFilterKeyId] = useState<number | undefined>(undefined)
-  const [filterStart, setFilterStart] = useState('')
-  const [filterEnd, setFilterEnd] = useState('')
-  const { items: logItems, total: logTotal, isLoading: logsLoading } = useRouterUsageLogs({
-    page: logsPage,
-    pageSize: 20,
-    modelName: filterModel || undefined,
-    keyId: filterKeyId,
-    start: filterStart || undefined,
-    end: filterEnd || undefined,
-  })
-  const logTotalPages = Math.ceil(logTotal / 20)
+  const { balance, isLoading: balanceLoading, isError: balanceError, mutate: mutateBalance } = useRouterBalance()
+  const { analytics, isLoading: analyticsLoading, isError: analyticsError, mutate: mutateAnalytics } =
+    useRouterUsageAnalytics(range)
+  const { keys, isLoading: keysLoading, isError: keysError, mutate: mutateKeys } = useRouterKeys()
 
-  const dashboard = useMemo(
-    () =>
-      createUsageDashboardViewModel({
-        events,
-        summary,
-        referenceModelId,
-        range: timeRange,
-      }),
-    [events, summary, referenceModelId, timeRange]
+  useEffect(() => {
+    const nextWindow = buildUsageRecordTimeWindow(range)
+    setStartInput(nextWindow.startInput)
+    setEndInput(nextWindow.endInput)
+    setPage(1)
+  }, [range])
+
+  const logsFilter = useMemo(
+    () => ({
+      page,
+      pageSize: 20,
+      start: toUsageRecordQueryValue(startInput),
+      end: toUsageRecordQueryValue(endInput),
+      effectiveModel: effectiveModel || undefined,
+      keyId: keyId ? Number(keyId) : undefined,
+    }),
+    [effectiveModel, endInput, keyId, page, startInput]
   )
 
-  const topModel = dashboard.modelStats[0]
-  const comparisonTone = dashboard.comparison.isSaving
-    ? 'text-emerald-600 bg-emerald-50 ring-emerald-100'
-    : 'text-amber-700 bg-amber-50 ring-amber-100'
-  const comparisonTitle = dashboard.comparison.isSaving ? '预计节省' : '预计溢价'
-  const comparisonDescription = dashboard.hasEvents
-    ? `与 ${dashboard.comparison.referenceModelName} 作为统一参考模型相比，当前 Router 组合更具成本优势。`
-    : '当前时间范围内暂无真实调用记录，图表区域会保留结构化占位。'
+  const { items: logItems, total: logTotal, isLoading: logsLoading, isError: logsError, mutate: mutateLogs } =
+    useRouterUsageLogs(logsFilter)
 
-  const modelRequestsOption = {
-    color: MODEL_COLORS,
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' },
-    },
-    grid: { left: '3%', right: '6%', top: '8%', bottom: '3%', containLabel: true },
-    xAxis: {
-      type: 'value',
-      axisLine: { show: false },
-      axisTick: { show: false },
-      splitLine: { lineStyle: { color: '#f1f5f9' } },
-    },
-    yAxis: {
-      type: 'category',
-      data: dashboard.modelStats.map((item) => item.model),
-      axisLine: { show: false },
-      axisTick: { show: false },
-    },
-    series: [
-      {
-        type: 'bar',
-        barWidth: 16,
-        data: dashboard.modelStats.map((item, index) => ({
-          value: item.requests,
-          itemStyle: {
-            color: MODEL_COLORS[index % MODEL_COLORS.length],
-            borderRadius: [0, 6, 6, 0],
-          },
-        })),
+  const analyticsViewModel = useMemo(() => buildUsageRecordAnalyticsViewModel(analytics), [analytics])
+  const currency = analytics?.currency || balance?.currency || 'CNY'
+  const successRate = normalizeSuccessRateToPercent(analytics?.overview.success_rate ?? 0)
+  const totalPages = Math.ceil(logTotal / 20)
+  const keyMap = useMemo(
+    () => new Map(keys.map((item) => [item.id, `${item.name} (${item.token_preview})`])),
+    [keys]
+  )
+  const modelOptions = useMemo(
+    () => Array.from(new Set(analytics?.models.map((item) => item.effective_model) ?? [])),
+    [analytics?.models]
+  )
+
+  const stackedBarOption = useMemo(
+    () => ({
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' },
+        formatter: (params: Array<{ axisValueLabel: string; seriesName: string; value: number }>) => {
+          const header = params[0]?.axisValueLabel ?? ''
+          const rows = params
+            .filter((item) => item.value > 0)
+            .map((item) => `${item.seriesName}: ${formatCurrency(item.value, currency)}`)
+            .join('<br/>')
+          return rows ? `${header}<br/>${rows}` : `${header}<br/>暂无花费`
+        },
       },
-    ],
-  }
-
-  const modelCostShareOption = {
-    color: MODEL_COLORS,
-    tooltip: {
-      trigger: 'item',
-      formatter: (params: { name: string; value: number; percent: number }) =>
-        `${params.name}<br/>${formatCurrency(params.value, dashboard.currency)} (${params.percent}%)`,
-    },
-    legend: {
-      orient: 'vertical',
-      right: 0,
-      top: 'center',
-      textStyle: { color: '#64748b' },
-    },
-    series: [
-      {
-        type: 'pie',
-        radius: ['48%', '72%'],
-        center: ['35%', '50%'],
-        label: { show: false },
-        data: dashboard.modelStats.map((item, index) => ({
-          value: Number(item.totalCost.toFixed(6)),
-          name: item.model,
-          itemStyle: { color: MODEL_COLORS[index % MODEL_COLORS.length] },
-        })),
+      legend: {
+        top: 0,
+        data: analyticsViewModel.stackedBar.series.map((item) => item.model),
+        textStyle: { color: '#64748b', fontSize: 12 },
       },
-    ],
-  }
-
-  const trendOption = {
-    color: ['#0f172a', '#f97316'],
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['请求数', '费用'], top: 0, right: 0 },
-    grid: { left: '3%', right: '4%', top: '18%', bottom: '3%', containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: dashboard.dailyTrend.map((item) => item.date),
-      axisLine: { show: false },
-      axisTick: { show: false },
-    },
-    yAxis: [
-      {
+      grid: {
+        left: 12,
+        right: 12,
+        top: 48,
+        bottom: 12,
+        containLabel: true,
+      },
+      xAxis: {
+        type: 'category',
+        data: analyticsViewModel.stackedBar.labels,
+        axisLine: { lineStyle: { color: '#e2e8f0' } },
+        axisTick: { show: false },
+        axisLabel: { color: '#64748b' },
+      },
+      yAxis: {
         type: 'value',
         axisLine: { show: false },
         axisTick: { show: false },
+        axisLabel: {
+          color: '#64748b',
+          formatter: (value: number) => value.toFixed(2),
+        },
         splitLine: { lineStyle: { color: '#f1f5f9' } },
       },
-      {
-        type: 'value',
-        axisLine: { show: false },
-        axisTick: { show: false },
-        splitLine: { show: false },
-      },
-    ],
-    series: [
-      {
-        name: '请求数',
-        type: 'line',
-        smooth: true,
-        data: dashboard.dailyTrend.map((item) => item.requests),
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(15,23,42,0.18)' },
-              { offset: 1, color: 'rgba(15,23,42,0)' },
-            ],
-          },
-        },
-      },
-      {
-        name: '费用',
-        type: 'line',
-        smooth: true,
-        yAxisIndex: 1,
-        data: dashboard.dailyTrend.map((item) => Number(item.totalCost.toFixed(6))),
-      },
-    ],
-  }
+      series: analyticsViewModel.stackedBar.series.map((item) => ({
+        name: item.model,
+        type: 'bar',
+        stack: 'cost',
+        emphasis: { focus: 'series' },
+        itemStyle: { color: item.color, borderRadius: [6, 6, 0, 0] },
+        data: item.data.map((value) => Number(value.toFixed(6))),
+      })),
+    }),
+    [analyticsViewModel.stackedBar.labels, analyticsViewModel.stackedBar.series, currency]
+  )
 
-  const tokenTrendOption = {
-    color: ['#8b5cf6', '#10b981'],
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['输入 Tokens', '输出 Tokens'], top: 0, right: 0 },
-    grid: { left: '3%', right: '4%', top: '18%', bottom: '3%', containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: dashboard.dailyTrend.map((item) => item.date),
-      axisLine: { show: false },
-      axisTick: { show: false },
-    },
-    yAxis: {
-      type: 'value',
-      axisLine: { show: false },
-      axisTick: { show: false },
-      splitLine: { lineStyle: { color: '#f1f5f9' } },
-    },
-    series: [
-      {
-        name: '输入 Tokens',
-        type: 'line',
-        smooth: true,
-        stack: 'tokens',
-        data: dashboard.dailyTrend.map((item) => item.promptTokens),
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(139,92,246,0.28)' },
-              { offset: 1, color: 'rgba(139,92,246,0.05)' },
-            ],
-          },
-        },
+  const donutOption = useMemo(
+    () => ({
+      tooltip: {
+        trigger: 'item',
+        formatter: (params: { name: string; data: { requestCount: number; requestSharePercent: number } }) =>
+          `${params.name}<br/>${formatCompactNumber(params.data.requestCount)} 次请求 (${params.data.requestSharePercent.toFixed(1)}%)`,
       },
-      {
-        name: '输出 Tokens',
-        type: 'line',
-        smooth: true,
-        stack: 'tokens',
-        data: dashboard.dailyTrend.map((item) => item.completionTokens),
-        areaStyle: {
-          color: {
-            type: 'linear',
-            x: 0,
-            y: 0,
-            x2: 0,
-            y2: 1,
-            colorStops: [
-              { offset: 0, color: 'rgba(16,185,129,0.28)' },
-              { offset: 1, color: 'rgba(16,185,129,0.05)' },
-            ],
+      series: [
+        {
+          type: 'pie',
+          radius: ['52%', '72%'],
+          center: ['50%', '52%'],
+          label: {
+            formatter: '{b|{b}}\n{c|{d}%}',
+            rich: {
+              b: { fontSize: 12, color: '#334155', lineHeight: 18 },
+              c: { fontSize: 11, color: '#64748b', lineHeight: 16 },
+            },
           },
+          data: analyticsViewModel.donut.map((item) => ({
+            value: item.requestCount,
+            name: item.model,
+            requestCount: item.requestCount,
+            requestSharePercent: item.requestSharePercent,
+            itemStyle: { color: item.color },
+          })),
         },
-      },
-    ],
-  }
+      ],
+    }),
+    [analyticsViewModel.donut]
+  )
 
-  if (isLoading) {
+  const loading = balanceLoading || analyticsLoading || keysLoading
+
+  if (loading) {
     return (
-      <div className="space-y-4" style={{ fontFamily: 'MiSans, sans-serif' }}>
-        <div className="h-40 animate-pulse rounded-2xl bg-gray-100"></div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="h-28 animate-pulse rounded-3xl bg-gray-100"></div>
+      <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
+        <div className="h-40 animate-pulse rounded-3xl bg-gray-100"></div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="h-32 animate-pulse rounded-3xl bg-gray-100"></div>
           ))}
         </div>
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <div className="h-80 animate-pulse rounded-3xl bg-gray-100"></div>
-          <div className="h-80 animate-pulse rounded-3xl bg-gray-100"></div>
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr_1fr]">
+          {Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="h-[392px] animate-pulse rounded-3xl bg-gray-100"></div>
+          ))}
         </div>
       </div>
     )
   }
 
-  if (isError) {
+  if (balanceError || analyticsError || keysError) {
     return (
-      <ErrorBanner message="用量数据加载失败。" onRetry={() => mutate()} />
+      <ErrorBanner
+        message="使用记录加载失败。"
+        onRetry={() => {
+          void mutateBalance()
+          void mutateAnalytics()
+          void mutateKeys()
+        }}
+      />
     )
   }
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.18),_transparent_32%),linear-gradient(145deg,#0f172a_0%,#111827_45%,#1f2937_100%)] text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.75)]">
-        <div className="grid gap-8 px-6 py-7 lg:grid-cols-[1.6fr_1fr] lg:px-8">
+      <section className="overflow-hidden rounded-3xl border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_32%),linear-gradient(145deg,#f8fafc_0%,#ffffff_62%,#eff6ff_100%)] p-7 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.45)]">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-full bg-white/12 px-3 py-1 text-xs tracking-[0.24em] text-white/80">ROUTER USAGE</span>
-              <span className={`rounded-full px-3 py-1 text-xs ring-1 ${comparisonTone}`}>
-                {comparisonTitle} {formatCurrency(Math.abs(dashboard.comparison.savedAmount), dashboard.currency)}
-              </span>
+            <ConsolePageHeader
+              badge="USAGE RECORD"
+              title="使用记录"
+              description="同一时间范围统一驱动总览、模型分析与请求明细。"
+            />
+            <div className="mt-5 inline-flex rounded-full bg-gray-100 p-1">
+              {USAGE_RECORD_RANGES.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={range === option}
+                  onClick={() => setRange(option)}
+                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                    range === option
+                      ? 'bg-white text-gray-950 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.75)]'
+                      : 'text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
             </div>
-            <h2 className="mt-5 text-3xl tracking-tight text-white">真实 Router 用量仪表盘</h2>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300">
-              {comparisonDescription}
+          </div>
+          <div className="rounded-3xl border border-white/70 bg-white/90 p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.28)] backdrop-blur-sm xl:max-w-md">
+            <p className="text-sm text-gray-500">当前时间窗口</p>
+            <p className="mt-2 text-2xl tracking-tight text-gray-950">{range}</p>
+            <p className="mt-3 text-sm leading-6 text-gray-500">
+              明细表默认跟随上方时间范围，手动调整筛选后仍可查看更细的时间切片。
             </p>
-            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">当前费用</p>
-                <p className="mt-3 text-2xl text-white">{formatCurrency(dashboard.comparison.actualCost, dashboard.currency)}</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">参考费用</p>
-                <p className="mt-3 text-2xl text-white">
-                  {formatCurrency(dashboard.comparison.theoreticalCost, dashboard.currency)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">成功率</p>
-                <p className="mt-3 text-2xl text-white">{dashboard.successRate.toFixed(1)}%</p>
-              </div>
-            </div>
           </div>
+        </div>
+      </section>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.08] p-5 backdrop-blur-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-300">参考模型对比</p>
-                <p className="mt-1 text-xs text-slate-400">用于估算统一落在单一参考模型时的理论费用。</p>
-              </div>
-            </div>
-            <div className="mt-5 space-y-2">
-              {USAGE_REFERENCE_MODELS.map((model) => {
-                const active = model.id === referenceModelId
-                return (
-                  <button
-                    key={model.id}
-                    onClick={() => setReferenceModelId(model.id)}
-                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition ${
-                      active
-                        ? 'border-white/20 bg-white text-slate-900'
-                        : 'border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.10]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="h-3 w-3 rounded-full" style={{ backgroundColor: model.color }}></span>
-                      <span className="text-sm font-medium">{model.name}</span>
-                    </div>
-                    <span className={`text-xs ${active ? 'text-slate-500' : 'text-slate-400'}`}>
-                      {active ? '当前参考' : '切换'}
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          label="当前余额"
+          value={formatCurrency(balance?.available_balance ?? 0, currency)}
+          hint={`总余额 ${formatCurrency(balance?.balance ?? 0, currency)}，冻结 ${formatCurrency(balance?.frozen_amount ?? 0, currency)}`}
+        />
+        <SummaryCard
+          label="使用统计"
+          value={formatCompactNumber(analytics?.overview.total_requests ?? 0)}
+          hint={`成功 ${formatCompactNumber(analytics?.overview.success_requests ?? 0)} 次`}
+        />
+        <SummaryCard
+          label="花费"
+          value={formatCurrency(analytics?.overview.total_cost ?? 0, currency)}
+          hint={`${range} 内累计消费`}
+        />
+        <SummaryCard
+          label="成功率"
+          value={`${successRate.toFixed(1)}%`}
+          hint="按当前全局时间范围聚合"
+        />
+      </section>
+
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr_1fr]">
+        <PanelShell title="费用分布" description="按时间桶查看各实际模型的花费堆叠。">
+          {analyticsViewModel.hasData ? (
+            <ReactECharts option={stackedBarOption} style={{ height: '320px', width: '100%' }} />
+          ) : (
+            <PanelEmptyState title="所选时间范围暂无模型花费分布" />
+          )}
+        </PanelShell>
+
+        <PanelShell title="请求占比" description="按请求量观察模型份额结构。">
+          {analyticsViewModel.hasData ? (
+            <ReactECharts option={donutOption} style={{ height: '320px', width: '100%' }} />
+          ) : (
+            <PanelEmptyState title="所选时间范围暂无模型请求占比" />
+          )}
+        </PanelShell>
+
+        <PanelShell title="请求排行" description="同一颜色映射在三张分析卡中保持一致。">
+          {analyticsViewModel.hasData ? (
+            <div className="space-y-3">
+              {analyticsViewModel.ranking.map((item, index) => (
+                <div
+                  key={item.model}
+                  className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs text-gray-500">
+                      {index + 1}
                     </span>
-                  </button>
-                )
-              })}
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }}></span>
+                    <div>
+                      <p className="text-sm text-gray-950">{item.model}</p>
+                      <p className="text-xs text-gray-500">{formatCurrency(item.totalCost, currency)}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-950">{formatCompactNumber(item.requestCount)} 次</p>
+                    <p className="text-xs text-gray-500">{item.requestSharePercent.toFixed(1)}%</p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="mt-5 rounded-2xl border border-white/10 bg-black/[0.15] p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">范围</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {RANGES.map((range) => (
-                  <button
-                    key={range}
-                    onClick={() => setTimeRange(range)}
-                    className={`rounded-full px-3 py-1.5 text-sm transition ${
-                      timeRange === range ? 'bg-white text-slate-950' : 'bg-white/[0.08] text-slate-200 hover:bg-white/[0.14]'
-                    }`}
-                  >
-                    {range}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <MetricCard
-          label="总请求数"
-          value={formatCompactNumber(dashboard.aggregate.totalRequests)}
-          hint={`${timeRange} 内累计请求`}
-        />
-        <MetricCard
-          label="总 Tokens"
-          value={formatCompactNumber(dashboard.aggregate.totalTokens)}
-          hint={`${formatCompactNumber(dashboard.aggregate.promptTokens)} 输入 / ${formatCompactNumber(dashboard.aggregate.completionTokens)} 输出`}
-        />
-        <MetricCard
-          label="总费用"
-          value={formatCurrency(dashboard.aggregate.totalCost, dashboard.currency)}
-          hint="按后端实时计费结果聚合"
-        />
-        <MetricCard
-          label="节省比例"
-          value={`${Math.abs(dashboard.comparison.savingsPercentage).toFixed(1)}%`}
-          hint={dashboard.comparison.isSaving ? '相对参考模型的成本优势' : '当前策略高于参考模型'}
-          accent={dashboard.comparison.isSaving ? '#059669' : '#b45309'}
-        />
-        <MetricCard
-          label="主力模型"
-          value={topModel?.model ?? '-'}
-          hint={topModel ? `${formatCompactNumber(topModel.requests)} 次请求 / ${formatCurrency(topModel.totalCost, dashboard.currency)}` : '等待调用记录'}
-        />
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-medium text-gray-900">成本对比总览</p>
-              <p className="mt-1 text-sm text-gray-500">基于真实 usage events 聚合，并按参考模型估算对比。</p>
-            </div>
-            <span className={`rounded-full px-3 py-1 text-xs ring-1 ${comparisonTone}`}>
-              {dashboard.comparison.isSaving ? '成本更低' : '成本更高'}
-            </span>
-          </div>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl bg-slate-950 p-5 text-white">
-              <p className="text-xs uppercase tracking-[0.24em] text-slate-400">Router 当前</p>
-              <p className="mt-3 text-3xl">{formatCurrency(dashboard.comparison.actualCost, dashboard.currency)}</p>
-              <p className="mt-2 text-xs text-slate-400">来自 {timeRange} 内真实成功与失败请求。</p>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
-              <p className="text-xs uppercase tracking-[0.24em] text-gray-400">参考模型</p>
-              <p className="mt-3 text-3xl text-gray-950">{formatCurrency(dashboard.comparison.theoreticalCost, dashboard.currency)}</p>
-              <p className="mt-2 text-xs text-gray-500">以 {dashboard.comparison.referenceModelName} 统一承载的理论值。</p>
-            </div>
-            <div className="rounded-2xl border border-dashed border-gray-200 bg-white p-5">
-              <p className="text-xs uppercase tracking-[0.24em] text-gray-400">差额</p>
-              <p className={`mt-3 text-3xl ${dashboard.comparison.isSaving ? 'text-emerald-600' : 'text-amber-700'}`}>
-                {dashboard.comparison.isSaving ? '-' : '+'}
-                {formatCurrency(Math.abs(dashboard.comparison.savedAmount), dashboard.currency)}
-              </p>
-              <p className="mt-2 text-xs text-gray-500">用于观察智能路由在成本上的整体收益。</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-          <p className="text-sm font-medium text-gray-900">观测重点</p>
-          <div className="mt-5 space-y-4">
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">最近窗口</p>
-              <p className="mt-2 text-lg text-gray-900">{timeRange}</p>
-              <p className="mt-2 text-sm text-gray-500">当前页面所有统计和图表都基于选中的时间范围重新聚合。</p>
-            </div>
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">模型覆盖</p>
-              <p className="mt-2 text-lg text-gray-900">{dashboard.modelStats.length || 0} 个模型</p>
-              <p className="mt-2 text-sm text-gray-500">会把不同厂商的同族模型名称标准化后再参与排行与成本测算。</p>
-            </div>
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">数据状态</p>
-              <p className="mt-2 text-lg text-gray-900">{dashboard.hasEvents ? '已有真实调用' : '暂无窗口数据'}</p>
-              <p className="mt-2 text-sm text-gray-500">即使没有记录，也会保留完整面板结构，方便继续联调与截图验收。</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-          <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">模型请求排行</div>
-          {dashboard.hasEvents ? (
-            <ReactECharts option={modelRequestsOption} style={{ height: '320px' }} />
           ) : (
-            <EmptyPanel title="模型请求排行" description="接入真实请求后，这里会展示不同模型的调用次数分布。" compact />
+            <PanelEmptyState title="所选时间范围暂无模型请求排行" />
           )}
-        </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-          <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">模型费用占比</div>
-          {dashboard.hasEvents ? (
-            <ReactECharts option={modelCostShareOption} style={{ height: '320px' }} />
-          ) : (
-            <EmptyPanel title="模型费用占比" description="当 Router 写入真实账单后，这里会呈现费用结构，帮助判断高成本模型来源。" compact />
-          )}
-        </div>
+        </PanelShell>
       </section>
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-          <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">请求与费用趋势</div>
-          {dashboard.hasEvents ? (
-            <ReactECharts option={trendOption} style={{ height: '320px' }} />
-          ) : (
-            <EmptyPanel title="请求与费用趋势" description="趋势图会在有真实 usage events 后按天聚合请求量与费用。" />
-          )}
-        </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-          <div className="mb-3 px-2 pt-2 text-sm font-medium text-gray-900">Token 趋势</div>
-          {dashboard.hasEvents ? (
-            <ReactECharts option={tokenTrendOption} style={{ height: '320px' }} />
-          ) : (
-            <EmptyPanel title="Token 趋势" description="这里会拆分输入与输出 token 的变化，用于识别上下文长度和输出长度的波动。" />
-          )}
-        </div>
-      </section>
-
-      <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-        <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+      <section className="rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <div className="flex flex-col gap-4 border-b border-gray-100 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
-            <h3 className="text-lg text-gray-900">请求明细</h3>
-            <p className="mt-1 text-sm text-gray-500">支持按日期、模型、API Key 筛选，服务端分页。</p>
+            <h3 className="text-lg text-gray-950">请求明细</h3>
+            <p className="mt-1 text-sm text-gray-500">按时间、实际模型和 KEY 筛选，20 条每页，按最新请求优先展示。</p>
           </div>
           <span className="text-sm text-gray-400">共 {logTotal} 条</span>
         </div>
 
-        <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1.1fr_1.1fr_1fr_1fr_auto]">
           <div>
-            <label className="mb-1 block text-xs text-gray-500">开始时间</label>
+            <label htmlFor="usage-record-start" className="mb-1 block text-xs text-gray-500">
+              开始时间
+            </label>
             <input
+              id="usage-record-start"
+              aria-label="开始时间"
               type="datetime-local"
-              value={filterStart}
-              onChange={(e) => { setFilterStart(e.target.value); setLogsPage(1) }}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-950"
+              value={startInput}
+              onChange={(event) => {
+                setStartInput(event.target.value)
+                setPage(1)
+              }}
+              className="w-full rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-500">结束时间</label>
+            <label htmlFor="usage-record-end" className="mb-1 block text-xs text-gray-500">
+              结束时间
+            </label>
             <input
+              id="usage-record-end"
+              aria-label="结束时间"
               type="datetime-local"
-              value={filterEnd}
-              onChange={(e) => { setFilterEnd(e.target.value); setLogsPage(1) }}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-950"
+              value={endInput}
+              onChange={(event) => {
+                setEndInput(event.target.value)
+                setPage(1)
+              }}
+              className="w-full rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs text-gray-500">模型名</label>
-            <input
-              type="text"
-              value={filterModel}
-              onChange={(e) => { setFilterModel(e.target.value); setLogsPage(1) }}
-              placeholder="如 gpt-4o"
-              className="w-40 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-950"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-gray-500">API Key</label>
-            <Select
-              value={String(filterKeyId ?? '')}
-              onChange={(v) => { setFilterKeyId(v ? Number(v) : undefined); setLogsPage(1) }}
-              options={[
-                { value: '', label: '全部' },
-                ...keys.map((k) => ({ value: String(k.id), label: `${k.name} (${k.token_preview})` })),
-              ]}
-            />
-          </div>
-          {(filterStart || filterEnd || filterModel || filterKeyId) && (
-            <button
-              onClick={() => { setFilterStart(''); setFilterEnd(''); setFilterModel(''); setFilterKeyId(undefined); setLogsPage(1) }}
-              className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50"
+            <label htmlFor="usage-record-model" className="mb-1 block text-xs text-gray-500">
+              实际模型
+            </label>
+            <select
+              id="usage-record-model"
+              aria-label="实际模型"
+              value={effectiveModel}
+              onChange={(event) => {
+                setEffectiveModel(event.target.value)
+                setPage(1)
+              }}
+              className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-gray-950"
             >
-              清除筛选
+              <option value="">全部</option>
+              {modelOptions.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="usage-record-key" className="mb-1 block text-xs text-gray-500">
+              KEY
+            </label>
+            <select
+              id="usage-record-key"
+              aria-label="KEY"
+              value={keyId}
+              onChange={(event) => {
+                setKeyId(event.target.value)
+                setPage(1)
+              }}
+              className="w-full rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-gray-950"
+            >
+              <option value="">全部</option>
+              {keys.map((item) => (
+                <option key={item.id} value={String(item.id)}>
+                  {item.name} ({item.token_preview})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={() => {
+                const nextWindow = buildUsageRecordTimeWindow(range)
+                setStartInput(nextWindow.startInput)
+                setEndInput(nextWindow.endInput)
+                setEffectiveModel('')
+                setKeyId('')
+                setPage(1)
+              }}
+              className="w-full rounded-2xl border border-gray-200 px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-50"
+            >
+              重置筛选
             </button>
-          )}
+          </div>
         </div>
 
-        {logsLoading ? (
-          <div className="h-40 animate-pulse rounded-2xl bg-gray-100" />
-        ) : logItems.length === 0 ? (
-          <EmptyState title="当前筛选条件下没有请求记录" description="调整筛选条件或等待新的 Router 调用。" />
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 text-gray-400">
-                    <th className="px-3 py-3 font-normal">时间</th>
-                    <th className="px-3 py-3 font-normal">模型</th>
-                    <th className="px-3 py-3 font-normal">实际模型</th>
-                    <th className="px-3 py-3 font-normal">服务商</th>
-                    <th className="px-3 py-3 font-normal">Tokens</th>
-                    <th className="px-3 py-3 font-normal">费用</th>
-                    <th className="px-3 py-3 font-normal">耗时</th>
-                    <th className="px-3 py-3 font-normal">状态</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logItems.map((event) => (
-                    <tr key={event.id} className="border-b border-gray-50 text-gray-700">
-                      <td className="px-3 py-3">{formatDateTime(event.created_at)}</td>
-                      <td className="px-3 py-3">{event.model_name}</td>
-                      <td className="px-3 py-3">{event.selected_model || '-'}</td>
-                      <td className="px-3 py-3">{event.provider_slug || '-'}</td>
-                      <td className="px-3 py-3">{formatCompactNumber(event.total_tokens)}</td>
-                      <td className="px-3 py-3">{formatCurrency(event.cost, dashboard.currency)}</td>
-                      <td className="px-3 py-3">{event.duration_ms != null ? `${event.duration_ms}ms` : '-'}</td>
-                      <td className="px-3 py-3">
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs ${
-                            event.status === 1
-                              ? 'bg-green-50 text-green-700'
-                              : event.status === 3
-                                ? 'bg-amber-50 text-amber-700'
-                                : 'bg-red-50 text-red-600'
-                          }`}
-                        >
-                          {event.status === 1 ? '成功' : event.status === 3 ? '已退款' : '错误'}
-                        </span>
-                      </td>
+        <div className="mt-6">
+          {logsLoading ? (
+            <div className="h-40 animate-pulse rounded-2xl bg-gray-100" />
+          ) : logsError ? (
+            <ErrorBanner message="请求明细加载失败。" onRetry={() => mutateLogs()} />
+          ) : logItems.length === 0 ? (
+            <EmptyState title="当前筛选条件下没有请求记录" description="调整筛选条件或等待新的 Router 调用。" />
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-100 text-gray-400">
+                      <th className="px-3 py-3 font-normal">时间</th>
+                      <th className="px-3 py-3 font-normal">请求模型</th>
+                      <th className="px-3 py-3 font-normal">实际模型</th>
+                      <th className="px-3 py-3 font-normal">KEY</th>
+                      <th className="px-3 py-3 font-normal">服务商</th>
+                      <th className="px-3 py-3 font-normal">Tokens</th>
+                      <th className="px-3 py-3 font-normal">费用</th>
+                      <th className="px-3 py-3 font-normal">状态</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {logTotalPages > 1 && (
-              <Pagination page={logsPage - 1} totalPages={logTotalPages} onPageChange={(p) => setLogsPage(p + 1)} />
-            )}
-          </>
-        )}
+                  </thead>
+                  <tbody>
+                    {logItems.map((event) => (
+                      <tr key={event.id} className="border-b border-gray-50 text-gray-700">
+                        <td className="px-3 py-3">{formatDateTime(event.created_at)}</td>
+                        <td className="px-3 py-3">{event.model_name}</td>
+                        <td className="px-3 py-3">{resolveUsageEventEffectiveModel(event)}</td>
+                        <td className="px-3 py-3">{keyMap.get(event.api_key_id ?? -1) || '-'}</td>
+                        <td className="px-3 py-3">{event.provider_slug || '-'}</td>
+                        <td className="px-3 py-3">{formatCompactNumber(event.total_tokens)}</td>
+                        <td className="px-3 py-3">{formatCurrency(event.cost, currency)}</td>
+                        <td className="px-3 py-3">
+                          <span
+                            className={`rounded-full px-2.5 py-1 text-xs ${
+                              isSuccessStatus(event.status)
+                                ? 'bg-green-50 text-green-700'
+                                : event.status === 3
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : 'bg-red-50 text-red-600'
+                            }`}
+                          >
+                            {isSuccessStatus(event.status) ? '成功' : event.status === 3 ? '已退款' : '错误'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {totalPages > 1 && (
+                <Pagination page={page - 1} totalPages={totalPages} onPageChange={(nextPage) => setPage(nextPage + 1)} />
+              )}
+            </>
+          )}
+        </div>
       </section>
     </div>
   )

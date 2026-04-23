@@ -3,11 +3,13 @@ import {
   fetchAllRouterUsageEvents,
   fetchRouterBalance,
   fetchRouterBillingLedger,
+  fetchRouterUsageAnalytics,
   fetchRouterUsageEvents,
   fetchRouterUsageStats,
   fetchRouterUsageSummary,
   fetchVoucherRedemptions,
 } from '@/lib/api/router'
+import type { RouterUsageAnalyticsRange } from '@/lib/api/router'
 
 export function useRouterBalance() {
   const { data, error, isLoading, mutate } = useSWR('router-balance', fetchRouterBalance, {
@@ -32,6 +34,21 @@ export function useRouterUsageSummary(keyId?: number) {
 
   return {
     summary: data?.data ?? null,
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
+
+export function useRouterUsageAnalytics(range: RouterUsageAnalyticsRange) {
+  const cacheKey = ['router-usage-analytics', range]
+  const { data, error, isLoading, mutate } = useSWR(cacheKey, () => fetchRouterUsageAnalytics(range), {
+    revalidateOnFocus: false,
+    dedupingInterval: 15000,
+  })
+
+  return {
+    analytics: data?.data ?? null,
     isLoading,
     isError: error,
     mutate,
@@ -155,13 +172,21 @@ export interface UsageLogsFilter {
   keyId?: number
   start?: string
   end?: string
-  modelName?: string
+  effectiveModel?: string
 }
 
 export function useRouterUsageLogs(filter: UsageLogsFilter) {
   const pageSize = filter.pageSize ?? 20
   const offset = ((filter.page ?? 1) - 1) * pageSize
-  const cacheKey = ['router-usage-logs', filter.page ?? 1, pageSize, filter.keyId ?? 'all', filter.start ?? '', filter.end ?? '', filter.modelName ?? '']
+  const cacheKey = [
+    'router-usage-logs',
+    filter.page ?? 1,
+    pageSize,
+    filter.keyId ?? 'all',
+    filter.start ?? '',
+    filter.end ?? '',
+    filter.effectiveModel ?? '',
+  ]
   const { data, error, isLoading, mutate } = useSWR(
     cacheKey,
     () =>
@@ -171,7 +196,7 @@ export function useRouterUsageLogs(filter: UsageLogsFilter) {
         key_id: filter.keyId,
         start: filter.start,
         end: filter.end,
-        model_name: filter.modelName,
+        effective_model: filter.effectiveModel,
       }),
     {
       revalidateOnFocus: false,

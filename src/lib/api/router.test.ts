@@ -151,6 +151,34 @@ describe('user-service backed router console API', () => {
     )
   })
 
+  it('forwards effective_model to /billing/usage/logs for actual-model filtering', async () => {
+    mockGet.mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: {
+        items: [],
+        total: 0,
+        page: 1,
+        page_size: 20,
+      },
+    })
+
+    const { fetchRouterUsageEvents } = await import('./router')
+    await fetchRouterUsageEvents({
+      limit: 20,
+      offset: 0,
+      effective_model: 'gpt-4.1-mini-2026-04-14',
+    })
+
+    expect(mockGet).toHaveBeenCalledWith('/billing/usage/logs', {
+      params: {
+        page: 1,
+        page_size: 20,
+        effective_model: 'gpt-4.1-mini-2026-04-14',
+      },
+    })
+  })
+
   it('maps raw usage stats from /billing/usage and forwards query params', async () => {
     mockGet.mockResolvedValueOnce({
       code: 200,
@@ -235,6 +263,88 @@ describe('user-service backed router console API', () => {
       total_tokens: 750,
       total_cost: 3.45,
       currency: 'CNY',
+    })
+  })
+
+  it('maps usage analytics from /billing/usage/analytics and converts all cost fields to yuan', async () => {
+    mockGet.mockResolvedValueOnce({
+      code: 200,
+      message: 'success',
+      data: {
+        range: '8h',
+        granularity: 'hour',
+        start: '2026-04-24T00:00:00Z',
+        end: '2026-04-24T08:00:00Z',
+        currency: 'CNY',
+        overview: {
+          total_requests: 48,
+          success_requests: 45,
+          success_rate: 0.9375,
+          total_cost: 1234,
+        },
+        models: [
+          {
+            effective_model: 'gpt-4.1-mini-2026-04-14',
+            request_count: 30,
+            request_share: 0.625,
+            total_cost: 789,
+          },
+        ],
+        buckets: [
+          {
+            bucket_start: '2026-04-24T00:00:00Z',
+            label: '08:00',
+            costs: [
+              {
+                effective_model: 'gpt-4.1-mini-2026-04-14',
+                total_cost: 456,
+              },
+            ],
+          },
+        ],
+      },
+    })
+
+    const { fetchRouterUsageAnalytics } = await import('./router')
+    const response = await fetchRouterUsageAnalytics('8h')
+
+    expect(mockGet).toHaveBeenCalledWith('/billing/usage/analytics', {
+      params: {
+        range: '8h',
+      },
+    })
+    expect(response.data).toEqual({
+      range: '8h',
+      granularity: 'hour',
+      start: '2026-04-24T00:00:00Z',
+      end: '2026-04-24T08:00:00Z',
+      currency: 'CNY',
+      overview: {
+        total_requests: 48,
+        success_requests: 45,
+        success_rate: 0.9375,
+        total_cost: 12.34,
+      },
+      models: [
+        {
+          effective_model: 'gpt-4.1-mini-2026-04-14',
+          request_count: 30,
+          request_share: 0.625,
+          total_cost: 7.89,
+        },
+      ],
+      buckets: [
+        {
+          bucket_start: '2026-04-24T00:00:00Z',
+          label: '08:00',
+          costs: [
+            {
+              effective_model: 'gpt-4.1-mini-2026-04-14',
+              total_cost: 4.56,
+            },
+          ],
+        },
+      ],
     })
   })
 
