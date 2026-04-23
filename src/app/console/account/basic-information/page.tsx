@@ -3,28 +3,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/hooks/useUser'
-import { useRouterKeys } from '@/hooks/useRouterKeys'
-import { useRouterUsageSummary } from '@/hooks/useRouterUsage'
 import { changePassword, resetPassword, sendResetPasswordCode, sendVerifyEmailCode, verifyEmail } from '@/lib/api/auth'
 import { extractErrorMessage } from '@/lib/error'
-import {
-  countActiveKeys,
-  extractCurrency,
-  formatCompactNumber,
-  formatCurrency,
-  sumPrepaidBalance,
-} from '@/lib/router-analytics'
 import { clearAllTokens } from '@/lib/token'
 import { useAuthStore } from '@/stores/auth'
 
-function SummaryCard(props: { label: string; value: string; hint: string }) {
-  return (
-    <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
-      <p className="text-sm text-gray-500">{props.label}</p>
-      <p className="mt-3 text-2xl tracking-tight text-gray-950">{props.value}</p>
-      <p className="mt-2 text-xs leading-6 text-gray-400">{props.hint}</p>
-    </div>
-  )
+function formatDateTime(value: string | null | undefined) {
+  if (!value) {
+    return '-'
+  }
+  return new Date(value).toLocaleString('zh-CN', {
+    hour12: false,
+  })
 }
 
 function PasswordDialog(props: {
@@ -293,8 +283,6 @@ function PasswordDialog(props: {
 export default function BasicInformationPage() {
   const router = useRouter()
   const { user, isLoading, isError, mutate } = useUser({ restoreSession: true })
-  const { keys, isLoading: keysLoading } = useRouterKeys()
-  const { summary, isLoading: summaryLoading } = useRouterUsageSummary()
   const logout = useAuthStore((state) => state.logout)
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
   const [passwordSubmitting, setPasswordSubmitting] = useState(false)
@@ -319,12 +307,8 @@ export default function BasicInformationPage() {
   if (isLoading) {
     return (
       <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-        <div className="h-44 animate-pulse rounded-2xl bg-gray-100"></div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="h-28 animate-pulse rounded-xl bg-gray-100"></div>
-          ))}
-        </div>
+        <div className="h-20 animate-pulse rounded-xl bg-gray-100"></div>
+        <div className="h-72 animate-pulse rounded-xl bg-gray-100"></div>
       </div>
     )
   }
@@ -340,16 +324,23 @@ export default function BasicInformationPage() {
     )
   }
 
-  const activeKeyCount = countActiveKeys(keys)
-  const prepaidBalance = sumPrepaidBalance(keys)
-  const currency = extractCurrency(summary)
-  const totalRequests = summary?.total_requests ?? 0
-  const totalTokens = summary?.total_tokens ?? 0
-  const totalCost = summary?.total_cost ?? 0
-  const loading = keysLoading || summaryLoading
+  const userStatus = user?.status === 1 ? '正常' : '已禁用'
+  const emailStatus = user?.email_verified_at ? '邮箱已验证' : '邮箱未验证'
+  const rows = [
+    { label: '邮箱', value: user?.email || '-' },
+    { label: '用户 UID', value: user?.uid ? String(user.uid) : '-' },
+    { label: '账户状态', value: userStatus, tone: user?.status === 1 ? 'text-emerald-600' : 'text-red-600' },
+    {
+      label: '认证状态',
+      value: emailStatus,
+      tone: user?.email_verified_at ? 'text-emerald-600' : 'text-amber-600',
+    },
+    { label: '注册时间', value: formatDateTime(user?.created_at) },
+    { label: '最近登录', value: formatDateTime(user?.last_login_at) },
+  ]
 
   return (
-    <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
+    <div className="space-y-8" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <PasswordDialog
         open={passwordDialogOpen}
         email={user?.email || ''}
@@ -358,104 +349,45 @@ export default function BasicInformationPage() {
         onSuccess={handlePasswordSuccess}
       />
 
-      <section className="overflow-hidden rounded-2xl border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(15,23,42,0.08),_transparent_32%),linear-gradient(145deg,#ffffff_0%,#f8fafc_100%)] p-8 shadow-[0_26px_60px_-42px_rgba(15,23,42,0.22)]">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="inline-flex rounded-full bg-gray-950 px-3 py-1 text-xs font-medium tracking-[0.24em] text-white">
-              ACCOUNT OVERVIEW
-            </div>
-            <h2 className="mt-5 text-[1.75rem] tracking-tight text-gray-950">账户总览与 Router 摘要</h2>
-            <p className="mt-3 text-sm leading-7 text-gray-600">
-              这里集中展示当前账户身份、Router Key 状态、累计请求、Token 与费用摘要，作为整个控制台的统一入口。
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <button
-                onClick={() => router.push('/console/api/get-api')}
-                className="rounded-full bg-gray-950 px-6 py-3 text-sm font-medium text-white transition hover:bg-gray-800"
-              >
-                管理 API Key
-              </button>
-              <button
-                onClick={() => router.push('/console/payment/balance')}
-                className="rounded-full border border-gray-300 px-6 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-              >
-                查看余额与账单
-              </button>
-            </div>
-          </div>
+      <section className="border-b border-gray-200 pb-6">
+        <h1 className="text-3xl tracking-tight text-gray-950">用户信息</h1>
+      </section>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <div className="rounded-xl bg-gray-950 p-5 text-white">
-              <p className="text-xs tracking-[0.24em] text-slate-400">账户身份</p>
-              <p className="mt-3 text-lg">{user?.email || '-'}</p>
-              <p className="mt-2 text-sm text-slate-300">UID {user?.uid || '-'} · 当前账户已登录</p>
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="divide-y divide-gray-100">
+          {rows.map((row) => (
+            <div key={row.label} className="grid gap-2 px-6 py-5 md:grid-cols-[180px_1fr] md:items-center">
+              <div className="text-sm text-gray-500">{row.label}</div>
+              <div className={`text-sm text-gray-950 ${row.tone ?? ''}`}>{row.value}</div>
             </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="text-xs tracking-[0.24em] text-gray-400">结算币种</p>
-              <p className="mt-3 text-lg text-gray-950">{currency}</p>
-              <p className="mt-2 text-sm text-gray-500">费用与余额面板都会按后端返回币种显示。</p>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <SummaryCard label="活跃 API Key" value={loading ? '...' : String(activeKeyCount)} hint="当前启用中的 Router Key 数量" />
-        <SummaryCard label="总请求数" value={loading ? '...' : formatCompactNumber(totalRequests)} hint="累计成功与失败请求" />
-        <SummaryCard label="总 Tokens" value={loading ? '...' : formatCompactNumber(totalTokens)} hint="累计输入与输出 Token" />
-        <SummaryCard label="总费用" value={loading ? '...' : formatCurrency(totalCost, currency)} hint="Router 汇总账单" />
-        <SummaryCard label="预付费余额" value={loading ? '...' : formatCurrency(prepaidBalance, currency)} hint="所有 prepaid Key 余额之和" />
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-          <h3 className="text-lg text-gray-900">账户信息</h3>
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">邮箱</p>
-              <p className="mt-2 text-sm text-gray-900">{user?.email || '-'}</p>
-            </div>
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">用户 UID</p>
-              <p className="mt-2 text-sm text-gray-900">{user?.uid || '-'}</p>
-            </div>
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">账户状态</p>
-              <p className={`mt-2 text-sm ${user?.status === 1 ? 'text-emerald-600' : 'text-red-600'}`}>
-                {user?.status === 1 ? '正常' : '已禁用'}
-              </p>
-            </div>
-            <div className="rounded-2xl bg-gray-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">认证状态</p>
-              <p className={`mt-2 text-sm ${user?.email_verified_at ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {user?.email_verified_at ? '邮箱已验证' : '邮箱未验证'}
-              </p>
-            </div>
-          </div>
+      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+        <div className="border-b border-gray-100 px-6 py-5">
+          <h2 className="text-lg text-gray-950">安全设置</h2>
         </div>
-
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-          <h3 className="text-lg text-gray-900">安全与管理</h3>
-          <div className="mt-5 space-y-4">
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-sm font-medium text-gray-900">登录密码</p>
-              <p className="mt-2 text-sm leading-6 text-gray-600">建议定期更新密码，并避免与其他平台复用相同密码。</p>
-              <button
-                onClick={() => setPasswordDialogOpen(true)}
-                className="mt-4 rounded-full bg-gray-950 px-4 py-2 text-sm text-white transition hover:bg-gray-800"
-              >
-                修改密码
-              </button>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <p className="text-sm font-medium text-gray-900">邮箱绑定</p>
-              <p className="mt-2 text-sm leading-6 text-gray-600">当前绑定邮箱为 {user?.email || '-'}，用于登录和验证码验证。</p>
+        <div className="divide-y divide-gray-100">
+          <div className="grid gap-4 px-6 py-5 md:grid-cols-[180px_1fr_auto] md:items-center">
+            <div className="text-sm text-gray-500">登录密码</div>
+            <div className="text-sm text-gray-700">用于账户登录和敏感操作确认。</div>
+            <button
+              onClick={() => setPasswordDialogOpen(true)}
+              className="w-fit rounded-full bg-gray-950 px-4 py-2 text-sm text-white transition hover:bg-gray-800"
+            >
+              修改密码
+            </button>
+          </div>
+          <div className="px-6 py-5">
+            <div className="grid gap-4 md:grid-cols-[180px_1fr] md:items-start">
+              <div className="text-sm text-gray-500">邮箱验证</div>
               {user?.email_verified_at ? (
-                <div className="mt-4 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
+                <div className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700">
                   已验证
                 </div>
               ) : (
-                <div className="mt-4 space-y-3">
+                <div className="space-y-3">
                   <div className="flex items-end gap-2">
                     <div className="flex-1">
                       <input
