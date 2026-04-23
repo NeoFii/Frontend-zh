@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useRouterBillingLedger } from '@/hooks/useRouterUsage'
 import { transactionTypeMeta } from '@/lib/api/router'
 import { formatCurrency, formatDateTime } from '@/lib/router-analytics'
@@ -20,18 +20,24 @@ const TYPE_TABS: Array<{ value: number | null; label: string }> = [
   { value: 4, label: '冻结' },
   { value: 5, label: '解冻' },
   { value: 6, label: '调整' },
+  { value: 7, label: '代金券' },
 ]
 
 export default function BillingHistoryPage() {
   const [page, setPage] = useState(0)
   const [typeFilter, setTypeFilter] = useState<number | null>(null)
-  const { items, total, isLoading, isError, mutate } = useRouterBillingLedger({ limit: PAGE_SIZE, offset: page * PAGE_SIZE })
+  const { items, total, isLoading, isError, mutate } = useRouterBillingLedger({
+    limit: PAGE_SIZE,
+    offset: page * PAGE_SIZE,
+    type: typeFilter ?? undefined,
+  })
 
-  const filteredItems = useMemo(
-    () => typeFilter === null ? items : items.filter((item) => item.type === typeFilter),
-    [items, typeFilter]
-  )
   const totalPages = Math.ceil(total / PAGE_SIZE)
+  const showGlobalEmpty = typeFilter === null && items.length === 0
+  const handleTypeChange = (value: number | null) => {
+    setTypeFilter(value)
+    setPage(0)
+  }
 
   if (isLoading) {
     return (
@@ -52,7 +58,7 @@ export default function BillingHistoryPage() {
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <ConsolePageHeader badge="BILLING LEDGER" title="账单历史与账务流水" description="这里按账户余额流水实时渲染入账、调整、冻结和扣费记录，用于核对每次资金变化和调用来源。" />
 
-      {items.length === 0 ? (
+      {showGlobalEmpty ? (
         <EmptyState title="暂无账单流水。" />
       ) : (
         <section className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
@@ -60,7 +66,7 @@ export default function BillingHistoryPage() {
             {TYPE_TABS.map((tab) => (
               <button
                 key={tab.value ?? 'all'}
-                onClick={() => setTypeFilter(tab.value)}
+                onClick={() => handleTypeChange(tab.value)}
                 className={`rounded-full px-3.5 py-1.5 text-sm transition ${
                   typeFilter === tab.value
                     ? 'bg-gray-950 text-white'
@@ -71,13 +77,13 @@ export default function BillingHistoryPage() {
               </button>
             ))}
           </div>
-          {filteredItems.length === 0 ? (
+          {items.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500">
               当前类型下暂无记录。
             </div>
           ) : (
           <div className="divide-y divide-gray-100">
-            {filteredItems.map((item) => {
+            {items.map((item) => {
               const meta = transactionTypeMeta(item.type)
               const isPositive = item.direction === 'credit' || (item.direction === 'adjust' && item.amount >= 0)
               const amountPrefix = isPositive ? '+' : '-'

@@ -5,6 +5,7 @@ import {
   fetchRouterBillingLedger,
   fetchRouterUsageEvents,
   fetchRouterUsageSummary,
+  fetchVoucherRedemptions,
 } from '@/lib/api/router'
 
 export function useRouterBalance() {
@@ -60,8 +61,14 @@ export function useRouterUsageEvents(options?: { keyId?: number; limit?: number;
   }
 }
 
-export function useRouterBillingLedger(options?: { keyId?: number; limit?: number; offset?: number }) {
-  const cacheKey = ['router-billing-ledger', options?.keyId ?? 'all', options?.limit ?? 50, options?.offset ?? 0]
+export function useRouterBillingLedger(options?: { keyId?: number; limit?: number; offset?: number; type?: number }) {
+  const cacheKey = [
+    'router-billing-ledger',
+    options?.keyId ?? 'all',
+    options?.limit ?? 50,
+    options?.offset ?? 0,
+    options?.type ?? 'all',
+  ]
   const { data, error, isLoading, mutate } = useSWR(
     cacheKey,
     () =>
@@ -69,10 +76,35 @@ export function useRouterBillingLedger(options?: { keyId?: number; limit?: numbe
         key_id: options?.keyId,
         limit: options?.limit,
         offset: options?.offset,
+        type: options?.type,
       }),
     {
       revalidateOnFocus: false,
       dedupingInterval: 15000,
+    }
+  )
+
+  return {
+    items: data?.data.items ?? [],
+    total: data?.data.total ?? 0,
+    isLoading,
+    isError: error,
+    mutate,
+  }
+}
+
+export function useVoucherRedemptions(options?: { limit?: number; offset?: number }) {
+  const cacheKey = ['router-voucher-redemptions', options?.limit ?? 20, options?.offset ?? 0]
+  const { data, error, isLoading, mutate } = useSWR(
+    cacheKey,
+    () =>
+      fetchVoucherRedemptions({
+        limit: options?.limit,
+        offset: options?.offset,
+      }),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 10000,
     }
   )
 
