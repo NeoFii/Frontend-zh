@@ -3,7 +3,7 @@
 /**
  * 模型页面
  * 展示所有支持的 AI 模型，以网格卡片形式呈现
- * 支持分类 Tab、研发商多选、关键词搜索（均通过后端 API 过滤）
+ * 支持分类 Tab、厂商多选和分页（均通过后端 API 过滤）
  */
 
 import React, { useState, useEffect } from 'react'
@@ -11,7 +11,6 @@ import useSWR from 'swr'
 import { getModels, getCategories, getVendors } from '@/lib/api/testing-model'
 import type { ModelCategory, ModelVendor } from '@/types/model'
 import CategoryTabs from '@/components/model/CategoryTabs'
-import ModelSearch from '@/components/model/ModelSearch'
 import ModelCard from '@/components/model/ModelCard'
 import VendorFilter from '@/components/model/VendorFilter'
 
@@ -22,11 +21,13 @@ const animationClasses = {
   visible: 'opacity-100 translate-y-0',
 }
 
+const MODEL_PAGE_SIZE = 24
+
 export default function ModelPage() {
   // 筛选状态
-  const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedVendors, setSelectedVendors] = useState<string[]>([])
+  const [page, setPage] = useState(1)
 
   // 用于触发页面进入动画的状态
   const [isLoaded, setIsLoaded] = useState(false)
@@ -42,34 +43,44 @@ export default function ModelPage() {
     () => getCategories()
   )
 
-  // 获取研发商列表（静态数据，不受筛选影响）
+  // 获取厂商列表（静态数据，不受筛选影响）
   const { data: vendors = [] } = useSWR<ModelVendor[]>(
     'vendors',
     () => getVendors()
   )
 
   // 获取模型列表（随所有筛选条件变化而重新请求）
-  const swrKey = ['models', selectedCategory, selectedVendors.join(','), searchQuery]
+  const swrKey = ['models', selectedCategory, selectedVendors.join(','), page]
   const { data: modelsData, isLoading } = useSWR(
     swrKey,
     () =>
       getModels({
         category: selectedCategory || undefined,
         vendors: selectedVendors.length > 0 ? selectedVendors : undefined,
-        q: searchQuery || undefined,
-        page: 1,
-        page_size: 100,
+        page,
+        page_size: MODEL_PAGE_SIZE,
       })
   )
 
   const models = modelsData?.items || []
   const totalModels = modelsData?.total ?? models.length
-  const hasActiveFilters = searchQuery || selectedCategory || selectedVendors.length > 0
+  const totalPages = Math.max(1, Math.ceil(totalModels / MODEL_PAGE_SIZE))
+  const hasActiveFilters = selectedCategory || selectedVendors.length > 0
+
+  const changeCategory = (category: string | null) => {
+    setSelectedCategory(category)
+    setPage(1)
+  }
+
+  const changeVendors = (vendorSlugs: string[]) => {
+    setSelectedVendors(vendorSlugs)
+    setPage(1)
+  }
 
   const clearAllFilters = () => {
-    setSearchQuery('')
     setSelectedCategory(null)
     setSelectedVendors([])
+    setPage(1)
   }
 
   return (
@@ -94,33 +105,26 @@ export default function ModelPage() {
         <div className={`w-full bg-white border border-[#E5E7EB] rounded-lg p-5 md:p-6 mb-8 ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-200`}>
           <div className="flex flex-col gap-6">
 
-            {/* 上半部分：分类 Tab 与 搜索框 */}
+            {/* 上半部分：分类 Tab */}
             <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-slate-100 pb-6">
               <div className="w-full xl:w-auto flex-1 overflow-x-auto pb-2 xl:pb-0">
                 <CategoryTabs
                   categories={categories}
                   selectedKey={selectedCategory}
-                  onChange={setSelectedCategory}
+                  onChange={changeCategory}
                   labels={{ all: '全部模型' }}
-                />
-              </div>
-              <div className="w-full xl:w-80 shrink-0">
-                <ModelSearch
-                  value={searchQuery}
-                  onChange={setSearchQuery}
-                  placeholder="搜索模型名称或能力..."
                 />
               </div>
             </div>
 
-            {/* 下半部分：研发商筛选 */}
+            {/* 下半部分：厂商筛选 */}
             <div className="w-full">
               <div className="text-sm font-bold tracking-widest uppercase text-slate-400 mb-3 ml-1">
               </div>
               <VendorFilter
                 vendors={vendors}
                 selectedVendors={selectedVendors}
-                onChange={setSelectedVendors}
+                onChange={changeVendors}
               />
             </div>
 
@@ -140,7 +144,7 @@ export default function ModelPage() {
               </span>
             ) : (
               <>
-                共找到 <span className="text-slate-900 font-bold text-base px-0.5">{models.length}</span> 个可用模型
+                共 {totalModels} 个模型 · 第 {page} / {totalPages} 页
               </>
             )}
           </div>
@@ -190,7 +194,7 @@ export default function ModelPage() {
 
               <h3 className="text-xl font-bold text-slate-800 tracking-tight mb-2">没有找到匹配的模型</h3>
               <p className="text-sm text-slate-500 max-w-sm mb-6 leading-relaxed">
-                当前筛选组合下未找到任何模型。您可以尝试减少筛选条件或更换搜索关键词。
+                当前筛选组合下未找到任何模型。您可以尝试减少筛选条件。
               </p>
 
               <button
@@ -201,6 +205,25 @@ export default function ModelPage() {
               </button>
             </div>
           )}
+        </div>
+
+        <div className={`mt-8 flex items-center justify-center gap-3 ${animationClasses.container} ${isLoaded ? animationClasses.visible : animationClasses.hidden} delay-500`}>
+          <button
+            type="button"
+            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+            disabled={page <= 1}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+          >
+            上一页
+          </button>
+          <button
+            type="button"
+            onClick={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
+            disabled={page >= totalPages}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+          >
+            下一页
+          </button>
         </div>
 
       </div>
