@@ -1,7 +1,7 @@
 import React from 'react'
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
-import ModelCardV2 from './ModelCardV2'
+import ModelCard from './ModelCard'
 
 jest.mock('next/link', () => {
   function MockLink({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) {
@@ -19,10 +19,10 @@ jest.mock('next/image', () => {
   return MockImage
 })
 
-describe('ModelCardV2', () => {
+describe('ModelCard', () => {
   it('renders model card with vendor, name, tags, and context window', () => {
     render(
-      React.createElement(ModelCardV2, {
+      React.createElement(ModelCard, {
         model: {
           id: 1,
           slug: 'gpt-5',
@@ -67,7 +67,7 @@ describe('ModelCardV2', () => {
 
   it('shows placeholders when model-level fen pricing is absent', () => {
     render(
-      React.createElement(ModelCardV2, {
+      React.createElement(ModelCard, {
         model: {
           id: 1,
           slug: 'gpt-5',

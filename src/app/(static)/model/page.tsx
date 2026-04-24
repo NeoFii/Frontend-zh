@@ -12,7 +12,7 @@ import { getModels, getCategories, getVendors } from '@/lib/api/testing-model'
 import type { ModelCategory, ModelVendor } from '@/types/model'
 import CategoryTabs from '@/components/model/CategoryTabs'
 import ModelSearch from '@/components/model/ModelSearch'
-import ModelCardV2 from '@/components/model/ModelCardV2'
+import ModelCard from '@/components/model/ModelCard'
 import VendorFilter from '@/components/model/VendorFilter'
 
 // 定义进入动画的 Tailwind 类组合
@@ -174,7 +174,7 @@ export default function ModelPage() {
             // 网格列表
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {models.map((model) => (
-                <ModelCardV2 key={model.slug} model={model} />
+                <ModelCard key={model.slug} model={model} />
               ))}
             </div>
           ) : (

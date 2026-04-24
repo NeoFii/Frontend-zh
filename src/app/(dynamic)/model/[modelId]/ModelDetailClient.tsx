@@ -5,7 +5,7 @@ import useSWR from 'swr'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getModelBySlug } from '@/lib/api/testing-model'
-import type { ModelDetail, ModelOffering } from '@/types/model'
+import type { ModelDetail } from '@/types/model'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 
 interface ModelDetailClientProps {
@@ -23,74 +23,6 @@ const formatContextWindow = (tokens?: number): string => {
 const formatFenPrice = (fen?: number | null): string => {
   if (fen == null) return '待配置'
   return `¥${(fen / 100).toFixed(2)}`
-}
-
-// 提供商卡片：展示一个提供商的性能探测均值
-const OfferingCard: React.FC<{ offering: ModelOffering }> = ({ offering }) => {
-  const { provider, metrics } = offering
-  const hasMetrics = metrics && metrics.sample_count > 0
-
-  return (
-    <div className="bg-[#F7F8FA] rounded-xl p-5">
-      {/* 提供商头部 */}
-      <div className="flex items-center gap-3 mb-4">
-        {provider.logo_url ? (
-          <div className="relative w-10 h-10 flex-shrink-0">
-            <Image
-              src={provider.logo_url}
-              alt={provider.name}
-              fill
-              className="object-contain rounded-lg"
-            />
-          </div>
-        ) : (
-          <div className="w-10 h-10 rounded-lg bg-[#6366F1] flex items-center justify-center text-white font-bold">
-            {provider.name.charAt(0)}
-          </div>
-        )}
-        <div>
-          <h4 className="text-[16px] font-semibold text-[#181E25]">{provider.name}</h4>
-        </div>
-      </div>
-
-      {/* 性能探测均值 */}
-      <div className="border-t border-gray-200 pt-4">
-        {hasMetrics ? (
-          <>
-            <h5 className="text-[13px] font-medium text-[#181E25] mb-3">近期性能（均值）</h5>
-            <div className="grid grid-cols-3 gap-3 text-[12px]">
-              <div>
-                <div className="text-[#9CA3AF] mb-1">首字延迟</div>
-                <div className="text-[#181E25] font-medium">
-                  {metrics.avg_ttft_ms != null ? `${metrics.avg_ttft_ms}ms` : '-'}
-                </div>
-              </div>
-              <div>
-                <div className="text-[#9CA3AF] mb-1">E2E 延迟</div>
-                <div className="text-[#181E25] font-medium">
-                  {metrics.avg_e2e_latency_ms != null ? `${metrics.avg_e2e_latency_ms}ms` : '-'}
-                </div>
-              </div>
-              <div>
-                <div className="text-[#9CA3AF] mb-1">吞吐量</div>
-                <div className="text-[#181E25] font-medium">
-                  {metrics.avg_throughput_tps != null
-                    ? `${metrics.avg_throughput_tps.toFixed(1)} t/s`
-                    : '-'}
-                </div>
-              </div>
-            </div>
-            <div className="hidden">
-              近 {metrics.sample_count} 次探测均值
-              {metrics.probe_region && ` · ${metrics.probe_region}`}
-            </div>
-          </>
-        ) : (
-          <p className="text-[12px] text-[#9CA3AF]">暂无性能探测数据</p>
-        )}
-      </div>
-    </div>
-  )
 }
 
 export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
@@ -124,8 +56,6 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
       </main>
     )
   }
-
-  const activeOfferings = model.offerings.filter((o) => o.is_active)
 
   return (
     <main className="min-h-screen bg-white">
@@ -235,21 +165,6 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
           </div>
         )}
 
-        {/* 报价与性能 */}
-        <div className="mb-8">
-          <h2 className="text-[20px] font-semibold text-[#181E25] mb-4">支持服务商与性能</h2>
-          {activeOfferings.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {activeOfferings.map((offering) => (
-                <OfferingCard key={offering.id} offering={offering} />
-              ))}
-            </div>
-          ) : (
-            <div className="bg-[#F7F8FA] rounded-xl p-6 text-center text-[14px] text-[#9CA3AF]">
-              暂无可用提供商数据
-            </div>
-          )}
-        </div>
       </div>
     </main>
   )

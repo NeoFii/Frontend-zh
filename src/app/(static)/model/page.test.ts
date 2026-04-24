@@ -24,8 +24,8 @@ jest.mock('@/components/model/VendorFilter', () => {
   }
 })
 
-jest.mock('@/components/model/ModelCardV2', () => {
-  return function ModelCardV2({ model }: { model: { name: string; summary?: string } }) {
+jest.mock('@/components/model/ModelCard', () => {
+  return function ModelCard({ model }: { model: { name: string; summary?: string } }) {
     return React.createElement('div', null, `${model.name}:${model.summary ?? ''}`)
   }
 })
