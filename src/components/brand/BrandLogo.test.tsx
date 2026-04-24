@@ -25,9 +25,18 @@ describe('BrandLogo', () => {
     expect(screen.getByText('TierFlow')).toBeInTheDocument()
   })
 
-  it('supports fixed mark sizes', () => {
-    render(<BrandMark size="hero" />)
+  it('keeps every slash mark size aligned to the site logo standard', () => {
+    render(
+      <>
+        <BrandMark size="sm" data-testid="mark-sm" />
+        <BrandMark size="md" data-testid="mark-md" />
+        <BrandMark size="lg" data-testid="mark-lg" />
+        <BrandMark size="hero" data-testid="mark-hero" />
+      </>
+    )
 
-    expect(screen.getByText('/')).toHaveClass('h-28', 'w-28', 'text-5xl')
+    for (const size of ['sm', 'md', 'lg', 'hero']) {
+      expect(screen.getByTestId(`mark-${size}`)).toHaveClass('h-7', 'w-7', 'rounded-md', 'text-base')
+    }
   })
 })

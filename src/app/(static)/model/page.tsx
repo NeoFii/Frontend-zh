@@ -87,10 +87,7 @@ export default function ModelPage() {
     <main className="min-h-screen bg-[#F8FAFC] font-sans text-[#181E25] pb-16">
       <div className="border-b border-[#E5E7EB] bg-white">
         <div className="mx-auto max-w-[1200px] px-4 lg:px-0 py-10">
-          <div className="inline-flex rounded-full border border-[#E5E7EB] bg-[#F9FAFB] px-3 py-1 text-[13px] font-medium text-[#4B5563]">
-            {totalModels} 个模型 · {vendors.length} 家厂商
-          </div>
-          <h1 className="mt-5 text-[32px] font-semibold leading-tight text-[#181E25]">
+          <h1 className="text-[32px] font-semibold leading-tight text-[#181E25]">
             TierFlow 支持的模型
           </h1>
           <p className="mt-3 max-w-[720px] text-[15px] leading-7 text-[#4B5563]">

@@ -121,12 +121,12 @@ describe('ModelPage', () => {
     })
   })
 
-  it('renders the product-style hero copy and model stats badge', () => {
+  it('renders the product-style hero copy without model stats badge', () => {
     const { container } = render(React.createElement(ModelPage))
     const pageContainer = container.querySelector('main > div + div')
     const grid = container.querySelector('.grid.grid-cols-1.gap-4')
 
-    expect(screen.getByText('30 个模型 · 2 家厂商')).toBeInTheDocument()
+    expect(screen.queryByText('30 个模型 · 2 家厂商')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'TierFlow 支持的模型' })).toBeInTheDocument()
     expect(screen.getByText('gpt-5:广泛通用能力，工具调用稳定。')).toBeInTheDocument()
     expect(screen.queryByText(/这里是详情正文/)).not.toBeInTheDocument()

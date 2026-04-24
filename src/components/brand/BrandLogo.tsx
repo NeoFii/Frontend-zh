@@ -5,9 +5,9 @@ type BrandMarkTone = 'default' | 'inverse'
 
 const markSizeClasses: Record<BrandLogoSize, string> = {
   sm: 'h-7 w-7 rounded-md text-base',
-  md: 'h-9 w-9 rounded-md text-xl',
-  lg: 'h-16 w-16 rounded-2xl text-2xl',
-  hero: 'h-28 w-28 rounded-[1.5rem] text-5xl',
+  md: 'h-7 w-7 rounded-md text-base',
+  lg: 'h-7 w-7 rounded-md text-base',
+  hero: 'h-7 w-7 rounded-md text-base',
 }
 
 const labelSizeClasses: Record<Exclude<BrandLogoSize, 'hero'>, string> = {
