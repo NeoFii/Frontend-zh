@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { BrandMark } from '@/components/brand/BrandLogo'
 import PageHero from '@/components/ui/PageHero'
 
 // --- 动画组件 1: 数字滚动效果 (Odometer/CountUp) ---
@@ -167,9 +168,10 @@ export default function AboutClient() {
                       <div className="absolute bottom-0 left-0 w-64 h-64 bg-violet-50 rounded-full blur-3xl -ml-20 -mb-20"></div>
 
                       <div className="text-center relative z-10 flex flex-col items-center">
-                        <div className="w-28 h-28 mx-auto mb-6 bg-gradient-to-br from-blue-600 to-violet-600 rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-blue-500/30 transform group-hover:-translate-y-2 transition-all duration-300">
-                          <span className="text-5xl font-extrabold text-white">E</span>
-                        </div>
+                        <BrandMark
+                          size="hero"
+                          className="mx-auto mb-6 shadow-2xl shadow-gray-900/20 transform group-hover:-translate-y-2 transition-all duration-300"
+                        />
                         {/* 品牌名称同样使用跳出动画 */}
                         <div className="text-slate-900 font-bold text-3xl tracking-tight mb-3 h-10">
                           <BouncingText text="Eucal AI" delayOffset={0.8} isLoaded={isLoaded} />

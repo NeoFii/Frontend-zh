@@ -1,11 +1,11 @@
+import { BrandMark } from '@/components/brand/BrandLogo'
+
 export default function Loading() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <div className="flex flex-col items-center">
         {/* Logo 动画 */}
-        <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/30 mb-6 animate-pulse">
-          <span className="text-white font-bold text-2xl">E</span>
-        </div>
+        <BrandMark size="lg" className="mb-6 animate-pulse shadow-lg shadow-gray-900/20" />
 
         {/* 加载动画 */}
         <div className="flex space-x-2">

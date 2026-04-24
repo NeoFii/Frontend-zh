@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 interface NavItem { name: string; path: string; children?: NavItem[]; external?: boolean }
 
@@ -100,12 +101,10 @@ export default function AppHeader() {
           <div className="flex items-center">
             {/* Logo */}
             <Link href="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/25 group-hover:scale-105 group-hover:shadow-primary-500/40 transition-all duration-300">
-                <span className="text-white font-bold text-xl">E</span>
-              </div>
-              <span className="text-xl font-bold text-gray-900 tracking-tight font-sans group-hover:text-primary-600 transition-colors duration-300">
-                {companyName}
-              </span>
+              <BrandLogo
+                label={companyName}
+                labelClassName="text-gray-900 font-sans group-hover:text-primary-600 transition-colors duration-300"
+              />
             </Link>
 
             {/* Desktop navigation */}

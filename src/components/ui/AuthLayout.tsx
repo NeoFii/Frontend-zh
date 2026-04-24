@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 export const LoadingState = ({ label }: { label: string }) => (
   <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center bg-[#f8fafc] text-[#6b7280]">
@@ -44,10 +45,6 @@ export default function AuthLayout({
             maskImage: 'radial-gradient(ellipse at 40% 30%, #000 30%, transparent 80%)',
           }}
         />
-        <div className="relative z-10 mb-20 flex items-center gap-2.5 text-base font-semibold">
-          <span className="grid h-7 w-7 place-items-center rounded-md bg-[#f97316] font-mono font-bold text-[#111827]">/</span>
-          <span>TierFlow</span>
-        </div>
         <div className="relative z-10">
           <h2 className="mb-6 max-w-[15ch] text-[clamp(28px,3vw,40px)] font-medium leading-[1.1] tracking-[-0.02em]">
             {heading}
@@ -62,8 +59,11 @@ export default function AuthLayout({
       <section className="flex min-h-[680px] flex-col px-6 py-10 sm:px-10 lg:p-12">
         <div className="mb-auto flex items-center justify-between gap-4 pb-12">
           <Link href="/" className="flex items-center gap-2.5 text-base font-semibold text-[#111827]">
-            <span className="grid h-7 w-7 place-items-center rounded-md bg-[#111827] font-mono font-bold text-white">/</span>
-            <span>TierFlow</span>
+            <BrandLogo
+              label="TierFlow"
+              className="gap-2.5"
+              labelClassName="text-base font-semibold text-[#111827]"
+            />
           </Link>
           <span className="font-mono text-[13px] text-[#6b7280]">
             {switchLabel}

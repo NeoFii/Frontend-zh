@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 
 interface NavItem { name: string; path: string }
 
@@ -16,12 +17,7 @@ export default function AppFooter() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20">
-                <span className="text-white font-bold text-xl">E</span>
-              </div>
-              <span className="text-xl font-bold text-white">Eucal AI</span>
-            </div>
+            <BrandLogo size="md" markTone="inverse" className="mb-4" labelClassName="text-white" />
             <p className="text-gray-400 mb-4 max-w-sm">
               致力于为企业提供高性能 AI 推理优化方案，推动智能化转型。
             </p>

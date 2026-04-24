@@ -1,16 +1,19 @@
 ﻿'use client'
 
 import Link from 'next/link'
+import { BrandLogo } from '@/components/brand/BrandLogo'
+
 export default function ConsoleHeader() {
   return (
     <header className="fixed left-0 right-0 top-0 z-50 h-16 border-b border-gray-200 bg-white/95 backdrop-blur" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <div className="flex h-full items-center justify-between px-6">
         <div className="flex min-w-0 items-center gap-5">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gray-950 text-sm font-semibold text-white shadow-[0_12px_24px_-16px_rgba(15,23,42,0.55)]">
-              E
-            </div>
-            <span className="text-lg font-semibold tracking-tight text-gray-950">Eucal AI</span>
+            <BrandLogo
+              size="md"
+              labelClassName="text-lg font-semibold text-gray-950"
+              markClassName="shadow-[0_12px_24px_-16px_rgba(15,23,42,0.55)]"
+            />
           </Link>
 
           <div className="hidden h-8 w-px bg-gray-200 lg:block" />
