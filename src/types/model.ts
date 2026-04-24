@@ -85,7 +85,12 @@ export interface ModelListItem {
   id: number
   slug: string
   name: string
+  summary?: string
   description?: string
+  /** 每百万输入 token 价格（人民币分，null=未知）*/
+  price_input_per_m_fen?: number | null
+  /** 每百万输出 token 价格（人民币分，null=未知）*/
+  price_output_per_m_fen?: number | null
   /** 能力标签，如 ["chat","reasoning","vision","tool_calling"] */
   capability_tags: string[]
   context_window?: number
@@ -110,4 +115,3 @@ export interface PagedResponse<T> {
   page: number
   page_size: number
 }
-

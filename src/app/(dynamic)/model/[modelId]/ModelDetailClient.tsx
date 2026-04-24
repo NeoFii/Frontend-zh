@@ -20,7 +20,12 @@ const formatContextWindow = (tokens?: number): string => {
   return String(tokens)
 }
 
-// 报价卡片：展示一个提供商的价格和性能探测均值
+const formatFenPrice = (fen?: number | null): string => {
+  if (fen == null) return '待配置'
+  return `¥${(fen / 100).toFixed(2)}`
+}
+
+// 提供商卡片：展示一个提供商的性能探测均值
 const OfferingCard: React.FC<{ offering: ModelOffering }> = ({ offering }) => {
   const { provider, metrics } = offering
   const hasMetrics = metrics && metrics.sample_count > 0
@@ -45,26 +50,6 @@ const OfferingCard: React.FC<{ offering: ModelOffering }> = ({ offering }) => {
         )}
         <div>
           <h4 className="text-[16px] font-semibold text-[#181E25]">{provider.name}</h4>
-        </div>
-      </div>
-
-      {/* 价格信息 */}
-      <div className="grid grid-cols-2 gap-4 mb-4 text-[13px]">
-        <div>
-          <span className="text-[#9CA3AF]">输入: </span>
-          <span className="text-[#181E25]">
-            {offering.price_input_per_m != null
-              ? `¥${offering.price_input_per_m}/1M`
-              : '-'}
-          </span>
-        </div>
-        <div>
-          <span className="text-[#9CA3AF]">输出: </span>
-          <span className="text-[#181E25]">
-            {offering.price_output_per_m != null
-              ? `¥${offering.price_output_per_m}/1M`
-              : '-'}
-          </span>
         </div>
       </div>
 
@@ -190,10 +175,16 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
               )}
             </div>
           )}
+
+          {model.summary && (
+            <p className="mt-4 max-w-[760px] text-[15px] leading-7 text-[#4B5563]">
+              {model.summary}
+            </p>
+          )}
         </div>
 
         {/* 关键信息卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-[#F7F8FA] rounded-xl p-5">
             <div className="text-[13px] text-[#666666] mb-1">上下文窗口</div>
             <div className="text-[24px] font-semibold text-[#181E25]">
@@ -202,32 +193,29 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
             <div className="text-[12px] text-[#666666] mt-1">tokens</div>
           </div>
 
-          {model.max_output_tokens && (
-            <div className="bg-[#F7F8FA] rounded-xl p-5">
-              <div className="text-[13px] text-[#666666] mb-1">最大输出</div>
-              <div className="text-[24px] font-semibold text-[#181E25]">
-                {formatContextWindow(model.max_output_tokens)}
-              </div>
-              <div className="text-[12px] text-[#666666] mt-1">tokens</div>
-            </div>
-          )}
-
           <div className="bg-[#F7F8FA] rounded-xl p-5">
-            <div className="text-[13px] text-[#666666] mb-1">可用提供商</div>
+            <div className="text-[13px] text-[#666666] mb-1">每百万输入价格</div>
             <div className="text-[24px] font-semibold text-[#181E25]">
-              {activeOfferings.length}
+              {formatFenPrice(model.price_input_per_m_fen)}
             </div>
           </div>
-        </div>
+
+          <div className="bg-[#F7F8FA] rounded-xl p-5">
+            <div className="text-[13px] text-[#666666] mb-1">每百万输出价格</div>
+            <div className="text-[24px] font-semibold text-[#181E25]">
+              {formatFenPrice(model.price_output_per_m_fen)}
+            </div>
+          </div>
+        </section>
 
         {/* 模型描述 */}
         {model.description && (
-          <div className="mb-8">
-            <h2 className="text-[20px] font-semibold text-[#181E25] mb-4">模型描述</h2>
+          <section className="mb-8">
+            <h2 className="text-[20px] font-semibold text-[#181E25] mb-4">模型介绍</h2>
             <div className="bg-[#F7F8FA] rounded-xl p-6">
               <MarkdownRenderer content={model.description} />
             </div>
-          </div>
+          </section>
         )}
 
         {/* 能力标签 */}
