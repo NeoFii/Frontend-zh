@@ -148,23 +148,6 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
           </section>
         )}
 
-        {/* 能力标签 */}
-        {model.capability_tags.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-[20px] font-semibold text-[#181E25] mb-4">能力标签</h2>
-            <div className="flex flex-wrap gap-3">
-              {model.capability_tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="px-4 py-2 bg-[#F7F8FA] rounded-lg text-[14px] text-[#181E25]"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
       </div>
     </main>
   )

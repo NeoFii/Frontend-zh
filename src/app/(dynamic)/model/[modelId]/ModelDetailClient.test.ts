@@ -41,7 +41,7 @@ describe('ModelDetailClient', () => {
         description: '开源推理模型，擅长数学、代码与复杂分析。',
         price_input_per_m_fen: 1234,
         price_output_per_m_fen: 5678,
-        capability_tags: ['reasoning', 'coding'],
+        capability_tags: ['chat', 'reasoning', 'coding'],
         context_window: 128000,
         max_output_tokens: 32000,
         is_reasoning_model: true,
@@ -102,6 +102,10 @@ describe('ModelDetailClient', () => {
     expect(screen.queryByText('OpenRouter')).not.toBeInTheDocument()
     expect(screen.queryByText('近期性能（均值）')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '模型介绍' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: '能力标签' })).not.toBeInTheDocument()
+    expect(screen.queryByText('chat')).not.toBeInTheDocument()
+    expect(screen.queryByText('reasoning')).not.toBeInTheDocument()
+    expect(screen.queryByText('coding')).not.toBeInTheDocument()
 
     const metricsSection = screen.getByText('上下文窗口').closest('section')
     const introSection = screen.getByRole('heading', { name: '模型介绍' }).closest('section')
