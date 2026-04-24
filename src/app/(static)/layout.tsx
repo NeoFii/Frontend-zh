@@ -3,7 +3,7 @@ import SiteLayout from "@/components/layout/SiteLayout";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: '一个接口 主流大模型 - Eucal AI',
+    title: '一个接口 主流大模型',
     description: '只需替换 BASE URL，即可通过统一接口访问所有主流大模型',
   }
 }

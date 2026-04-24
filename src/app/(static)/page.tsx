@@ -85,7 +85,7 @@ export default function Home() {
   }, [])
 
   return (
-    <main className="relative overflow-x-hidden bg-slate-50 text-slate-900 font-sans selection:bg-[#3b82f6] selection:text-white">
+    <div className="relative overflow-x-hidden bg-slate-50 text-slate-900 font-sans selection:bg-[#3b82f6] selection:text-white">
 
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -419,12 +419,12 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="pt-24 pb-10 relative overflow-hidden">
+      <section aria-labelledby="home-cta-heading" className="pt-24 pb-10 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[1px] bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[#3b82f6]/5 rounded-full blur-[100px] pointer-events-none"></div>
         <Reveal>
           <div className="max-w-4xl mx-auto px-4 text-center relative z-10">
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-slate-900">准备好升级您的 AI 架构了吗？</h2>
+            <h2 id="home-cta-heading" className="text-3xl md:text-5xl font-bold mb-6 text-slate-900">准备好升级您的 AI 架构了吗？</h2>
             <p className="text-slate-500 mb-10 text-lg">加入全球开发者团队，立即告别高昂且低效的大模型账单。</p>
             <div className="flex justify-center mb-20">
               <button onClick={handleCtaClick} className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-full text-lg font-semibold transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-2 hover:-translate-y-1">
@@ -434,7 +434,7 @@ export default function Home() {
             </div>
           </div>
         </Reveal>
-      </footer>
-    </main>
+      </section>
+    </div>
   )
 }
