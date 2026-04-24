@@ -8,7 +8,7 @@ import { validatePassword } from '@/lib/utils/validation'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 import { PasswordStrength } from '@/components/register/PasswordStrength'
 import { PasswordRequirements } from '@/components/register/PasswordRequirements'
-import { extractErrorMessage } from '@/lib/error'
+import { extractErrorMessage, normalizeResponseMessage } from '@/lib/error'
 import AuthLayout from '@/components/ui/AuthLayout'
 
 export default function ForgotPassword() {
@@ -70,7 +70,7 @@ export default function ForgotPassword() {
         setCodeCountdown(60)
         setStep(2)
       } else {
-        setError(res.message || '发送失败')
+        setError(normalizeResponseMessage(res.message, '发送失败'))
       }
     } catch (err: unknown) {
       setError(extractErrorMessage(err))
@@ -112,7 +112,7 @@ export default function ForgotPassword() {
         // 重置成功，跳转到登录页
         router.push('/login?reset=true')
       } else {
-        setError(res.message || '重置失败')
+        setError(normalizeResponseMessage(res.message, '重置失败'))
       }
     } catch (err: unknown) {
       setError(extractErrorMessage(err))

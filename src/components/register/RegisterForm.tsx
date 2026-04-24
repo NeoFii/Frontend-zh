@@ -16,14 +16,7 @@ import { setAccessToken } from '@/lib/token'
 import { sendVerificationCode, register } from '@/lib/api/auth'
 import { validateEmail, validatePassword } from '@/lib/utils/validation'
 import { PasswordInput } from '@/components/ui/PasswordInput'
-
-type ApiError = {
-  response?: {
-    data?: {
-      message?: string
-    }
-  }
-}
+import { extractErrorMessage, normalizeResponseMessage } from '@/lib/error'
 
 type FormData = {
   email: string
@@ -32,8 +25,6 @@ type FormData = {
   confirmPassword: string
   agreement: boolean
 }
-
-const getApiErrorMessage = (error: unknown) => (error as ApiError).response?.data?.message
 
 export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
   const router = useRouter()
@@ -79,10 +70,10 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
     try {
       const res = await sendVerificationCode(form.email)
       if (res.code !== 200) {
-        setError(res.message || '发送失败')
+        setError(normalizeResponseMessage(res.message, '发送失败'))
       }
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err) || '发送失败')
+      setError(extractErrorMessage(err))
     } finally {
       setCodeLoading(false)
     }
@@ -159,10 +150,10 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
           onSuccess()
         }
       } else {
-        setError(res.message || '注册失败')
+        setError(normalizeResponseMessage(res.message, '注册失败'))
       }
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err) || '注册失败，请稍后重试')
+      setError(extractErrorMessage(err))
     } finally {
       setLoading(false)
     }

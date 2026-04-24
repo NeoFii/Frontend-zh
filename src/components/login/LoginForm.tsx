@@ -13,6 +13,7 @@ import { FormAlert } from '@/components/ui/FormAlert'
 import { login, loginWithCode, sendLoginCode } from '@/lib/api/auth'
 import { validateEmail } from '@/lib/utils/validation'
 import { PasswordInput } from '@/components/ui/PasswordInput'
+import { extractErrorMessage, normalizeResponseMessage } from '@/lib/error'
 
 interface LoginFormProps {
   onSuccess: () => void
@@ -60,7 +61,7 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     try {
       const res = await sendLoginCode(form.email)
       if (res.code !== 200) {
-        setError(res.message || '发送失败')
+        setError(normalizeResponseMessage(res.message, '发送失败'))
       }
     } catch {
       setError('发送失败')
@@ -111,12 +112,10 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         saveUser(res.data.user)
         onSuccess()
       } else {
-        setError(res.message || '登录失败')
+        setError(normalizeResponseMessage(res.message, '登录失败'))
       }
     } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } }
-      const message = axiosError.response?.data?.message
-      setError(message || '登录失败，请稍后重试')
+      setError(extractErrorMessage(err))
     } finally {
       setLoading(false)
     }

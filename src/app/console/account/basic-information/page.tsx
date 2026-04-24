@@ -11,6 +11,7 @@ import { PasswordStrength } from '@/components/register/PasswordStrength'
 import { PasswordRequirements } from '@/components/register/PasswordRequirements'
 import { clearAllTokens } from '@/lib/token'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/components/ui/Toast'
 
 function formatDateTime(value: string | null | undefined) {
   if (!value) {
@@ -284,6 +285,7 @@ export default function BasicInformationPage() {
   const router = useRouter()
   const { user, isLoading, isError, mutate } = useUser({ restoreSession: true })
   const logout = useAuthStore((state) => state.logout)
+  const { showToast, ToastContainer } = useToast()
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false)
   const [passwordSubmitting, setPasswordSubmitting] = useState(false)
   const [verifyCode, setVerifyCode] = useState('')
@@ -297,8 +299,8 @@ export default function BasicInformationPage() {
     try {
       clearAllTokens()
       logout()
-      window.alert('密码修改成功，请重新登录。')
-      router.replace('/login')
+      showToast('密码修改成功，请重新登录', 'success')
+      setTimeout(() => router.replace('/login'), 1500)
     } finally {
       setPasswordSubmitting(false)
     }
@@ -341,6 +343,7 @@ export default function BasicInformationPage() {
 
   return (
     <div className="space-y-8" style={{ fontFamily: 'MiSans, sans-serif' }}>
+      <ToastContainer />
       <PasswordDialog
         open={passwordDialogOpen}
         email={user?.email || ''}

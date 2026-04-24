@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useEffect, useState } from 'react'
+import { extractErrorMessage } from '@/lib/error'
 import { fetchTopupOrders } from '@/lib/api/router'
 import type { TopupOrderItem } from '@/lib/api/router'
 import { formatCurrency, formatDateTime } from '@/lib/router-analytics'
@@ -38,7 +39,7 @@ export default function RechargePage() {
         setTotal(res.data.total)
         setError(null)
       })
-      .catch(() => setError('加载充值记录失败'))
+      .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setLoading(false))
   }, [page])
 
