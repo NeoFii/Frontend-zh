@@ -4,6 +4,11 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter as useNextRouter } from 'next/navigation'
 import { sendResetPasswordCode, resetPassword } from '@/lib/api/auth'
+import { validatePassword } from '@/lib/utils/validation'
+import { PasswordInput } from '@/components/ui/PasswordInput'
+import { PasswordStrength } from '@/components/register/PasswordStrength'
+import { PasswordRequirements } from '@/components/register/PasswordRequirements'
+import { extractErrorMessage } from '@/lib/error'
 import AuthLayout from '@/components/ui/AuthLayout'
 
 export default function ForgotPassword() {
@@ -68,8 +73,7 @@ export default function ForgotPassword() {
         setError(res.message || '发送失败')
       }
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || '发送失败，请稍后重试')
+      setError(extractErrorMessage(err))
     } finally {
       setCodeLoading(false)
     }
@@ -87,8 +91,8 @@ export default function ForgotPassword() {
       setError('请填写新密码')
       return
     }
-    if (form.password.length < 8) {
-      setError('密码长度至少为8位')
+    if (!validatePassword(form.password)) {
+      setError('密码需包含大写字母、小写字母、数字和特殊符号，且不少于8位')
       return
     }
     if (form.password !== form.confirmPassword) {
@@ -111,8 +115,7 @@ export default function ForgotPassword() {
         setError(res.message || '重置失败')
       }
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } }
-      setError(error.response?.data?.message || '重置失败，请稍后重试')
+      setError(extractErrorMessage(err))
     } finally {
       setLoading(false)
     }
@@ -185,27 +188,25 @@ export default function ForgotPassword() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">新密码</label>
-                  <input
+                  <PasswordInput
                     name="password"
-                    type="password"
                     required
                     minLength={8}
                     value={form.password}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
-                    placeholder="请设置新密码（至少8位）"
+                    placeholder="请设置新密码（含大小写字母、数字和特殊符号）"
                   />
+                  <PasswordStrength password={form.password} />
+                  <PasswordRequirements password={form.password} />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">确认新密码</label>
-                  <input
+                  <PasswordInput
                     name="confirmPassword"
-                    type="password"
                     required
                     value={form.confirmPassword}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all"
                     placeholder="请再次输入新密码"
                   />
                 </div>

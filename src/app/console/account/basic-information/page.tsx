@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation'
 import { useUser } from '@/hooks/useUser'
 import { changePassword, resetPassword, sendResetPasswordCode, sendVerifyEmailCode, verifyEmail } from '@/lib/api/auth'
 import { extractErrorMessage } from '@/lib/error'
+import { validatePassword } from '@/lib/utils/validation'
+import { PasswordInput } from '@/components/ui/PasswordInput'
+import { PasswordStrength } from '@/components/register/PasswordStrength'
+import { PasswordRequirements } from '@/components/register/PasswordRequirements'
 import { clearAllTokens } from '@/lib/token'
 import { useAuthStore } from '@/stores/auth'
 
@@ -55,7 +59,7 @@ function PasswordDialog(props: {
     props.onClose()
   }
 
-  const validatePassword = (): boolean => {
+  const validateForm = (): boolean => {
     if (!newPassword || !confirmPassword) {
       setError('请输入新密码并确认。')
       return false
@@ -64,8 +68,8 @@ function PasswordDialog(props: {
       setError('两次输入的新密码不一致。')
       return false
     }
-    if (newPassword.length < 8) {
-      setError('新密码至少需要 8 位。')
+    if (!validatePassword(newPassword)) {
+      setError('密码需包含大写字母、小写字母、数字和特殊符号，且不少于8位')
       return false
     }
     return true
@@ -94,7 +98,7 @@ function PasswordDialog(props: {
     setError(null)
     setMessage(null)
 
-    if (!validatePassword()) {
+    if (!validateForm()) {
       return
     }
 
@@ -194,12 +198,12 @@ function PasswordDialog(props: {
           {mode === 'current' ? (
             <label className="grid gap-2">
               <span className="text-sm text-gray-600">当前密码</span>
-              <input
-                type="password"
+              <PasswordInput
+                name="oldPassword"
                 value={oldPassword}
                 onChange={(event) => setOldPassword(event.target.value)}
-                className="rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-gray-950"
                 placeholder="请输入当前密码"
+                className="rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-gray-950 pr-12"
               />
             </label>
           ) : (
@@ -224,25 +228,27 @@ function PasswordDialog(props: {
             </div>
           )}
 
-          <label className="grid gap-2">
+          <div className="grid gap-2">
             <span className="text-sm text-gray-600">新密码</span>
-            <input
-              type="password"
+            <PasswordInput
+              name="newPassword"
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              className="rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-gray-950"
-              placeholder="至少 8 位"
+              placeholder="含大小写字母、数字和特殊符号，不少于8位"
+              className="rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-gray-950 pr-12"
             />
-          </label>
+            <PasswordStrength password={newPassword} />
+            <PasswordRequirements password={newPassword} />
+          </div>
 
           <label className="grid gap-2">
             <span className="text-sm text-gray-600">确认新密码</span>
-            <input
-              type="password"
+            <PasswordInput
+              name="confirmPassword"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              className="rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-gray-950"
               placeholder="再次输入新密码"
+              className="rounded-2xl border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-gray-950 pr-12"
             />
           </label>
         </div>
