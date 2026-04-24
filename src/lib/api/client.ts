@@ -3,6 +3,7 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, InternalAxiosReq
 import { clearAllTokens, getAccessToken, isAccessTokenExpiringSoon, setAccessToken } from '@/lib/token'
 import { DEFAULT_USER_API_BASE_URL } from '@/lib/config'
 import proxyConfig from '@/lib/proxy-config'
+import { safeJsonParse } from '@/lib/utils/safe-json'
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean
@@ -135,6 +136,16 @@ export function createApiClient(
     headers: {
       'Content-Type': 'application/json',
     },
+    transformResponse: [
+      (data: string) => {
+        if (typeof data !== 'string') return data
+        try {
+          return safeJsonParse(data)
+        } catch {
+          return data
+        }
+      },
+    ],
   })
 
   apiClient.interceptors.request.use(
