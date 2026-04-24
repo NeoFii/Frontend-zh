@@ -29,7 +29,7 @@ src/
     model/          # 模型卡片、筛选
   hooks/            # useUser、useRouterKeys、useRouterUsage
   lib/
-    api/            # API 客户端：auth、router、testing-model
+    api/            # API 客户端：auth、router、model-catalog
   stores/           # Zustand auth store
   types/            # TypeScript 类型定义
 ```
@@ -65,18 +65,15 @@ cp .env.example .env
 ```env
 # 浏览器侧统一走同源代理
 NEXT_PUBLIC_API_BASE_URL=/api/v1
-NEXT_PUBLIC_TESTING_API_URL=/testing-api
-NEXT_PUBLIC_TESTING_API_BASE_URL=/testing-api
 NEXT_PUBLIC_ROUTER_API_BASE_URL=/router-api/api/v1
 NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL=/router-api/v1
 
 # Next.js 服务端反代到本机后端
 API_URL=http://127.0.0.1:8000
-TESTING_API_URL=http://127.0.0.1:8002
 ROUTER_API_URL=http://127.0.0.1:8003
 ```
 
-生产模式下只需要对外暴露前端端口；浏览器访问 `/api`、`/testing-api`、`/router-api` 时会由 Next.js 转发到本机后端服务。
+生产模式下只需要对外暴露前端端口；浏览器访问 `/api`、`/router-api` 时会由 Next.js 转发到本机后端服务。
 
 ### 4. 启动开发服务器
 

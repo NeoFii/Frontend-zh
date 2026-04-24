@@ -28,15 +28,8 @@ const nextConfig = {
     formats: ['image/avif', 'image/webp'],
   },
   async rewrites() {
-    const { apiUrl, testingApiUrl, routerApiUrl } = proxyConfig.resolveProxyTargets()
+    const { apiUrl, routerApiUrl } = proxyConfig.resolveProxyTargets()
     const rewrites = []
-
-    if (testingApiUrl) {
-      rewrites.push({
-        source: '/testing-api/:path*',
-        destination: `${testingApiUrl}/api/:path*`,
-      })
-    }
 
     if (routerApiUrl) {
       rewrites.push({

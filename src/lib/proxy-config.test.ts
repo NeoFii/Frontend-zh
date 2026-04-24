@@ -16,7 +16,6 @@ describe('proxy config', () => {
     delete process.env.NEXT_PUBLIC_MODEL_CATALOG_API_BASE_URL
     delete process.env.NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL
     delete process.env.API_URL
-    delete process.env.TESTING_API_URL
     delete process.env.ROUTER_API_URL
 
     const {
@@ -31,7 +30,6 @@ describe('proxy config', () => {
     expect(resolveRouterOpenAIBaseUrl()).toBe('/router-api/v1')
     expect(resolveProxyTargets()).toEqual({
       apiUrl: 'http://127.0.0.1:8000',
-      testingApiUrl: 'http://127.0.0.1:8002',
       routerApiUrl: 'http://127.0.0.1:8003',
     })
   })
@@ -41,7 +39,6 @@ describe('proxy config', () => {
     process.env.NEXT_PUBLIC_MODEL_CATALOG_API_BASE_URL = ' https://models.example.com/catalog/ '
     process.env.NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL = ' https://gateway.example.com/v1/ '
     process.env.API_URL = ' http://127.0.0.1:9001/ '
-    process.env.TESTING_API_URL = ' http://127.0.0.1:9002/ '
     process.env.ROUTER_API_URL = ' http://127.0.0.1:9003/ '
 
     const {
@@ -56,7 +53,6 @@ describe('proxy config', () => {
     expect(resolveRouterOpenAIBaseUrl()).toBe('https://gateway.example.com/v1')
     expect(resolveProxyTargets()).toEqual({
       apiUrl: 'http://127.0.0.1:9001',
-      testingApiUrl: 'http://127.0.0.1:9002',
       routerApiUrl: 'http://127.0.0.1:9003',
     })
   })

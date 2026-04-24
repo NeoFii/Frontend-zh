@@ -1,7 +1,6 @@
 const DEFAULT_PUBLIC_API_BASE_URL = '/api/v1'
 const DEFAULT_PUBLIC_ROUTER_OPENAI_BASE_URL = '/router-api/v1'
 const DEFAULT_INTERNAL_API_URL = 'http://127.0.0.1:8000'
-const DEFAULT_INTERNAL_TESTING_API_URL = 'http://127.0.0.1:8002'
 const DEFAULT_INTERNAL_ROUTER_API_URL = 'http://127.0.0.1:8003'
 
 function normalizeConfiguredUrl(value, fallback) {
@@ -45,7 +44,6 @@ function resolveRouterOpenAIBaseUrl(env = process.env) {
 function resolveProxyTargets(env = process.env) {
   return {
     apiUrl: normalizeConfiguredUrl(env.API_URL, DEFAULT_INTERNAL_API_URL),
-    testingApiUrl: normalizeConfiguredUrl(env.TESTING_API_URL, DEFAULT_INTERNAL_TESTING_API_URL),
     routerApiUrl: normalizeConfiguredUrl(env.ROUTER_API_URL, DEFAULT_INTERNAL_ROUTER_API_URL),
   }
 }
@@ -53,7 +51,6 @@ function resolveProxyTargets(env = process.env) {
 module.exports = {
   DEFAULT_INTERNAL_API_URL,
   DEFAULT_INTERNAL_ROUTER_API_URL,
-  DEFAULT_INTERNAL_TESTING_API_URL,
   DEFAULT_PUBLIC_API_BASE_URL,
   DEFAULT_PUBLIC_ROUTER_OPENAI_BASE_URL,
   normalizeConfiguredUrl,
