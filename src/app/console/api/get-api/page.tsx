@@ -11,6 +11,7 @@ import {
 } from '@/lib/router-analytics'
 
 import type { ApiKeyCreatePayload, ApiKeyUpdatePayload } from '@/lib/api/router'
+import { useToast } from '@/components/ui/Toast'
 
 interface DialogState {
   mode: 'create' | 'edit'
@@ -236,6 +237,7 @@ export default function GetApiPage() {
   const [submitting, setSubmitting] = useState(false)
   const [baseUrl, setBaseUrl] = useState('/router-api/v1')
   const [revealedKey, setRevealedKey] = useState<string | null>(null)
+  const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
     setBaseUrl(proxyConfig.resolveRouterOpenAIBaseUrl())
@@ -326,7 +328,12 @@ export default function GetApiPage() {
   }
 
   async function handleCopyBaseUrl() {
-    await navigator.clipboard.writeText(baseUrl)
+    try {
+      await navigator.clipboard.writeText(baseUrl)
+      showToast('Base URL 已复制', 'success')
+    } catch {
+      showToast('复制失败，请手动复制', 'error')
+    }
   }
 
   return (
@@ -555,7 +562,12 @@ export default function GetApiPage() {
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={async () => {
-                  await navigator.clipboard.writeText(revealedKey)
+                  try {
+                    await navigator.clipboard.writeText(revealedKey)
+                    showToast('密钥已复制到剪贴板', 'success')
+                  } catch {
+                    showToast('复制失败，请手动复制', 'error')
+                  }
                 }}
                 className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-4 py-2 text-sm text-white transition hover:bg-gray-800"
               >
@@ -571,6 +583,7 @@ export default function GetApiPage() {
           </div>
         </div>
       ) : null}
+      <ToastContainer />
     </div>
   )
 }
