@@ -2,7 +2,7 @@
 
 /**
  * 厂商筛选组件
- * 通过 vendors prop 接收研发商列表（由父组件通过 API 获取），支持多选筛选
+ * 通过 vendors prop 接收厂商列表（由父组件通过 API 获取），支持多选筛选
  */
 
 import React from 'react'
@@ -10,9 +10,9 @@ import Image from 'next/image'
 import type { ModelVendor } from '@/types/model'
 
 interface VendorFilterProps {
-  /** 研发商列表（由父组件 getVendors() 获取后传入） */
+  /** 厂商列表（由父组件 getVendors() 获取后传入） */
   vendors: ModelVendor[]
-  /** 已选中的研发商 slug 列表 */
+  /** 已选中的厂商 slug 列表 */
   selectedVendors: string[]
   onChange: (vendorSlugs: string[]) => void
 }
@@ -37,8 +37,7 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
 
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-[14px] font-medium text-[#181E25]">研发商</span>
+      <div className="flex items-center justify-end mb-3">
         <div className="flex gap-2">
           {selectedVendors.length > 0 && (
             <button
@@ -57,7 +56,7 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
         </div>
       </div>
 
-      {/* 研发商标签列表 */}
+      {/* 厂商标签列表 */}
       <div className="flex flex-wrap gap-2">
         {vendors.map((vendor) => {
           const isSelected = selectedVendors.includes(vendor.slug)
@@ -74,7 +73,7 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
                 }
               `}
             >
-              {/* 研发商 Logo */}
+              {/* 厂商 Logo */}
               {vendor.logo_url && (
                 <div className="relative w-5 h-5 flex-shrink-0">
                   <Image
@@ -94,7 +93,7 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
       {/* 已选数量提示 */}
       {selectedVendors.length > 0 && (
         <div className="mt-3 text-[13px] text-[#666666]">
-          已选 {selectedVendors.length} 个研发商
+          已选 {selectedVendors.length} 个
         </div>
       )}
     </div>
