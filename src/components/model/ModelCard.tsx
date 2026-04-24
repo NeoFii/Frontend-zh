@@ -9,6 +9,7 @@ import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { ModelListItem } from '@/types/model'
+import { formatFenPerMillionTokens } from '@/lib/pricing'
 
 interface ModelCardProps {
   model: ModelListItem
@@ -20,11 +21,6 @@ const formatContextWindow = (tokens?: number): string => {
   if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(0)}M`
   if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(0)}K`
   return String(tokens)
-}
-
-const formatFenPrice = (fen?: number | null): string => {
-  if (fen == null) return '待配置'
-  return `¥${(fen / 100).toFixed(2)}`
 }
 
 export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
@@ -94,13 +90,13 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
             <div className="min-w-0">
               <div className="text-[10px] font-medium text-[#9CA3AF]">IN / 1M</div>
               <div className="mt-1 text-[13px] font-semibold text-[#181E25]">
-                {formatFenPrice(model.price_input_per_m_fen)}
+                {formatFenPerMillionTokens(model.price_input_per_m_fen)}
               </div>
             </div>
             <div className="min-w-0">
               <div className="text-[10px] font-medium text-[#9CA3AF]">OUT / 1M</div>
               <div className="mt-1 text-[13px] font-semibold text-[#181E25]">
-                {formatFenPrice(model.price_output_per_m_fen)}
+                {formatFenPerMillionTokens(model.price_output_per_m_fen)}
               </div>
             </div>
           </div>

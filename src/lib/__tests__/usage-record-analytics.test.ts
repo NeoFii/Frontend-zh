@@ -90,8 +90,8 @@ describe('usage record analytics helpers', () => {
 
     expect(window.startInput).toBe('2026-04-24T08:45')
     expect(window.endInput).toBe('2026-04-24T16:45')
-    expect(window.start).toBe('2026-04-24T00:45:00.000Z')
-    expect(window.end).toBe('2026-04-24T08:45:00.000Z')
+    expect(window.start).toBe('2026-04-24T08:45:00+08:00')
+    expect(window.end).toBe('2026-04-24T16:45:00+08:00')
   })
 
   it('builds fallback analytics from usage stats and raw events when the analytics endpoint is unavailable', () => {

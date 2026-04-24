@@ -9,6 +9,7 @@ import proxyConfig from '@/lib/proxy-config'
 import {
   formatDateTime,
 } from '@/lib/router-analytics'
+import { formatShanghaiDateTimeLocalInput, toShanghaiApiDateTime } from '@/lib/time'
 
 import type { ApiKeyCreatePayload, ApiKeyUpdatePayload } from '@/lib/api/router'
 import { useToast } from '@/components/ui/Toast'
@@ -253,7 +254,7 @@ export default function GetApiPage() {
     }
     if (data.allowed_models.trim()) payload.allowed_models = data.allowed_models.trim()
     if (data.allow_ips.trim()) payload.allow_ips = data.allow_ips.trim()
-    if (data.expires_at) payload.expires_at = new Date(data.expires_at).toISOString()
+    if (data.expires_at) payload.expires_at = toShanghaiApiDateTime(data.expires_at)
     return payload
   }
 
@@ -266,7 +267,7 @@ export default function GetApiPage() {
     payload.allowed_models = data.allowed_models.trim() || null
     payload.allow_ips = data.allow_ips.trim() || null
     if (data.expires_at) {
-      payload.expires_at = new Date(data.expires_at).toISOString()
+      payload.expires_at = toShanghaiApiDateTime(data.expires_at)
     }
     return payload
   }
@@ -487,7 +488,7 @@ export default function GetApiPage() {
                                 quota_limit: item.quota_mode === 2 ? item.quota_limit.toString() : '',
                                 allowed_models: item.allowed_models || '',
                                 allow_ips: item.allow_ips || '',
-                                expires_at: item.expires_at ? item.expires_at.slice(0, 16) : '',
+                                expires_at: item.expires_at ? formatShanghaiDateTimeLocalInput(new Date(item.expires_at)) : '',
                               })}
                             >
                               <EditIcon />

@@ -120,8 +120,8 @@ describe('router analytics helpers', () => {
     const now = new Date('2026-04-23T10:35:00+08:00')
 
     expect(getBalanceTokenTrendQueryWindow('24h', now)).toEqual({
-      start: '2026-04-22T02:00:00.000Z',
-      end: '2026-04-23T02:00:00.000Z',
+      start: '2026-04-22T10:00:00+08:00',
+      end: '2026-04-23T10:00:00+08:00',
     })
   })
 

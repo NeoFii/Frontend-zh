@@ -12,14 +12,10 @@ import { PasswordRequirements } from '@/components/register/PasswordRequirements
 import { clearAllTokens } from '@/lib/token'
 import { useAuthStore } from '@/stores/auth'
 import { useToast } from '@/components/ui/Toast'
+import { formatShanghaiDateTime } from '@/lib/time'
 
 function formatDateTime(value: string | null | undefined) {
-  if (!value) {
-    return '-'
-  }
-  return new Date(value).toLocaleString('zh-CN', {
-    hour12: false,
-  })
+  return formatShanghaiDateTime(value)
 }
 
 function PasswordDialog(props: {

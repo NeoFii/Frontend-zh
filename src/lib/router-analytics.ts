@@ -1,4 +1,5 @@
 import type { RouterApiKey, RouterUsageEvent, RouterUsageStat, RouterUsageSummary } from '@/lib/api/router'
+import { formatShanghaiDateTime, toShanghaiApiDateTime } from '@/lib/time'
 
 export type UsageRange = '24h' | '7d' | '30d' | '90d'
 export type BalanceTokenTrendRange = '24h' | '7d' | '30d'
@@ -124,16 +125,16 @@ export function getBalanceTokenTrendQueryWindow(range: BalanceTokenTrendRange, n
 
   if (range === '24h') {
     return {
-      start: addHours(endDate, -24).toISOString(),
-      end: endDate.toISOString(),
+      start: toShanghaiApiDateTime(addHours(endDate, -24)) ?? '',
+      end: toShanghaiApiDateTime(endDate) ?? '',
     }
   }
 
   const days = range === '7d' ? 7 : 30
 
   return {
-    start: startOfDay(addDays(endDate, -(days - 1))).toISOString(),
-    end: endDate.toISOString(),
+    start: toShanghaiApiDateTime(startOfDay(addDays(endDate, -(days - 1)))) ?? '',
+    end: toShanghaiApiDateTime(endDate) ?? '',
   }
 }
 
@@ -561,10 +562,5 @@ export function formatTokenAxisValue(value: number) {
 }
 
 export function formatDateTime(value: string | null | undefined) {
-  if (!value) {
-    return '-'
-  }
-  return new Date(value).toLocaleString('zh-CN', {
-    hour12: false,
-  })
+  return formatShanghaiDateTime(value)
 }

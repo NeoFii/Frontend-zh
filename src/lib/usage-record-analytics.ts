@@ -5,6 +5,7 @@ import type {
   RouterUsageEvent,
   RouterUsageStat,
 } from '@/lib/api/router'
+import { formatShanghaiDateTimeLocalInput, toShanghaiApiDateTime } from '@/lib/time'
 
 const MODEL_COLOR_PALETTE = ['#0f172a', '#2563eb', '#ea580c', '#059669', '#7c3aed', '#dc2626', '#0891b2', '#ca8a04']
 const OTHER_MODEL_LABEL = '其他'
@@ -80,20 +81,6 @@ function addDays(date: Date, days: number) {
 
 function pad2(value: number) {
   return String(value).padStart(2, '0')
-}
-
-function formatDateTimeLocalInput(date: Date) {
-  return [
-    date.getFullYear(),
-    '-',
-    pad2(date.getMonth() + 1),
-    '-',
-    pad2(date.getDate()),
-    'T',
-    pad2(date.getHours()),
-    ':',
-    pad2(date.getMinutes()),
-  ].join('')
 }
 
 function sumCostByModel(
@@ -186,10 +173,10 @@ export function buildUsageRecordTimeWindow(
   })()
 
   return {
-    start: startDate.toISOString(),
-    end: endDate.toISOString(),
-    startInput: formatDateTimeLocalInput(startDate),
-    endInput: formatDateTimeLocalInput(endDate),
+    start: toShanghaiApiDateTime(startDate) ?? '',
+    end: toShanghaiApiDateTime(endDate) ?? '',
+    startInput: formatShanghaiDateTimeLocalInput(startDate),
+    endInput: formatShanghaiDateTimeLocalInput(endDate),
   }
 }
 
@@ -201,27 +188,27 @@ export function buildUsageRecordAnalyticsWindow(
     case '8h': {
       const endDate = addHours(truncateToHour(now), 1)
       const startDate = addHours(endDate, -8)
-      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'hour' }
+      return { start: toShanghaiApiDateTime(startDate) ?? '', end: toShanghaiApiDateTime(endDate) ?? '', granularity: 'hour' }
     }
     case '24h': {
       const endDate = addHours(truncateToHour(now), 1)
       const startDate = addHours(endDate, -24)
-      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'hour' }
+      return { start: toShanghaiApiDateTime(startDate) ?? '', end: toShanghaiApiDateTime(endDate) ?? '', granularity: 'hour' }
     }
     case '7d': {
       const endDate = addDays(truncateToDay(now), 1)
       const startDate = addDays(endDate, -7)
-      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'day' }
+      return { start: toShanghaiApiDateTime(startDate) ?? '', end: toShanghaiApiDateTime(endDate) ?? '', granularity: 'day' }
     }
     case '30d': {
       const endDate = addDays(truncateToDay(now), 1)
       const startDate = addDays(endDate, -30)
-      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'day' }
+      return { start: toShanghaiApiDateTime(startDate) ?? '', end: toShanghaiApiDateTime(endDate) ?? '', granularity: 'day' }
     }
     default: {
       const endDate = addHours(truncateToHour(now), 1)
       const startDate = addHours(endDate, -8)
-      return { start: startDate.toISOString(), end: endDate.toISOString(), granularity: 'hour' }
+      return { start: toShanghaiApiDateTime(startDate) ?? '', end: toShanghaiApiDateTime(endDate) ?? '', granularity: 'hour' }
     }
   }
 }
@@ -231,12 +218,7 @@ export function toUsageRecordQueryValue(value: string | undefined) {
     return undefined
   }
 
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) {
-    return undefined
-  }
-
-  return parsed.toISOString()
+  return toShanghaiApiDateTime(value)
 }
 
 export function resolveUsageEventEffectiveModel(event: Pick<RouterUsageEvent, 'selected_model' | 'model_name'>) {
