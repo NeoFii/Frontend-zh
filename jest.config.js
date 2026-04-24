@@ -6,7 +6,14 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/', '<rootDir>/src/stores/__tests__/auth.test.ts'],
+  testPathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/.next/',
+    '<rootDir>/.worktrees/',
+    '<rootDir>/.trees/',
+    '<rootDir>/.claude/worktrees/',
+    '<rootDir>/src/stores/__tests__/auth.test.ts',
+  ],
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
