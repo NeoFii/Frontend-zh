@@ -4,7 +4,7 @@ import React from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
 import Image from 'next/image'
-import { getModelBySlug } from '@/lib/api/testing-model'
+import { getModelBySlug } from '@/lib/api/model-catalog'
 import type { ModelDetail } from '@/types/model'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 

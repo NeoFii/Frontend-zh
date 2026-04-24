@@ -3,11 +3,11 @@ import '@testing-library/jest-dom'
 import { fireEvent, render, screen } from '@testing-library/react'
 import useSWR from 'swr'
 import ModelPage from './page'
-import { getModels } from '@/lib/api/testing-model'
+import { getModels } from '@/lib/api/model-catalog'
 
 jest.mock('swr', () => jest.fn())
 
-jest.mock('@/lib/api/testing-model', () => ({
+jest.mock('@/lib/api/model-catalog', () => ({
   getCategories: jest.fn(),
   getVendors: jest.fn(),
   getModels: jest.fn(),

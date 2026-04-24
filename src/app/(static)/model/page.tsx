@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react'
 import useSWR from 'swr'
-import { getModels, getCategories, getVendors } from '@/lib/api/testing-model'
+import { getModels, getCategories, getVendors } from '@/lib/api/model-catalog'
 import type { ModelCategory, ModelVendor } from '@/types/model'
 import CategoryTabs from '@/components/model/CategoryTabs'
 import ModelCard from '@/components/model/ModelCard'
