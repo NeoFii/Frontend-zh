@@ -61,8 +61,8 @@ describe('ModelCard', () => {
     expect(screen.getByText('IN / 1M')).toBeInTheDocument()
     expect(screen.getByText('OUT / 1M')).toBeInTheDocument()
     expect(screen.getByText('200K')).toBeInTheDocument()
-    expect(screen.getByText('¥12.34')).toBeInTheDocument()
-    expect(screen.getByText('¥56.78')).toBeInTheDocument()
+    expect(screen.getByText('¥12.34 / 1M tokens')).toBeInTheDocument()
+    expect(screen.getByText('¥56.78 / 1M tokens')).toBeInTheDocument()
   })
 
   it('shows placeholders when model-level fen pricing is absent', () => {

@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { getModelBySlug } from '@/lib/api/model-catalog'
 import type { ModelDetail } from '@/types/model'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
+import { formatFenPerMillionTokens } from '@/lib/pricing'
 
 interface ModelDetailClientProps {
   modelId: string
@@ -18,11 +19,6 @@ const formatContextWindow = (tokens?: number): string => {
   if (tokens >= 1_000_000) return `${(tokens / 1_000_000).toFixed(0)}M`
   if (tokens >= 1_000) return `${(tokens / 1_000).toFixed(0)}K`
   return String(tokens)
-}
-
-const formatFenPrice = (fen?: number | null): string => {
-  if (fen == null) return '待配置'
-  return `¥${(fen / 100).toFixed(2)}`
 }
 
 export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
@@ -126,14 +122,14 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
           <div className="bg-[#F7F8FA] rounded-xl p-5">
             <div className="text-[13px] text-[#666666] mb-1">每百万输入价格</div>
             <div className="text-[24px] font-semibold text-[#181E25]">
-              {formatFenPrice(model.price_input_per_m_fen)}
+              {formatFenPerMillionTokens(model.price_input_per_m_fen)}
             </div>
           </div>
 
           <div className="bg-[#F7F8FA] rounded-xl p-5">
             <div className="text-[13px] text-[#666666] mb-1">每百万输出价格</div>
             <div className="text-[24px] font-semibold text-[#181E25]">
-              {formatFenPrice(model.price_output_per_m_fen)}
+              {formatFenPerMillionTokens(model.price_output_per_m_fen)}
             </div>
           </div>
         </section>
