@@ -327,13 +327,27 @@ export default function GetApiPage() {
     }
   }
 
-  async function handleCopyBaseUrl() {
-    try {
-      await navigator.clipboard.writeText(baseUrl)
-      showToast('Base URL 已复制', 'success')
-    } catch {
-      showToast('复制失败，请手动复制', 'error')
+  async function copyToClipboard(text: string): Promise<boolean> {
+    if (navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text)
+        return true
+      } catch { /* fall through */ }
     }
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(ta)
+    return ok
+  }
+
+  async function handleCopyBaseUrl() {
+    const ok = await copyToClipboard(baseUrl)
+    showToast(ok ? 'Base URL 已复制' : '复制失败，请手动复制', ok ? 'success' : 'error')
   }
 
   return (
@@ -562,12 +576,8 @@ export default function GetApiPage() {
             <div className="mt-5 flex justify-end gap-2">
               <button
                 onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(revealedKey)
-                    showToast('密钥已复制到剪贴板', 'success')
-                  } catch {
-                    showToast('复制失败，请手动复制', 'error')
-                  }
+                  const ok = await copyToClipboard(revealedKey)
+                  showToast(ok ? '密钥已复制到剪贴板' : '复制失败，请手动复制', ok ? 'success' : 'error')
                 }}
                 className="inline-flex items-center gap-2 rounded-xl bg-gray-950 px-4 py-2 text-sm text-white transition hover:bg-gray-800"
               >
