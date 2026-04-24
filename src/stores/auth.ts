@@ -81,16 +81,23 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      // 持久化 user 和 isAuthenticated，确保页面刷新后登录状态不丢失
+      version: 1,
+      migrate: (persisted, version) => {
+        if (version === 0 && persisted && typeof persisted === 'object') {
+          const state = persisted as Record<string, unknown>
+          const user = state.user as Record<string, unknown> | null
+          if (user && typeof user.uid === 'number') {
+            user.uid = String(user.uid)
+          }
+        }
+        return persisted as { user: UserInfo | null; sessionStatus: SessionStatus }
+      },
       partialize: (state) => ({
         user: state.user,
         sessionStatus: state.sessionStatus === 'authenticated' ? 'unknown' : state.sessionStatus,
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return
-        // 不在这里请求 /auth/me，避免重复调用
-        // isAuthenticated 由登录/登出动作维护
-        // 用户数据由 useUser 的 SWR 管理
         state.isHydrated = true
       },
     }

@@ -16,7 +16,7 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/hooks/useUser', () => ({
   useUser: () => ({
     user: {
-      uid: 1001,
+      uid: '1001',
       email: 'user@example.com',
       status: 1,
       email_verified_at: '2026-04-20T10:00:00Z',
