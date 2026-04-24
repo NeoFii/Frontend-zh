@@ -1,25 +1,41 @@
-# 前端 Docker Compose 配置
-# 使用方式: docker-compose up -d
+# Eucal AI 中文前端 Docker Compose 配置
+#
+# 使用方式:
+#   1. cp .env.example .env  并修改配置
+#   2. docker compose up -d --build
+#
+# 前提条件:
+#   - eucal_network 网络已创建: docker network create eucal_network
+#   - 后端服务已在同一网络中运行:
+#     - 主后端 API (默认 eucal_backend:8000)
+#     - Router API  (默认 eucal_router:8003)
 
 services:
   frontend:
     build:
-      context: ../..
-      dockerfile: eucalAI_frontend_zh/deploy/Dockerfile
-    container_name: eucal_frontend
+      context: ..
+      dockerfile: deploy/Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-/api/v1}
+        NEXT_PUBLIC_COMPANY_NAME: ${NEXT_PUBLIC_COMPANY_NAME:-Eucal AI}
+        NEXT_PUBLIC_IMAGE_HOSTS: ${NEXT_PUBLIC_IMAGE_HOSTS:-eucal.ai,www.eucal.ai,neofii.fun}
+        NEXT_PUBLIC_ROUTER_API_BASE_URL: ${NEXT_PUBLIC_ROUTER_API_BASE_URL:-/router-api/api/v1}
+        NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL: ${NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL:-/router-api/v1}
+        NEXT_PUBLIC_MODEL_CATALOG_API_BASE_URL: ${NEXT_PUBLIC_MODEL_CATALOG_API_BASE_URL:-}
+    image: eucal-frontend-zh:latest
+    container_name: eucal_frontend_zh
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      # API 地址（使用 Docker 网络服务名）
-      NEXT_PUBLIC_API_BASE_URL: /api/v1
-      # 运行环境
       NODE_ENV: production
-      # 禁用遥测
       NEXT_TELEMETRY_DISABLED: "1"
+      API_URL: ${API_URL:-http://eucal_backend:8000}
+      ROUTER_API_URL: ${ROUTER_API_URL:-http://eucal_router:8003}
 
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
 
-    # 健康检查（alpine 镜像无 curl，使用 wget）
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
       interval: 30s
@@ -27,22 +43,15 @@ services:
       retries: 3
       start_period: 15s
 
-    # 资源限制（可选）
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 256M
+          cpus: '1.0'
+          memory: 512M
         reservations:
-          cpus: '0.1'
-          memory: 64M
+          cpus: '0.25'
+          memory: 128M
 
-    # 依赖关系
-    depends_on:
-      backend:
-        condition: service_healthy
-
-    # 网络配置
     networks:
       - eucal_network
 

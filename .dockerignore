@@ -40,3 +40,7 @@ Thumbs.db
 *.log
 tmp
 temp
+
+# 部署产物
+deploy/.env
+deploy/*.tar.gz

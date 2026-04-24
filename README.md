@@ -99,9 +99,13 @@ pnpm test          # 运行测试
 
 ## Docker 部署
 
+详细部署文档请参考 [deploy/README.md](deploy/README.md)。
+
 ```bash
 cd deploy
-docker compose up -d
+cp .env.example .env    # 编辑配置
+chmod +x deploy.sh
+./deploy.sh up          # 构建并启动
 ```
 
-部署配置位于 `deploy/` 目录，包含 Dockerfile、docker-compose.yml 和 Nginx 配置。
+部署配置位于 `deploy/` 目录，包含 Dockerfile、docker-compose.yml、部署脚本和 Nginx 参考配置。
