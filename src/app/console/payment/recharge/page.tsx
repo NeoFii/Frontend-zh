@@ -78,7 +78,7 @@ export default function RechargePage() {
                       <td className="px-6 py-5">
                         <span className={`rounded-full px-2.5 py-1 text-xs ${statusMeta.tone}`}>{statusMeta.label}</span>
                       </td>
-                      <td className="px-6 py-5 text-sm">{order.payment_channel}</td>
+                      <td className="px-6 py-5 text-sm">{order.payment_channel_label}</td>
                       <td className="px-6 py-5 text-sm">{formatDateTime(order.paid_at)}</td>
                       <td className="px-6 py-5 text-sm">{formatDateTime(order.created_at)}</td>
                       <td className="px-6 py-5 text-sm text-gray-500">{order.remark || '-'}</td>

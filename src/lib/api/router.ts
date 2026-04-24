@@ -160,6 +160,7 @@ export interface TopupOrderItem {
   /** 订单状态 */
   status: number
   payment_channel: string
+  payment_channel_label: string
   payment_no: string | null
   paid_at: string | null
   remark: string | null
@@ -294,6 +295,7 @@ export interface RouterBillingLedgerItem {
   description: string | null
   ref_type: string | null
   ref_id: string | null
+  reference_label: string | null
   remark: string | null
   created_at: string
 }
@@ -383,7 +385,7 @@ export function transactionTypeMeta(type: number) {
     case 5:
       return { label: '解冻', tone: 'bg-cyan-50 text-cyan-700', iconTone: 'bg-cyan-100 text-cyan-700' }
     case 6:
-      return { label: '管理员调整', tone: 'bg-purple-50 text-purple-700', iconTone: 'bg-purple-100 text-purple-700' }
+      return { label: '调账', tone: 'bg-purple-50 text-purple-700', iconTone: 'bg-purple-100 text-purple-700' }
     case 7:
       return { label: '代金券', tone: 'bg-emerald-50 text-emerald-700', iconTone: 'bg-emerald-100 text-emerald-700' }
     default:
@@ -393,6 +395,36 @@ export function transactionTypeMeta(type: number) {
 
 function centsToCurrency(value: number | null | undefined) {
   return (value ?? 0) / 100
+}
+
+export function paymentChannelLabel(paymentChannel: string) {
+  switch (paymentChannel) {
+    case 'manual':
+      return '管理员代充'
+    case 'alipay':
+      return '支付宝'
+    case 'wechat':
+    case 'wechat_pay':
+      return '微信支付'
+    default:
+      return paymentChannel || '-'
+  }
+}
+
+export function referenceLabel(refType: string | null, refId: string | null) {
+  if (!refId) {
+    return null
+  }
+  switch (refType) {
+    case 'topup_order':
+      return `订单号 ${refId}`
+    case 'api_call':
+      return `请求 ${refId}`
+    case 'voucher_code':
+      return `代金券 ${refId}`
+    default:
+      return `关联编号 ${refId}`
+  }
 }
 
 function toPagedParams(params?: RouterListParams) {
@@ -557,10 +589,7 @@ function transactionDescription(item: BackendBalanceTransactionItem) {
   if (item.remark) {
     return item.remark
   }
-  if (item.ref_type && item.ref_id) {
-    return `${item.ref_type} #${item.ref_id}`
-  }
-  return item.ref_type
+  return null
 }
 
 function normalizeTransaction(item: BackendBalanceTransactionItem): RouterBillingLedgerItem {
@@ -574,6 +603,7 @@ function normalizeTransaction(item: BackendBalanceTransactionItem): RouterBillin
     description: transactionDescription(item),
     ref_type: item.ref_type,
     ref_id: item.ref_id,
+    reference_label: referenceLabel(item.ref_type, item.ref_id),
     remark: item.remark,
     created_at: item.created_at,
   }
@@ -755,6 +785,7 @@ export function fetchTopupOrders(params?: { page?: number; page_size?: number })
         items: response.data.items.map((item): TopupOrderItem => ({
           ...item,
           amount: centsToCurrency(item.amount),
+          payment_channel_label: paymentChannelLabel(item.payment_channel),
         })),
         total: response.data.total,
       },

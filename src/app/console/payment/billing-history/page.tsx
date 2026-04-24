@@ -20,7 +20,7 @@ const TYPE_TABS: Array<{ value: number | null; label: string }> = [
   { value: 3, label: '退款' },
   { value: 4, label: '冻结' },
   { value: 5, label: '解冻' },
-  { value: 6, label: '调整' },
+  { value: 6, label: '调账' },
   { value: 7, label: '代金券' },
 ]
 
@@ -99,7 +99,7 @@ export default function BillingHistoryPage() {
               const meta = transactionTypeMeta(item.type)
               const isPositive = item.direction === 'credit' || (item.direction === 'adjust' && item.amount >= 0)
               const amountPrefix = isPositive ? '+' : '-'
-              const showReference = shouldShowTransactionReference(item.type)
+              const showReference = shouldShowTransactionReference(item.type) && Boolean(item.reference_label)
 
               return (
                 <div key={item.id} className="flex flex-col gap-4 px-4 py-5 md:flex-row md:items-center md:justify-between">
@@ -115,10 +115,7 @@ export default function BillingHistoryPage() {
                       <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                         <span>{formatDateTime(item.created_at)}</span>
                         {showReference && (
-                          <>
-                            <span>{item.ref_type || 'manual'}</span>
-                            <span>{item.ref_id || '-'}</span>
-                          </>
+                          <span>{item.reference_label}</span>
                         )}
                       </div>
                     </div>

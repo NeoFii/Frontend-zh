@@ -16,6 +16,7 @@ function buildOrder(page: number) {
     amount: 8,
     status: 2,
     payment_channel: 'alipay',
+    payment_channel_label: 'alipay',
     payment_no: `pay-${page}`,
     paid_at: '2026-04-22T10:00:00Z',
     remark: null,
@@ -71,5 +72,27 @@ describe('RechargePage', () => {
       expect(mockFetchTopupOrders).toHaveBeenCalledWith({ page: 1, page_size: 10 })
     )
     expect(screen.queryByRole('button', { name: '下一页' })).not.toBeInTheDocument()
+  })
+
+  it('shows administrator topups instead of the raw manual payment channel', async () => {
+    mockFetchTopupOrders.mockResolvedValueOnce({
+      data: {
+        items: [
+          {
+            ...buildOrder(1),
+            payment_channel: 'manual',
+            payment_channel_label: '管理员代充',
+          },
+        ],
+        total: 1,
+        page: 1,
+        page_size: 10,
+      },
+    })
+
+    render(<RechargePage />)
+
+    await waitFor(() => expect(screen.getByText('管理员代充')).toBeInTheDocument())
+    expect(screen.queryByText('manual')).not.toBeInTheDocument()
   })
 })

@@ -414,7 +414,8 @@ describe('user-service backed router console API', () => {
         amount: -4.56,
         balance_before: 10,
         balance_after: 5.44,
-        description: 'api_call #req-1',
+        description: null,
+        reference_label: '请求 req-1',
       })
     )
   })
@@ -548,5 +549,72 @@ describe('user-service backed router console API', () => {
         payment_channel: 'alipay',
       }),
     ])
+  })
+
+  it('adds display labels for manual topup orders and topup ledger references', async () => {
+    mockGet
+      .mockResolvedValueOnce({
+        code: 200,
+        message: 'success',
+        data: {
+          items: [
+            {
+              id: 52,
+              order_no: 'TP-20260423',
+              amount: 1200,
+              status: 2,
+              payment_channel: 'manual',
+              payment_no: null,
+              paid_at: '2026-04-23T10:00:00Z',
+              remark: null,
+              created_at: '2026-04-23T09:50:00Z',
+              updated_at: '2026-04-23T10:00:00Z',
+            },
+          ],
+          total: 1,
+          page: 1,
+          page_size: 10,
+        },
+      })
+      .mockResolvedValueOnce({
+        code: 200,
+        message: 'success',
+        data: {
+          items: [
+            {
+              id: 61,
+              type: 1,
+              amount: 1200,
+              balance_before: 0,
+              balance_after: 1200,
+              ref_type: 'topup_order',
+              ref_id: 'TP-20260423',
+              remark: null,
+              created_at: '2026-04-23T10:00:00Z',
+            },
+          ],
+          total: 1,
+          page: 1,
+          page_size: 10,
+        },
+      })
+
+    const { fetchTopupOrders, fetchRouterBillingLedger } = await import('./router')
+    const topupResponse = await fetchTopupOrders()
+    const ledgerResponse = await fetchRouterBillingLedger()
+
+    expect(topupResponse.data.items[0]).toEqual(
+      expect.objectContaining({
+        payment_channel: 'manual',
+        payment_channel_label: '管理员代充',
+      })
+    )
+    expect(ledgerResponse.data.items[0]).toEqual(
+      expect.objectContaining({
+        ref_type: 'topup_order',
+        ref_id: 'TP-20260423',
+        reference_label: '订单号 TP-20260423',
+      })
+    )
   })
 })

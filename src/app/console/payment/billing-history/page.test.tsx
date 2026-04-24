@@ -20,6 +20,7 @@ function ledgerItem(type: number, overrides = {}) {
     description: null,
     ref_type: type === 7 ? 'voucher_code' : 'topup_order',
     ref_id: type === 7 ? '10' : 'order-1',
+    reference_label: type === 7 ? null : '订单号 order-1',
     remark: null,
     created_at: '2026-04-22T10:00:00Z',
     ...overrides,
@@ -109,5 +110,49 @@ describe('BillingHistoryPage', () => {
     expect(screen.queryByText('frontend voucher page test: 100 CNY')).not.toBeInTheDocument()
     expect(screen.queryByText('voucher_code')).not.toBeInTheDocument()
     expect(screen.queryByText('1')).not.toBeInTheDocument()
+  })
+
+  it('shows order references without exposing internal ref_type values', async () => {
+    mockUseRouterBillingLedger.mockReturnValue({
+      items: [
+        ledgerItem(1, {
+          ref_type: 'topup_order',
+          ref_id: 'TP-20260423',
+          reference_label: '订单号 TP-20260423',
+        }),
+      ],
+      total: 1,
+      isLoading: false,
+      isError: null,
+      mutate: jest.fn(),
+    })
+
+    render(<BillingHistoryPage />)
+
+    expect(await screen.findByText('订单号 TP-20260423')).toBeInTheDocument()
+    expect(screen.queryByText('topup_order')).not.toBeInTheDocument()
+  })
+
+  it('labels admin adjustment transactions as 调账', async () => {
+    mockUseRouterBillingLedger.mockReturnValue({
+      items: [
+        ledgerItem(6, {
+          direction: 'adjust',
+          description: null,
+          ref_type: null,
+          ref_id: null,
+          reference_label: null,
+        }),
+      ],
+      total: 1,
+      isLoading: false,
+      isError: null,
+      mutate: jest.fn(),
+    })
+
+    render(<BillingHistoryPage />)
+
+    expect((await screen.findAllByText('调账')).length).toBeGreaterThanOrEqual(2)
+    expect(screen.queryByText('管理员调整')).not.toBeInTheDocument()
   })
 })
