@@ -22,6 +22,11 @@ const formatContextWindow = (tokens?: number): string => {
   return String(tokens)
 }
 
+const formatFenPrice = (fen?: number | null): string => {
+  if (fen == null) return '待配置'
+  return `¥${(fen / 100).toFixed(2)}`
+}
+
 export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   // 取第一个分类名作为主分类标签
   const primaryCategory = model.categories[0]
@@ -29,17 +34,10 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
   return (
     <Link href={`/model/${model.slug}`} className="block">
       <div className="group bg-white border border-gray-100 rounded-xl p-5 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full">
-        {/* 头部：分类 + 研发商 Logo */}
+        {/* 头部：研发商 Logo + 分类 */}
         <div className="flex items-center justify-between mb-3">
-          {primaryCategory ? (
-            <span className="px-3 py-1 text-[12px] text-[#666666] bg-[#F3F4F6] rounded-full">
-              {primaryCategory.name}
-            </span>
-          ) : (
-            <span />
-          )}
           {/* 研发商 Logo */}
-          {model.vendor.logo_url && (
+          {model.vendor.logo_url ? (
             <div className="relative w-[42px] h-[42px] flex-shrink-0">
               <Image
                 src={model.vendor.logo_url}
@@ -48,6 +46,15 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
                 className="object-contain"
               />
             </div>
+          ) : (
+            <span />
+          )}
+          {primaryCategory ? (
+            <span className="px-3 py-1 text-[12px] text-[#666666] bg-[#F3F4F6] rounded-full">
+              {primaryCategory.name}
+            </span>
+          ) : (
+            <span />
           )}
         </div>
 
@@ -75,12 +82,26 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
           </div>
         )}
 
-        {/* 底部：上下文窗口 */}
+        {/* 底部：上下文窗口 + 模型级价格 */}
         <div className="mt-auto pt-3 border-t border-gray-100">
-          <div className="flex justify-between text-[13px] text-[#666666]">
-            <div>
-              <span className="text-[#9CA3AF]">上下文: </span>
-              <span>{formatContextWindow(model.context_window)}</span>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="min-w-0">
+              <div className="text-[10px] font-medium text-[#9CA3AF]">CTX</div>
+              <div className="mt-1 text-[13px] font-semibold text-[#181E25]">
+                {formatContextWindow(model.context_window)}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] font-medium text-[#9CA3AF]">IN / 1M</div>
+              <div className="mt-1 text-[13px] font-semibold text-[#181E25]">
+                {formatFenPrice(model.price_input_per_m_fen)}
+              </div>
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10px] font-medium text-[#9CA3AF]">OUT / 1M</div>
+              <div className="mt-1 text-[13px] font-semibold text-[#181E25]">
+                {formatFenPrice(model.price_output_per_m_fen)}
+              </div>
             </div>
           </div>
         </div>
