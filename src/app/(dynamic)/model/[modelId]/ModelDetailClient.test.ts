@@ -60,7 +60,24 @@ describe('ModelDetailClient', () => {
             sort_order: 1,
           },
         ],
-        offerings: [],
+        offerings: [
+          {
+            id: 1,
+            provider: {
+              id: 1,
+              slug: 'openrouter',
+              name: 'OpenRouter',
+              logo_url: '/openrouter.png',
+            },
+            is_active: true,
+            metrics: {
+              sample_count: 3,
+              avg_ttft_ms: 800,
+              avg_e2e_latency_ms: 2400,
+              avg_throughput_tps: 32.4,
+            },
+          },
+        ],
       },
       isLoading: false,
     })
@@ -77,7 +94,13 @@ describe('ModelDetailClient', () => {
     expect(screen.getByText('每百万输出价格')).toBeInTheDocument()
     expect(screen.getByText('¥12.34')).toBeInTheDocument()
     expect(screen.getByText('¥56.78')).toBeInTheDocument()
+    expect(screen.queryByText('¥1234')).not.toBeInTheDocument()
+    expect(screen.queryByText('¥5678')).not.toBeInTheDocument()
     expect(screen.queryByText('最大输出')).not.toBeInTheDocument()
+    expect(screen.queryByText('支持服务商与性能')).not.toBeInTheDocument()
+    expect(screen.queryByText('暂无可用提供商数据')).not.toBeInTheDocument()
+    expect(screen.queryByText('OpenRouter')).not.toBeInTheDocument()
+    expect(screen.queryByText('近期性能（均值）')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '模型介绍' })).toBeInTheDocument()
 
     const metricsSection = screen.getByText('上下文窗口').closest('section')
