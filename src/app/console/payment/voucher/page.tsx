@@ -67,7 +67,7 @@ export default function VoucherPage() {
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <ConsolePageHeader badge="VOUCHER" title="代金券兑换" description="输入兑换码，将代金券余额充入账户。" />
 
-      <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+      <section className="rounded-lg border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
         <h3 className="text-sm font-medium text-gray-900">输入兑换码</h3>
         <p className="mt-1 text-sm text-gray-500">兑换成功后金额将立即到账，可在余额页面查看。</p>
 
@@ -93,7 +93,7 @@ export default function VoucherPage() {
         </div>
 
         {result && (
-          <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+          <div className="mt-5 rounded-lg border border-emerald-200 bg-emerald-50 px-5 py-4">
             <p className="text-sm font-medium text-emerald-700">
               兑换成功，已到账 {formatCurrency(result.amount, CURRENCY)}
             </p>
@@ -101,13 +101,13 @@ export default function VoucherPage() {
         )}
 
         {error && (
-          <div className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+          <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-5 py-4">
             <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+      <section className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
         <div className="border-b border-gray-100 px-6 py-4">
           <h3 className="text-sm font-medium text-gray-900">兑换历史</h3>
           <p className="mt-1 text-sm text-gray-500">仅显示当前账户已兑换的代金券记录。</p>
@@ -115,7 +115,7 @@ export default function VoucherPage() {
 
         {historyLoading ? (
           <div className="p-6">
-            <div className="h-32 animate-pulse rounded-2xl bg-gray-100" />
+            <div className="h-32 animate-pulse rounded-lg bg-gray-100" />
           </div>
         ) : historyError ? (
           <div className="p-6">

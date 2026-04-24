@@ -11,10 +11,10 @@ beforeAll(() => {
 })
 
 describe('AboutClient', () => {
-  it('uses the shared hero slash mark in the brand visual card', () => {
+  it('uses the shared site-standard slash mark in the brand visual card', () => {
     const { container } = render(<AboutClient />)
 
-    expect(screen.getByText('/')).toHaveClass('h-28', 'w-28', 'text-5xl')
+    expect(screen.getByText('/')).toHaveClass('h-7', 'w-7', 'text-base')
     expect(container.querySelector('.text-5xl.font-extrabold.text-white')).not.toBeInTheDocument()
   })
 })

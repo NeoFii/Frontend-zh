@@ -54,8 +54,8 @@ export default function BillingHistoryPage() {
   if (isLoading) {
     return (
       <div className="space-y-4" style={{ fontFamily: 'MiSans, sans-serif' }}>
-        <div className="h-40 animate-pulse rounded-2xl bg-gray-100"></div>
-        <div className="h-72 animate-pulse rounded-2xl bg-gray-100"></div>
+        <div className="h-40 animate-pulse rounded-lg bg-gray-100"></div>
+        <div className="h-72 animate-pulse rounded-lg bg-gray-100"></div>
       </div>
     )
   }
@@ -73,7 +73,7 @@ export default function BillingHistoryPage() {
       {showGlobalEmpty ? (
         <EmptyState title="暂无账单流水。" />
       ) : (
-        <section className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+        <section className="rounded-lg border border-gray-100 bg-white p-4 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
           <div className="mb-4 flex flex-wrap gap-2 px-2">
             {TYPE_TABS.map((tab) => (
               <button
@@ -90,7 +90,7 @@ export default function BillingHistoryPage() {
             ))}
           </div>
           {items.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500">
+            <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-6 py-10 text-center text-sm text-gray-500">
               当前类型下暂无记录。
             </div>
           ) : (

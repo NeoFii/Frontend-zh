@@ -252,7 +252,7 @@ describe('BalancePage', () => {
     expect(mockPush).not.toHaveBeenCalled()
   })
 
-  it('shows loading and empty states inside the trend card', () => {
+  it('shows loading state and renders empty trend data as a chart placeholder', () => {
     mockUseRouterUsageStats.mockReturnValueOnce({
       stats: [],
       isLoading: true,
@@ -274,8 +274,19 @@ describe('BalancePage', () => {
 
     rerender(<BalancePage />)
 
-    expect(screen.getByText('所选时间范围暂无 Token 数据')).toBeInTheDocument()
-    expect(screen.queryByTestId('token-trend-chart')).not.toBeInTheDocument()
+    expect(screen.queryByText('所选时间范围暂无 Token 数据')).not.toBeInTheDocument()
+    expect(screen.getByTestId('token-trend-chart')).toBeInTheDocument()
+
+    const latestOption = mockChartRender.mock.calls.at(-1)?.[0]?.option as {
+      legend: { data: string[] }
+      xAxis: { data: string[] }
+      series: Array<{ data: number[] }>
+    }
+
+    expect(latestOption.legend.data).toEqual(['输入 Tokens', '输出 Tokens', '缓存 Tokens'])
+    expect(latestOption.xAxis.data).toHaveLength(24)
+    expect(latestOption.series).toHaveLength(3)
+    expect(latestOption.series.every((series) => series.data.every((value) => value === 0))).toBe(true)
   })
 
   it('shows an error message inside the trend card without affecting the hero cards', () => {

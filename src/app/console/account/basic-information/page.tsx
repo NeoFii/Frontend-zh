@@ -301,15 +301,15 @@ export default function BasicInformationPage() {
   if (isLoading) {
     return (
       <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-        <div className="h-20 animate-pulse rounded-xl bg-gray-100"></div>
-        <div className="h-72 animate-pulse rounded-xl bg-gray-100"></div>
+        <div className="h-20 animate-pulse rounded-lg bg-gray-100"></div>
+        <div className="h-72 animate-pulse rounded-lg bg-gray-100"></div>
       </div>
     )
   }
 
   if (isError) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600" style={{ fontFamily: 'MiSans, sans-serif' }}>
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600" style={{ fontFamily: 'MiSans, sans-serif' }}>
         账户信息加载失败。
         <button onClick={() => mutate()} className="ml-2 font-medium text-red-700 hover:text-red-900">
           重试
@@ -347,7 +347,7 @@ export default function BasicInformationPage() {
         <h1 className="text-3xl tracking-tight text-gray-950">用户信息</h1>
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div className="divide-y divide-gray-100">
           {rows.map((row) => (
             <div key={row.label} className="grid gap-2 px-6 py-5 md:grid-cols-[180px_1fr] md:items-center">
@@ -358,7 +358,7 @@ export default function BasicInformationPage() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <section className="overflow-hidden rounded-lg border border-gray-200 bg-white">
         <div className="border-b border-gray-100 px-6 py-5">
           <h2 className="text-lg text-gray-950">安全设置</h2>
         </div>

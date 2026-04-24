@@ -331,7 +331,7 @@ export default function GetApiPage() {
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <section className="rounded-2xl bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
+      <section className="rounded-lg bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
             <h2 className="text-[1.75rem] tracking-tight text-gray-950">API</h2>
@@ -342,7 +342,7 @@ export default function GetApiPage() {
           <div className="shrink-0">
             <p className="text-sm text-gray-500">OpenAI compatible baseURL</p>
             <div className="mt-2 flex items-center gap-3">
-              <div className="min-w-0 rounded-2xl border border-[#cbd5e1] bg-[#eef3fa] px-4 py-3 text-sm text-gray-900 shadow-inner lg:min-w-[320px]">
+              <div className="min-w-0 rounded-lg border border-[#cbd5e1] bg-[#eef3fa] px-4 py-3 text-sm text-gray-900 shadow-inner lg:min-w-[320px]">
                 <span className="block truncate">{baseUrl}</span>
               </div>
               <button
@@ -359,13 +359,13 @@ export default function GetApiPage() {
       </section>
 
       {errorMessage ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{errorMessage}</div>
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{errorMessage}</div>
       ) : null}
       {noticeMessage ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{noticeMessage}</div>
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{noticeMessage}</div>
       ) : null}
 
-      <section className="rounded-2xl bg-[#f7f7f8] px-8 py-6 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
+      <section className="rounded-lg bg-[#f7f7f8] px-8 py-6 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
         <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div />
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -390,23 +390,23 @@ export default function GetApiPage() {
         </div>
 
         {isLoading ? (
-          <div className="rounded-xl bg-white p-6">
-            <div className="h-40 animate-pulse rounded-2xl bg-gray-100"></div>
+          <div className="rounded-lg bg-white p-6">
+            <div className="h-40 animate-pulse rounded-lg bg-gray-100"></div>
           </div>
         ) : !isLoading && isError ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
             加载 API Key 失败。
             <button onClick={() => mutate()} className="ml-2 font-medium text-red-700 hover:text-red-900">
               重试
             </button>
           </div>
         ) : visibleKeys.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-200 bg-white px-6 py-16 text-center">
+          <div className="rounded-lg border border-dashed border-gray-200 bg-white px-6 py-16 text-center">
             <p className="text-lg text-gray-900">你还没有创建任何 API Key</p>
             <p className="mt-2 text-sm text-gray-500">点击右上角按钮创建第一个 Key。完整密钥只会即时复制，不会在页面中缓存。</p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl bg-white ring-1 ring-inset ring-gray-100">
+          <div className="overflow-hidden rounded-lg bg-white ring-1 ring-inset ring-gray-100">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
                 <thead className="bg-[#f7f7f8] text-gray-500">
@@ -507,16 +507,16 @@ export default function GetApiPage() {
         )}
       </section>
 
-      <section id="usage-guide" className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)]">
+      <section id="usage-guide" className="rounded-lg border border-gray-100 bg-white p-6 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)]">
         <h3 className="text-xl text-gray-950">使用说明</h3>
         <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-2xl bg-gray-50 p-5">
+          <div className="rounded-lg bg-gray-50 p-5">
             <p className="text-sm font-medium text-gray-900">安全说明</p>
             <p className="mt-3 text-sm leading-7 text-gray-600">
               平台默认只展示脱敏预览。复制完整 Key 时会实时向后端请求，不会在页面中保留明文缓存；若怀疑泄露，直接失效或删除对应 Key。
             </p>
           </div>
-          <div className="rounded-2xl bg-gray-950 p-5">
+          <div className="rounded-lg bg-gray-950 p-5">
             <p className="text-sm font-medium text-gray-100">curl 示例</p>
             <pre className="mt-4 overflow-x-auto text-sm leading-7 text-gray-100">{`curl -X POST ${baseUrl}/chat/completions \\
   -H "Authorization: Bearer YOUR_ROUTER_API_KEY" \\

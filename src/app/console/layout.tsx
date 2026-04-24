@@ -76,7 +76,7 @@ export default function ConsoleLayout({
         <ConsoleSidebar activeMenu="usage-record" onMenuChange={() => {}} />
         <main className="ml-72 pt-16 min-h-screen">
           <div className="w-full p-8">
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
               当前会话校验失败。
               <button onClick={() => mutate()} className="ml-2 font-medium text-red-700 hover:text-red-900">
                 重试

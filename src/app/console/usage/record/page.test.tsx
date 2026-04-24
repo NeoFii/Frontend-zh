@@ -254,6 +254,16 @@ describe('UsageRecordPage', () => {
     expect(screen.getByText('费用分布')).toBeInTheDocument()
     expect(screen.getByText('请求占比')).toBeInTheDocument()
     expect(screen.getByText('请求排行')).toBeInTheDocument()
+    expect(screen.queryByText('当前时间窗口')).not.toBeInTheDocument()
+    expect(screen.queryByText('明细表默认跟随上方时间范围，手动调整筛选后仍可查看更细的时间切片。')).not.toBeInTheDocument()
+    expect(screen.queryByText('总余额 CNY 120.00，冻结 CNY 12.00')).not.toBeInTheDocument()
+    expect(screen.queryByText('成功 45 次')).not.toBeInTheDocument()
+    expect(screen.queryByText('8h 内累计消费')).not.toBeInTheDocument()
+    expect(screen.queryByText('按当前全局时间范围聚合')).not.toBeInTheDocument()
+    expect(screen.queryByText('按时间桶查看各实际模型的花费堆叠。')).not.toBeInTheDocument()
+    expect(screen.queryByText('按请求量观察模型份额结构。')).not.toBeInTheDocument()
+    expect(screen.queryByText('同一颜色映射在三张分析卡中保持一致。')).not.toBeInTheDocument()
+    expect(screen.queryByText('按时间、实际模型和 KEY 筛选，20 条每页，按最新请求优先展示。')).not.toBeInTheDocument()
     expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('8h')
     expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith({
       page: 1,
@@ -267,6 +277,71 @@ describe('UsageRecordPage', () => {
     const rows = within(screen.getByRole('table')).getAllByRole('row')
     expect(rows).toHaveLength(21)
     expect(screen.getByText('共 25 条')).toBeInTheDocument()
+  })
+
+  it('uses sidebar-matched rounded-lg on the main card containers', () => {
+    render(<UsageRecordPage />)
+
+    const expectedCardLabels = ['当前余额', '使用统计', '花费', '成功率']
+    for (const label of expectedCardLabels) {
+      const card = screen.getByText(label).closest('div')
+      expect(card).toHaveClass('rounded-lg')
+      expect(card?.className).not.toMatch(/rounded-(2xl|3xl)/)
+    }
+
+    const expectedPanelTitles = ['费用分布', '请求占比', '请求排行', '请求明细']
+    for (const title of expectedPanelTitles) {
+      const panel = screen.getByText(title).closest('section')
+      expect(panel).toHaveClass('rounded-lg')
+      expect(panel?.className).not.toMatch(/rounded-(2xl|3xl)/)
+    }
+  })
+
+  it('renders the page backbone while initial usage data is loading', () => {
+    mockUseRouterBalance.mockReturnValueOnce({
+      balance: null,
+      isLoading: true,
+      isError: null,
+      mutate: jest.fn(),
+    })
+    mockUseRouterUsageAnalytics.mockReturnValueOnce({
+      analytics: null,
+      isLoading: true,
+      isError: null,
+      isUnsupported: false,
+      mutate: jest.fn(),
+    })
+    mockUseRouterKeys.mockReturnValueOnce({
+      keys: [],
+      isLoading: true,
+      isError: null,
+      mutate: jest.fn(),
+    })
+    mockUseRouterUsageLogs.mockReturnValueOnce({
+      items: [],
+      total: 0,
+      isLoading: true,
+      isError: null,
+      mutate: jest.fn(),
+    })
+
+    render(<UsageRecordPage />)
+
+    expect(screen.getByRole('heading', { name: '使用记录' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '8h' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: '24h' })).toBeInTheDocument()
+    expect(screen.getByText('当前余额')).toBeInTheDocument()
+    expect(screen.getByText('使用统计')).toBeInTheDocument()
+    expect(screen.getByText('花费')).toBeInTheDocument()
+    expect(screen.getByText('成功率')).toBeInTheDocument()
+    expect(screen.getByText('费用分布')).toBeInTheDocument()
+    expect(screen.getByText('请求占比')).toBeInTheDocument()
+    expect(screen.getByText('请求排行')).toBeInTheDocument()
+    expect(screen.getByText('请求明细')).toBeInTheDocument()
+    expect(screen.getByLabelText('开始时间')).toBeInTheDocument()
+    expect(screen.getByLabelText('结束时间')).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: '实际模型' })).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'KEY' })).toBeInTheDocument()
   })
 
   it('refreshes analytics and resets the detail time window when the global range changes', async () => {
@@ -303,6 +378,54 @@ describe('UsageRecordPage', () => {
 
     expect(screen.getByLabelText('开始时间')).toHaveValue(nextWindow.startInput)
     expect(screen.getByLabelText('结束时间')).toHaveValue(nextWindow.endInput)
+  })
+
+  it('keeps the current usage layout visible while a new range loads with previous data', async () => {
+    const previousAnalytics = createAnalyticsFixture()
+    mockUseRouterUsageAnalytics.mockImplementation((nextRange: string) => ({
+      analytics: previousAnalytics,
+      isLoading: nextRange === '24h',
+      isError: null,
+      isUnsupported: false,
+      mutate: jest.fn(),
+    }))
+    mockUseRouterUsageLogs.mockImplementation((filter?: { page?: number }) => ({
+      items: Array.from({ length: 20 }, (_, index) => createLogItem(index + 1)),
+      total: 25,
+      isLoading: filter?.page === 1 && mockUseRouterUsageAnalytics.mock.calls.some((call) => call[0] === '24h'),
+      isError: null,
+      mutate: jest.fn(),
+    }))
+
+    render(<UsageRecordPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: '24h' }))
+
+    const nextWindow = buildUsageRecordTimeWindow('24h', new Date('2026-04-24T16:45:00+08:00'))
+
+    await waitFor(() => expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('24h'))
+    await waitFor(() =>
+      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith({
+        page: 1,
+        pageSize: 20,
+        start: nextWindow.start,
+        end: nextWindow.end,
+        effectiveModel: undefined,
+        keyId: undefined,
+      })
+    )
+
+    expect(screen.getByRole('button', { name: '24h' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText('当前余额')).toBeInTheDocument()
+    expect(screen.getByText('使用统计')).toBeInTheDocument()
+    expect(screen.getByText('花费')).toBeInTheDocument()
+    expect(screen.getByText('成功率')).toBeInTheDocument()
+    expect(screen.getByText('费用分布')).toBeInTheDocument()
+    expect(screen.getByText('请求占比')).toBeInTheDocument()
+    expect(screen.getByText('请求排行')).toBeInTheDocument()
+    expect(screen.getByRole('table')).toBeInTheDocument()
+    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(21)
+    expect(screen.getAllByTestId('usage-chart')).toHaveLength(2)
   })
 
   it('resets pagination to page 1 when the actual-model or key filter changes', async () => {
@@ -471,7 +594,7 @@ describe('UsageRecordPage', () => {
     expect(screen.getAllByTestId('usage-chart')).toHaveLength(2)
   })
 
-  it('renders empty analytics and detail states without breaking the layout', () => {
+  it('renders empty analytics as visual chart placeholders without no-data chart copy', () => {
     mockUseRouterUsageAnalytics.mockReturnValueOnce({
       analytics: {
         ...createAnalyticsFixture(),
@@ -499,7 +622,11 @@ describe('UsageRecordPage', () => {
 
     render(<UsageRecordPage />)
 
-    expect(screen.getByText('所选时间范围暂无模型花费分布')).toBeInTheDocument()
+    expect(screen.queryByText('所选时间范围暂无模型花费分布')).not.toBeInTheDocument()
+    expect(screen.queryByText('所选时间范围暂无模型请求占比')).not.toBeInTheDocument()
+    expect(screen.queryByText('所选时间范围暂无模型请求排行')).not.toBeInTheDocument()
+    expect(screen.getAllByTestId('usage-chart')).toHaveLength(2)
+    expect(screen.getByTestId('usage-ranking-empty')).toBeInTheDocument()
     expect(screen.getByText('当前筛选条件下没有请求记录')).toBeInTheDocument()
   })
 })

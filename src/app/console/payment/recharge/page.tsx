@@ -47,13 +47,13 @@ export default function RechargePage() {
       <ConsolePageHeader badge="PAYMENT" title="充值记录" description="在线充值功能开发中，以下展示历史充值订单记录。" />
 
       {loading ? (
-        <div className="h-40 animate-pulse rounded-2xl bg-gray-100" />
+        <div className="h-40 animate-pulse rounded-lg bg-gray-100" />
       ) : error ? (
         <ErrorBanner message={error} />
       ) : orders.length === 0 ? (
         <EmptyState title="暂无充值记录。" />
       ) : (
-        <section className="overflow-hidden rounded-xl bg-white ring-1 ring-inset ring-gray-100">
+        <section className="overflow-hidden rounded-lg bg-white ring-1 ring-inset ring-gray-100">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[#edf2f7] text-gray-500">

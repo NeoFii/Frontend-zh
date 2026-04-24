@@ -68,6 +68,7 @@ export default function BalancePage() {
   const balanceCurrency = balance?.currency ?? currency
 
   const trendViewModel = useMemo(() => buildBalanceTokenTrendViewModel(stats, trendRange), [stats, trendRange])
+  const trendHasData = trendViewModel.hasData
 
   const trendOption = useMemo(
     () => ({
@@ -111,23 +112,23 @@ export default function BalancePage() {
         showSymbol: false,
         symbol: 'circle',
         lineStyle: {
-          width: 3,
-          color: TREND_COLORS[index],
+          width: trendHasData ? 3 : 2,
+          color: trendHasData ? TREND_COLORS[index] : '#cbd5e1',
         },
         itemStyle: {
-          color: TREND_COLORS[index],
+          color: trendHasData ? TREND_COLORS[index] : '#cbd5e1',
         },
         emphasis: {
           focus: 'series',
         },
       })),
     }),
-    [trendViewModel]
+    [trendHasData, trendViewModel]
   )
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <section className="rounded-2xl bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
+      <section className="rounded-lg bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <ConsolePageHeader
@@ -155,25 +156,25 @@ export default function BalancePage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
+            <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
               <p className="text-sm text-gray-500">本月累计花费</p>
               <p className="mt-2 text-2xl tracking-tight text-gray-950">
                 {loading ? '...' : formatCurrency(monthlySpend, currency)}
               </p>
             </div>
-            <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
+            <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
               <p className="text-sm text-gray-500">总请求数</p>
               <p className="mt-2 text-2xl tracking-tight text-gray-950">
                 {loading ? '...' : formatCompactNumber(aggregate.totalRequests)}
               </p>
             </div>
-            <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
+            <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
               <p className="text-sm text-gray-500">成功率</p>
               <p className="mt-2 text-2xl tracking-tight text-gray-950">
                 {loading ? '...' : `${successRate.toFixed(1)}%`}
               </p>
             </div>
-            <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
+            <div className="rounded-lg border border-gray-100 bg-white p-4 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.32)]">
               <p className="text-sm text-gray-500">启用中的 Key</p>
               <p className="mt-2 text-2xl tracking-tight text-gray-950">{loading ? '...' : String(activeKeys)}</p>
             </div>
@@ -181,7 +182,7 @@ export default function BalancePage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+      <section className="rounded-lg border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
         <div className="flex flex-col gap-4 border-b border-gray-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-lg text-gray-900">Token 使用趋势</h3>
@@ -208,7 +209,7 @@ export default function BalancePage() {
 
         <div className="mt-6 h-[360px]">
           {statsLoading ? (
-            <div className="flex h-full flex-col justify-center gap-4 rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6">
+            <div className="flex h-full flex-col justify-center gap-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-6">
               <p className="text-sm text-gray-500">正在加载 Token 趋势...</p>
               <div className="space-y-3">
                 <div className="h-3 w-full animate-pulse rounded-full bg-gray-200" />
@@ -217,12 +218,8 @@ export default function BalancePage() {
               </div>
             </div>
           ) : statsError ? (
-            <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-red-200 bg-red-50/60 px-6 text-center text-sm text-red-600">
+            <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-red-200 bg-red-50/60 px-6 text-center text-sm text-red-600">
               Token 趋势加载失败，请稍后重试。
-            </div>
-          ) : !trendViewModel.hasData ? (
-            <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 text-center text-sm text-gray-500">
-              所选时间范围暂无 Token 数据
             </div>
           ) : (
             <ReactECharts option={trendOption} style={{ height: '100%', width: '100%' }} />

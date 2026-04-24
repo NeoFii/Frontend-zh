@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter as useNextRouter } from 'next/navigation'
 import { sendResetPasswordCode, resetPassword } from '@/lib/api/auth'
+import AuthLayout from '@/components/ui/AuthLayout'
 
 export default function ForgotPassword() {
   const router = useNextRouter()
@@ -118,21 +119,13 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900"></div>
-        <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-purple-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }}></div>
-
-        <div className="relative z-10 flex flex-col justify-center px-16 w-full">
-          <h1 className="text-4xl xl:text-5xl font-bold text-white leading-tight mb-6">
-            当你调用 AI，<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300">就是在调用我们。</span>
-          </h1>
-        </div>
-      </div>
-
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center px-6 sm:px-12 lg:px-16 py-12 bg-white">
+    <AuthLayout
+      heading={<>让智能体用<span className="text-[#fb923c]">对的</span>模型<br />而不是贵的</>}
+      showFormHeader={false}
+      showFooter={false}
+      centerAsideContent
+    >
+      <div className="w-full">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900">
@@ -236,6 +229,6 @@ export default function ForgotPassword() {
           </div>
         </div>
       </div>
-    </div>
+    </AuthLayout>
   )
 }

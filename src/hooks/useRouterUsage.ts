@@ -59,6 +59,7 @@ export function useRouterUsageAnalytics(range: RouterUsageAnalyticsRange) {
   const { data, error, isLoading, mutate } = useSWR(cacheKey, () => fetchRouterUsageAnalytics(range), {
     revalidateOnFocus: false,
     dedupingInterval: 15000,
+    keepPreviousData: true,
     onErrorRetry: (fetchError, _key, _config, revalidate, context) => {
       if (getResponseStatus(fetchError) === 404 || context.retryCount >= 3) {
         return
@@ -95,6 +96,7 @@ export function useRouterUsageStats(options?: { start?: string; end?: string; ap
     {
       revalidateOnFocus: false,
       dedupingInterval: 15000,
+      keepPreviousData: true,
     }
   )
 
@@ -141,6 +143,7 @@ export function useRouterUsageEvents(options?: {
     {
       revalidateOnFocus: false,
       dedupingInterval: 15000,
+      keepPreviousData: true,
     }
   )
 
@@ -247,6 +250,7 @@ export function useRouterUsageLogs(filter: UsageLogsFilter) {
     {
       revalidateOnFocus: false,
       dedupingInterval: 10000,
+      keepPreviousData: true,
     }
   )
 

@@ -13,12 +13,15 @@ export const LoadingState = ({ label }: { label: string }) => (
 
 interface AuthLayoutProps {
   heading: ReactNode
-  subtitle: string
-  terminal: ReactNode
-  switchLabel: string
-  switchLinkText: string
-  switchHref: string
-  footerRight: string
+  subtitle?: ReactNode
+  terminal?: ReactNode
+  switchLabel?: string
+  switchLinkText?: string
+  switchHref?: string
+  footerRight?: string
+  showFormHeader?: boolean
+  showFooter?: boolean
+  centerAsideContent?: boolean
   children: ReactNode
 }
 
@@ -30,11 +33,16 @@ export default function AuthLayout({
   switchLinkText,
   switchHref,
   footerRight,
+  showFormHeader = true,
+  showFooter = true,
+  centerAsideContent = false,
   children,
 }: AuthLayoutProps) {
+  const shouldCenterForm = !showFormHeader && !showFooter
+
   return (
     <div className="grid min-h-[calc(100vh-5rem)] grid-cols-1 bg-[#f8fafc] text-[#111827] lg:grid-cols-2">
-      <aside className="relative hidden min-h-[720px] overflow-hidden bg-[#111827] p-12 text-white lg:flex lg:flex-col">
+      <aside className={`relative hidden min-h-[720px] overflow-hidden bg-[#111827] p-12 text-white lg:flex lg:flex-col${centerAsideContent ? ' lg:justify-center' : ''}`}>
         <div
           className="absolute inset-0 opacity-70"
           style={{
@@ -46,39 +54,47 @@ export default function AuthLayout({
           }}
         />
         <div className="relative z-10">
-          <h2 className="mb-6 max-w-[15ch] text-[clamp(28px,3vw,40px)] font-medium leading-[1.1] tracking-[-0.02em]">
+          <h2 className={`${subtitle ? 'mb-6 ' : ''}max-w-[15ch] text-[clamp(28px,3vw,40px)] font-medium leading-[1.1] tracking-[-0.02em]`}>
             {heading}
           </h2>
-          <p className="max-w-[42ch] text-[14.5px] leading-[1.55] text-white/65">
-            {subtitle}
-          </p>
+          {subtitle && (
+            <p className="max-w-[42ch] text-[14.5px] leading-[1.55] text-white/65">
+              {subtitle}
+            </p>
+          )}
         </div>
         {terminal}
       </aside>
 
-      <section className="flex min-h-[680px] flex-col px-6 py-10 sm:px-10 lg:p-12">
-        <div className="mb-auto flex items-center justify-between gap-4 pb-12">
-          <Link href="/" className="flex items-center gap-2.5 text-base font-semibold text-[#111827]">
-            <BrandLogo
-              label="TierFlow"
-              className="gap-2.5"
-              labelClassName="text-base font-semibold text-[#111827]"
-            />
-          </Link>
-          <span className="font-mono text-[13px] text-[#6b7280]">
-            {switchLabel}
-            <Link href={switchHref} className="text-[#111827]">{switchLinkText}</Link>
-          </span>
-        </div>
+      <section className={`flex min-h-[680px] flex-col px-6 py-10 sm:px-10 lg:p-12${shouldCenterForm ? ' justify-center' : ''}`}>
+        {showFormHeader && (
+          <div className="mb-auto flex items-center justify-between gap-4 pb-12">
+            <Link href="/" className="flex items-center gap-2.5 text-base font-semibold text-[#111827]">
+              <BrandLogo
+                label="TierFlow"
+                className="gap-2.5"
+                labelClassName="text-base font-semibold text-[#111827]"
+              />
+            </Link>
+            <span className="font-mono text-[13px] text-[#6b7280]">
+              {switchLabel}
+              {switchHref && (
+                <Link href={switchHref} className="text-[#111827]">{switchLinkText}</Link>
+              )}
+            </span>
+          </div>
+        )}
 
         <div className="mx-auto w-full max-w-[400px] py-10">
           {children}
         </div>
 
-        <div className="mt-auto flex justify-between pt-6 font-mono text-xs text-[#9ca3af]">
-          <span>&copy; 2026 Eucal AI</span>
-          <span>{footerRight}</span>
-        </div>
+        {showFooter && (
+          <div className="mt-auto flex justify-between pt-6 font-mono text-xs text-[#9ca3af]">
+            <span>&copy; 2026 Eucal AI</span>
+            <span>{footerRight}</span>
+          </div>
+        )}
       </section>
     </div>
   )

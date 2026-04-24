@@ -45,38 +45,64 @@ const ReactECharts = dynamic(() => import('echarts-for-react'), {
 
 echarts.use([BarChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
 
-function SummaryCard(props: { label: string; value: string; hint: string }) {
+function SummaryValueLoading() {
+  return <div className="mt-4 h-8 w-24 animate-pulse rounded-lg bg-gray-100" />
+}
+
+function SummaryCard(props: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+    <div className="rounded-lg border border-gray-100 bg-white p-5 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
       <p className="text-sm text-gray-500">{props.label}</p>
-      <p className="mt-3 text-3xl tracking-tight text-gray-950">{props.value}</p>
-      <p className="mt-2 text-sm text-gray-500">{props.hint}</p>
+      {typeof props.value === 'string' ? (
+        <p className="mt-3 text-3xl tracking-tight text-gray-950">{props.value}</p>
+      ) : (
+        props.value
+      )}
     </div>
   )
 }
 
-function PanelShell(props: { title: string; description: string; children: ReactNode }) {
+function PanelShell(props: { title: string; children: ReactNode }) {
   return (
-    <section className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+    <section className="rounded-lg border border-gray-100 bg-white p-5 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
       <div className="mb-4">
         <h3 className="text-lg text-gray-950">{props.title}</h3>
-        <p className="mt-1 text-sm text-gray-500">{props.description}</p>
       </div>
       {props.children}
     </section>
   )
 }
 
-function PanelEmptyState(props: { title: string }) {
+const EMPTY_BAR_LABELS = ['', '', '', '', '', '']
+
+function EmptyRankingState() {
   return (
-    <div className="flex h-[320px] items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gray-50 px-6 text-center text-sm text-gray-500">
-      {props.title}
+    <div data-testid="usage-ranking-empty" className="space-y-3" aria-hidden="true">
+      {Array.from({ length: 5 }, (_, index) => (
+        <div
+          key={index}
+          className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3"
+        >
+          <div className="flex items-center gap-3">
+            <span className="h-7 w-7 rounded-full bg-white" />
+            <span className="h-3 w-3 rounded-full bg-gray-200" />
+            <div className="space-y-2">
+              <span className="block h-3 w-28 rounded-full bg-gray-200" />
+              <span className="block h-2.5 w-16 rounded-full bg-gray-100" />
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <span className="block h-3 w-14 rounded-full bg-gray-200" />
+            <span className="block h-2.5 w-10 rounded-full bg-gray-100" />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
 
 function PanelLoadingState() {
-  return <div className="h-[320px] animate-pulse rounded-2xl bg-gray-100" />
+  return <div className="h-[320px] animate-pulse rounded-lg bg-gray-100" />
 }
 
 function isSuccessStatus(status: number) {
@@ -101,7 +127,7 @@ export default function UsageRecordPage() {
     isUnsupported: analyticsUnsupported,
     mutate: mutateAnalytics,
   } = useRouterUsageAnalytics(range)
-  const { keys, isLoading: keysLoading, isError: keysError, mutate: mutateKeys } = useRouterKeys()
+  const { keys, isError: keysError, mutate: mutateKeys } = useRouterKeys()
   const fallbackEnabled = analyticsUnsupported || Boolean(analyticsError)
   const {
     stats: fallbackStats,
@@ -153,8 +179,13 @@ export default function UsageRecordPage() {
     () => buildUsageRecordFallbackOverview(fallbackStats, fallbackEvents),
     [fallbackEvents, fallbackStats]
   )
+  const fallbackInitialLoading = fallbackEventsLoading && fallbackStats.length === 0 && fallbackEvents.length === 0
   const fallbackAnalytics = useMemo(() => {
-    if (!fallbackEnabled || fallbackEventsLoading || fallbackEventsError) {
+    if (!fallbackEnabled || fallbackEventsError) {
+      return null
+    }
+
+    if (fallbackInitialLoading) {
       return null
     }
 
@@ -164,7 +195,7 @@ export default function UsageRecordPage() {
       events: fallbackEvents,
       currency: balance?.currency || 'CNY',
     })
-  }, [balance?.currency, fallbackEnabled, fallbackEvents, fallbackEventsError, fallbackEventsLoading, fallbackStats, range])
+  }, [balance?.currency, fallbackEnabled, fallbackEvents, fallbackEventsError, fallbackInitialLoading, fallbackStats, range])
   const analyticsData = analytics ?? fallbackAnalytics
   const analyticsViewModel = useMemo(() => buildUsageRecordAnalyticsViewModel(analyticsData), [analyticsData])
   const currency = analyticsData?.currency || balance?.currency || 'CNY'
@@ -196,8 +227,8 @@ export default function UsageRecordPage() {
     ],
     [keys]
   )
-  const analyticsAreaLoading = !analytics && fallbackEnabled && fallbackEventsLoading
-  const analyticsAreaError = !analytics && !analyticsAreaLoading && Boolean(analyticsError) && Boolean(fallbackEventsError)
+  const analyticsAreaLoading = !analyticsData && (analyticsLoading || (fallbackEnabled && fallbackInitialLoading))
+  const analyticsAreaError = !analyticsData && !analyticsAreaLoading && Boolean(analyticsError) && Boolean(fallbackEventsError)
 
   const stackedBarOption = useMemo(
     () => ({
@@ -254,6 +285,48 @@ export default function UsageRecordPage() {
     [analyticsViewModel.stackedBar.labels, analyticsViewModel.stackedBar.series, currency]
   )
 
+  const emptyStackedBarOption = useMemo(() => {
+    const labels =
+      analyticsViewModel.stackedBar.labels.length > 0 ? analyticsViewModel.stackedBar.labels : EMPTY_BAR_LABELS
+
+    return {
+      tooltip: { show: false },
+      legend: { show: false },
+      grid: {
+        left: 12,
+        right: 12,
+        top: 24,
+        bottom: 12,
+        containLabel: true,
+      },
+      xAxis: {
+        type: 'category',
+        data: labels,
+        axisLine: { lineStyle: { color: '#e2e8f0' } },
+        axisTick: { show: false },
+        axisLabel: { show: false },
+      },
+      yAxis: {
+        type: 'value',
+        min: 0,
+        max: 1,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { show: false },
+        splitLine: { lineStyle: { color: '#f1f5f9' } },
+      },
+      series: [
+        {
+          type: 'bar',
+          silent: true,
+          barMaxWidth: 24,
+          itemStyle: { color: '#e5e7eb', borderRadius: [6, 6, 0, 0] },
+          data: labels.map(() => 0),
+        },
+      ],
+    }
+  }, [analyticsViewModel.stackedBar.labels])
+
   const donutOption = useMemo(
     () => ({
       tooltip: {
@@ -286,42 +359,37 @@ export default function UsageRecordPage() {
     [analyticsViewModel.donut]
   )
 
-  const loading = balanceLoading || analyticsLoading || keysLoading
+  const emptyDonutOption = useMemo(
+    () => ({
+      tooltip: { show: false },
+      series: [
+        {
+          type: 'pie',
+          radius: ['52%', '72%'],
+          center: ['50%', '52%'],
+          silent: true,
+          label: { show: false },
+          emphasis: { disabled: true },
+          data: [
+            {
+              value: 1,
+              name: '',
+              itemStyle: { color: '#e5e7eb' },
+            },
+          ],
+        },
+      ],
+    }),
+    []
+  )
 
-  if (loading) {
-    return (
-      <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-        <div className="h-40 animate-pulse rounded-3xl bg-gray-100"></div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-32 animate-pulse rounded-3xl bg-gray-100"></div>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr_1fr]">
-          {Array.from({ length: 3 }).map((_, index) => (
-            <div key={index} className="h-[392px] animate-pulse rounded-3xl bg-gray-100"></div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (balanceError || keysError) {
-    return (
-      <ErrorBanner
-        message="使用记录加载失败。"
-        onRetry={() => {
-          void mutateBalance()
-          void mutateAnalytics()
-          void mutateKeys()
-        }}
-      />
-    )
-  }
+  const summaryLoading = analyticsAreaLoading
+  const summaryError = analyticsAreaError
+  const logsInitialLoading = logsLoading && logItems.length === 0
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <section className="overflow-hidden rounded-3xl border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_32%),linear-gradient(145deg,#f8fafc_0%,#ffffff_62%,#eff6ff_100%)] p-7 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.45)]">
+      <section className="overflow-hidden rounded-lg border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_32%),linear-gradient(145deg,#f8fafc_0%,#ffffff_62%,#eff6ff_100%)] p-7 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.45)]">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <ConsolePageHeader
@@ -347,41 +415,65 @@ export default function UsageRecordPage() {
               ))}
             </div>
           </div>
-          <div className="rounded-3xl border border-white/70 bg-white/90 p-5 shadow-[0_18px_40px_-34px_rgba(15,23,42,0.28)] backdrop-blur-sm xl:max-w-md">
-            <p className="text-sm text-gray-500">当前时间窗口</p>
-            <p className="mt-2 text-2xl tracking-tight text-gray-950">{range}</p>
-            <p className="mt-3 text-sm leading-6 text-gray-500">
-              明细表默认跟随上方时间范围，手动调整筛选后仍可查看更细的时间切片。
-            </p>
-          </div>
         </div>
       </section>
+
+      {(balanceError || keysError) && (
+        <ErrorBanner
+          message="基础数据加载失败。"
+          onRetry={() => {
+            void mutateBalance()
+            void mutateAnalytics()
+            void mutateKeys()
+          }}
+        />
+      )}
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
           label="当前余额"
-          value={formatCurrency(balance?.available_balance ?? 0, currency)}
-          hint={`总余额 ${formatCurrency(balance?.balance ?? 0, currency)}，冻结 ${formatCurrency(balance?.frozen_amount ?? 0, currency)}`}
+          value={
+            balanceLoading && !balance ? (
+              <SummaryValueLoading />
+            ) : balanceError && !balance ? (
+              '加载失败'
+            ) : (
+              formatCurrency(balance?.available_balance ?? 0, currency)
+            )
+          }
         />
         <SummaryCard
           label="使用统计"
-          value={formatCompactNumber(summaryOverview.total_requests)}
-          hint={`成功 ${formatCompactNumber(summaryOverview.success_requests)} 次`}
+          value={
+            summaryLoading ? (
+              <SummaryValueLoading />
+            ) : summaryError ? (
+              '加载失败'
+            ) : (
+              formatCompactNumber(summaryOverview.total_requests)
+            )
+          }
         />
         <SummaryCard
           label="花费"
-          value={formatCurrency(summaryOverview.total_cost, currency)}
-          hint={`${range} 内累计消费`}
+          value={
+            summaryLoading ? (
+              <SummaryValueLoading />
+            ) : summaryError ? (
+              '加载失败'
+            ) : (
+              formatCurrency(summaryOverview.total_cost, currency)
+            )
+          }
         />
         <SummaryCard
           label="成功率"
-          value={`${successRate.toFixed(1)}%`}
-          hint="按当前全局时间范围聚合"
+          value={summaryLoading ? <SummaryValueLoading /> : summaryError ? '加载失败' : `${successRate.toFixed(1)}%`}
         />
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr_1fr]">
-        <PanelShell title="费用分布" description="按时间桶查看各实际模型的花费堆叠。">
+        <PanelShell title="费用分布">
           {analyticsAreaLoading ? (
             <PanelLoadingState />
           ) : analyticsAreaError ? (
@@ -393,14 +485,15 @@ export default function UsageRecordPage() {
                 void mutateFallbackEvents()
               }}
             />
-          ) : analyticsViewModel.hasData ? (
-            <ReactECharts option={stackedBarOption} style={{ height: '320px', width: '100%' }} />
           ) : (
-            <PanelEmptyState title="所选时间范围暂无模型花费分布" />
+            <ReactECharts
+              option={analyticsViewModel.hasData ? stackedBarOption : emptyStackedBarOption}
+              style={{ height: '320px', width: '100%' }}
+            />
           )}
         </PanelShell>
 
-        <PanelShell title="请求占比" description="按请求量观察模型份额结构。">
+        <PanelShell title="请求占比">
           {analyticsAreaLoading ? (
             <PanelLoadingState />
           ) : analyticsAreaError ? (
@@ -412,14 +505,15 @@ export default function UsageRecordPage() {
                 void mutateFallbackEvents()
               }}
             />
-          ) : analyticsViewModel.hasData ? (
-            <ReactECharts option={donutOption} style={{ height: '320px', width: '100%' }} />
           ) : (
-            <PanelEmptyState title="所选时间范围暂无模型请求占比" />
+            <ReactECharts
+              option={analyticsViewModel.hasData ? donutOption : emptyDonutOption}
+              style={{ height: '320px', width: '100%' }}
+            />
           )}
         </PanelShell>
 
-        <PanelShell title="请求排行" description="同一颜色映射在三张分析卡中保持一致。">
+        <PanelShell title="请求排行">
           {analyticsAreaLoading ? (
             <PanelLoadingState />
           ) : analyticsAreaError ? (
@@ -436,7 +530,7 @@ export default function UsageRecordPage() {
               {analyticsViewModel.ranking.map((item, index) => (
                 <div
                   key={item.model}
-                  className="flex items-center justify-between rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3"
+                  className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs text-gray-500">
@@ -456,16 +550,15 @@ export default function UsageRecordPage() {
               ))}
             </div>
           ) : (
-            <PanelEmptyState title="所选时间范围暂无模型请求排行" />
+            <EmptyRankingState />
           )}
         </PanelShell>
       </section>
 
-      <section className="rounded-3xl border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+      <section className="rounded-lg border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
         <div className="flex flex-col gap-4 border-b border-gray-100 pb-5 md:flex-row md:items-end md:justify-between">
           <div>
             <h3 className="text-lg text-gray-950">请求明细</h3>
-            <p className="mt-1 text-sm text-gray-500">按时间、实际模型和 KEY 筛选，20 条每页，按最新请求优先展示。</p>
           </div>
           <span className="text-sm text-gray-400">共 {logTotal} 条</span>
         </div>
@@ -556,8 +649,8 @@ export default function UsageRecordPage() {
         </div>
 
         <div className="mt-6">
-          {logsLoading ? (
-            <div className="h-40 animate-pulse rounded-2xl bg-gray-100" />
+          {logsInitialLoading ? (
+            <div className="h-40 animate-pulse rounded-lg bg-gray-100" />
           ) : logsError ? (
             <ErrorBanner message="请求明细加载失败。" onRetry={() => mutateLogs()} />
           ) : logItems.length === 0 ? (
