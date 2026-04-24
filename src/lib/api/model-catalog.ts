@@ -14,8 +14,6 @@ import {
 } from '@/lib/model-categories'
 import proxyConfig from '@/lib/proxy-config'
 
-// TODO(v-next): 模型目录端点在 admin-service(:8001)，当前通过 /api/v1 代理到
-// user-service(:8000)。合并部署模式下正常，分离部署会 404。
 const MODEL_CATALOG_API_BASE = proxyConfig.resolveModelCatalogApiBaseUrl()
 
 const catalogAxios = axios.create({
