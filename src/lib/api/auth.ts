@@ -15,13 +15,13 @@ export interface RegisterParams {
 }
 
 export interface User {
-  uid: number
+  uid: string
   email: string
 }
 
 // 完整的用户信息（包含状态和时间戳）
 export interface UserInfo {
-  uid: number
+  uid: string
   email: string
   status: number
   email_verified_at: string | null
@@ -52,7 +52,7 @@ export interface RegisterResponse {
   code: number
   message: string
   data: {
-    uid: number
+    uid: string
     email: string
     created_at: string
     access_token?: string

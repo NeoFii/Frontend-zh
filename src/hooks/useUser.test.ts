@@ -17,7 +17,7 @@ describe('fetchCurrentUser', () => {
       code: 200,
       message: 'success',
       data: {
-        uid: 1,
+        uid: '1',
         email: 'test@example.com',
         status: 1,
         email_verified_at: null,

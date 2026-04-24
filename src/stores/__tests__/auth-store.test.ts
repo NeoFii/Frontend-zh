@@ -9,7 +9,7 @@ jest.mock('zustand', () => {
 })
 
 const testUser = {
-  uid: 1,
+  uid: '1',
   email: 'test@example.com',
   status: 1,
   email_verified_at: null,
@@ -57,7 +57,7 @@ describe('useAuthStore', () => {
   it('supports replacing the current user', () => {
     const nextUser = {
       ...testUser,
-      uid: 2,
+      uid: '2',
       email: 'user2@example.com',
     }
 
