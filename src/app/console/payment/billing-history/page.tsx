@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouterBillingLedger } from '@/hooks/useRouterUsage'
 import { transactionTypeMeta } from '@/lib/api/router'
-import { formatCurrency, formatDateTime } from '@/lib/router-analytics'
+import { formatCurrencyDetail, formatDateTime } from '@/lib/router-analytics'
 import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
 import ErrorBanner from '@/components/ui/ErrorBanner'
 import EmptyState from '@/components/ui/EmptyState'
@@ -123,10 +123,10 @@ export default function BillingHistoryPage() {
 
                   <div className="text-left md:text-right">
                     <p className={`text-sm font-medium ${isPositive ? 'text-emerald-600' : item.direction === 'adjust' ? 'text-amber-700' : 'text-gray-900'}`}>
-                      {amountPrefix}{formatCurrency(Math.abs(item.amount), CURRENCY)}
+                      {amountPrefix}{formatCurrencyDetail(Math.abs(item.amount), CURRENCY)}
                     </p>
                     <p className="mt-1 text-xs text-gray-500">
-                      余额: {item.balance_after === null ? '-' : formatCurrency(item.balance_after, CURRENCY)}
+                      余额: {item.balance_after === null ? '-' : formatCurrencyDetail(item.balance_after, CURRENCY)}
                     </p>
                   </div>
                 </div>

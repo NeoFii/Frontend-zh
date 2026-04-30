@@ -1,16 +1,14 @@
 import React from 'react'
 import '@testing-library/jest-dom'
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import UsageRecordPage from './page'
-import { buildUsageRecordAnalyticsWindow, buildUsageRecordTimeWindow } from '@/lib/usage-record-analytics'
+import { buildUsageRecordAnalyticsWindow } from '@/lib/usage-record-analytics'
 
 const mockChartRender = jest.fn()
 const mockUseRouterBalance = jest.fn()
 const mockUseRouterUsageAnalytics = jest.fn()
 const mockUseRouterUsageEvents = jest.fn()
-const mockUseRouterUsageLogs = jest.fn()
 const mockUseRouterUsageStats = jest.fn()
-const mockUseRouterKeys = jest.fn()
 
 jest.mock('next/dynamic', () => ({
   __esModule: true,
@@ -26,6 +24,7 @@ jest.mock('echarts/core', () => ({
 
 jest.mock('echarts/charts', () => ({
   BarChart: {},
+  LineChart: {},
   PieChart: {},
 }))
 
@@ -39,15 +38,10 @@ jest.mock('echarts/components', () => ({
   TooltipComponent: {},
 }))
 
-jest.mock('@/hooks/useRouterKeys', () => ({
-  useRouterKeys: () => mockUseRouterKeys(),
-}))
-
 jest.mock('@/hooks/useRouterUsage', () => ({
   useRouterBalance: () => mockUseRouterBalance(),
   useRouterUsageAnalytics: (...args: unknown[]) => mockUseRouterUsageAnalytics(...args),
   useRouterUsageEvents: (...args: unknown[]) => mockUseRouterUsageEvents(...args),
-  useRouterUsageLogs: (...args: unknown[]) => mockUseRouterUsageLogs(...args),
   useRouterUsageStats: (...args: unknown[]) => mockUseRouterUsageStats(...args),
 }))
 
@@ -99,39 +93,6 @@ function createAnalyticsFixture() {
   }
 }
 
-function createLogItem(index: number) {
-  return {
-    id: index,
-    request_id: `req-${index}`,
-    api_key_id: index % 2 === 0 ? 2 : 1,
-    model_name: 'gpt-4.1-mini',
-    selected_model: index % 3 === 0 ? null : 'gpt-4.1-mini-2026-04-14',
-    provider_slug: 'openai',
-    prompt_tokens: 100 + index,
-    completion_tokens: 50 + index,
-    cached_tokens: 0,
-    total_tokens: 150 + index,
-    cost: 0.2 + index * 0.01,
-    status: 1,
-    duration_ms: 200 + index,
-    is_stream: false,
-    routing_tier: null,
-    config_version: null,
-    config_source: null,
-    router_trace_id: null,
-    error_code: null,
-    error_msg: null,
-    created_at: `2026-04-24T0${index % 9}:00:00Z`,
-  }
-}
-
-function chooseSelectOption(name: string, optionLabel: string) {
-  const trigger = screen.getByRole('combobox', { name })
-  fireEvent.click(trigger)
-  expect(trigger).toHaveAttribute('aria-expanded', 'true')
-  fireEvent.click(screen.getByRole('option', { name: optionLabel }))
-}
-
 describe('UsageRecordPage', () => {
   beforeAll(() => {
     jest.useFakeTimers()
@@ -181,70 +142,10 @@ describe('UsageRecordPage', () => {
       isError: null,
       mutate: jest.fn(),
     })
-
-    mockUseRouterKeys.mockReturnValue({
-      keys: [
-        {
-          id: 1,
-          name: '主 Key',
-          token_preview: 'sk-main...',
-          status: 1,
-          is_active: true,
-          billing_mode: 'limited',
-          balance: 50,
-          quota_mode: 2,
-          quota_limit: 100,
-          quota_used: 50,
-          allowed_models: null,
-          allow_ips: null,
-          expires_at: null,
-          last_used_at: null,
-          created_at: '2026-04-01T00:00:00Z',
-          updated_at: '2026-04-01T00:00:00Z',
-        },
-        {
-          id: 2,
-          name: '批处理',
-          token_preview: 'sk-batch...',
-          status: 1,
-          is_active: true,
-          billing_mode: 'limited',
-          balance: 20,
-          quota_mode: 2,
-          quota_limit: 40,
-          quota_used: 20,
-          allowed_models: null,
-          allow_ips: null,
-          expires_at: null,
-          last_used_at: null,
-          created_at: '2026-04-01T00:00:00Z',
-          updated_at: '2026-04-01T00:00:00Z',
-        },
-      ],
-      isLoading: false,
-      isError: null,
-      mutate: jest.fn(),
-    })
-
-    mockUseRouterUsageLogs.mockImplementation((filter?: { page?: number; effectiveModel?: string; keyId?: number }) => {
-      const page = filter?.page ?? 1
-      const startIndex = (page - 1) * 20
-      const items = Array.from({ length: page === 2 ? 5 : 20 }, (_, index) => createLogItem(startIndex + index + 1))
-
-      return {
-        items,
-        total: 25,
-        isLoading: false,
-        isError: null,
-        mutate: jest.fn(),
-      }
-    })
   })
 
-  it('defaults to the 8h range and renders four summary cards, three analytics panels, and a 20-row detail page', () => {
+  it('defaults to the 8h range and renders four summary cards, analytics panels, and token trend', () => {
     render(<UsageRecordPage />)
-
-    const defaultWindow = buildUsageRecordTimeWindow('8h', new Date('2026-04-24T16:45:00+08:00'))
 
     expect(screen.getByRole('button', { name: '8h' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText('当前余额')).toBeInTheDocument()
@@ -254,29 +155,14 @@ describe('UsageRecordPage', () => {
     expect(screen.getByText('费用分布')).toBeInTheDocument()
     expect(screen.getByText('请求占比')).toBeInTheDocument()
     expect(screen.getByText('请求排行')).toBeInTheDocument()
-    expect(screen.queryByText('当前时间窗口')).not.toBeInTheDocument()
-    expect(screen.queryByText('明细表默认跟随上方时间范围，手动调整筛选后仍可查看更细的时间切片。')).not.toBeInTheDocument()
-    expect(screen.queryByText('总余额 CNY 120.00，冻结 CNY 12.00')).not.toBeInTheDocument()
-    expect(screen.queryByText('成功 45 次')).not.toBeInTheDocument()
-    expect(screen.queryByText('8h 内累计消费')).not.toBeInTheDocument()
-    expect(screen.queryByText('按当前全局时间范围聚合')).not.toBeInTheDocument()
-    expect(screen.queryByText('按时间桶查看各实际模型的花费堆叠。')).not.toBeInTheDocument()
-    expect(screen.queryByText('按请求量观察模型份额结构。')).not.toBeInTheDocument()
-    expect(screen.queryByText('同一颜色映射在三张分析卡中保持一致。')).not.toBeInTheDocument()
-    expect(screen.queryByText('按时间、实际模型和 KEY 筛选，20 条每页，按最新请求优先展示。')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Token 使用趋势' })).toBeInTheDocument()
+    expect(screen.queryByText('请求明细')).not.toBeInTheDocument()
     expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('8h')
-    expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith({
-      page: 1,
-      pageSize: 20,
-      start: defaultWindow.start,
-      end: defaultWindow.end,
-      effectiveModel: undefined,
-      keyId: undefined,
-    })
 
-    const rows = within(screen.getByRole('table')).getAllByRole('row')
-    expect(rows).toHaveLength(21)
-    expect(screen.getByText('共 25 条')).toBeInTheDocument()
+    const trendRangeButtons = ['24h', '7d', '30d']
+    for (const label of trendRangeButtons) {
+      expect(screen.getAllByRole('button', { name: label }).length).toBeGreaterThanOrEqual(1)
+    }
   })
 
   it('uses sidebar-matched rounded-lg on the main card containers', () => {
@@ -289,7 +175,7 @@ describe('UsageRecordPage', () => {
       expect(card?.className).not.toMatch(/rounded-(2xl|3xl)/)
     }
 
-    const expectedPanelTitles = ['费用分布', '请求占比', '请求排行', '请求明细']
+    const expectedPanelTitles = ['费用分布', '请求占比', '请求排行', 'Token 使用趋势']
     for (const title of expectedPanelTitles) {
       const panel = screen.getByText(title).closest('section')
       expect(panel).toHaveClass('rounded-lg')
@@ -311,25 +197,11 @@ describe('UsageRecordPage', () => {
       isUnsupported: false,
       mutate: jest.fn(),
     })
-    mockUseRouterKeys.mockReturnValueOnce({
-      keys: [],
-      isLoading: true,
-      isError: null,
-      mutate: jest.fn(),
-    })
-    mockUseRouterUsageLogs.mockReturnValueOnce({
-      items: [],
-      total: 0,
-      isLoading: true,
-      isError: null,
-      mutate: jest.fn(),
-    })
 
     render(<UsageRecordPage />)
 
     expect(screen.getByRole('heading', { name: '使用记录' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '8h' })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByRole('button', { name: '24h' })).toBeInTheDocument()
     expect(screen.getByText('当前余额')).toBeInTheDocument()
     expect(screen.getByText('使用统计')).toBeInTheDocument()
     expect(screen.getByText('花费')).toBeInTheDocument()
@@ -337,50 +209,20 @@ describe('UsageRecordPage', () => {
     expect(screen.getByText('费用分布')).toBeInTheDocument()
     expect(screen.getByText('请求占比')).toBeInTheDocument()
     expect(screen.getByText('请求排行')).toBeInTheDocument()
-    expect(screen.getByText('请求明细')).toBeInTheDocument()
-    expect(screen.getByLabelText('开始时间')).toBeInTheDocument()
-    expect(screen.getByLabelText('结束时间')).toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: '实际模型' })).toBeInTheDocument()
-    expect(screen.getByRole('combobox', { name: 'KEY' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Token 使用趋势' })).toBeInTheDocument()
   })
 
-  it('refreshes analytics and resets the detail time window when the global range changes', async () => {
+  it('refreshes analytics when the global range changes without affecting the trend range', () => {
     render(<UsageRecordPage />)
 
-    fireEvent.click(screen.getByRole('button', { name: '下一页' }))
-    await waitFor(() =>
-      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          page: 2,
-        })
-      )
-    )
+    const mainRange24h = screen.getAllByRole('button', { name: '24h' })[0]
+    fireEvent.click(mainRange24h)
 
-    fireEvent.change(screen.getByLabelText('开始时间'), {
-      target: { value: '2026-04-24T09:00' },
-    })
-
-    fireEvent.click(screen.getByRole('button', { name: '24h' }))
-
-    const nextWindow = buildUsageRecordTimeWindow('24h', new Date('2026-04-24T16:45:00+08:00'))
-
-    await waitFor(() => expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('24h'))
-    await waitFor(() =>
-      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith({
-        page: 1,
-        pageSize: 20,
-        start: nextWindow.start,
-        end: nextWindow.end,
-        effectiveModel: undefined,
-        keyId: undefined,
-      })
-    )
-
-    expect(screen.getByLabelText('开始时间')).toHaveValue(nextWindow.startInput)
-    expect(screen.getByLabelText('结束时间')).toHaveValue(nextWindow.endInput)
+    expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('24h')
+    expect(screen.getByRole('heading', { name: 'Token 使用趋势' })).toBeInTheDocument()
   })
 
-  it('keeps the current usage layout visible while a new range loads with previous data', async () => {
+  it('keeps the current usage layout visible while a new range loads with previous data', () => {
     const previousAnalytics = createAnalyticsFixture()
     mockUseRouterUsageAnalytics.mockImplementation((nextRange: string) => ({
       analytics: previousAnalytics,
@@ -389,92 +231,22 @@ describe('UsageRecordPage', () => {
       isUnsupported: false,
       mutate: jest.fn(),
     }))
-    mockUseRouterUsageLogs.mockImplementation((filter?: { page?: number }) => ({
-      items: Array.from({ length: 20 }, (_, index) => createLogItem(index + 1)),
-      total: 25,
-      isLoading: filter?.page === 1 && mockUseRouterUsageAnalytics.mock.calls.some((call) => call[0] === '24h'),
-      isError: null,
-      mutate: jest.fn(),
-    }))
 
     render(<UsageRecordPage />)
 
-    fireEvent.click(screen.getByRole('button', { name: '24h' }))
+    const mainRange24h = screen.getAllByRole('button', { name: '24h' })[0]
+    fireEvent.click(mainRange24h)
 
-    const nextWindow = buildUsageRecordTimeWindow('24h', new Date('2026-04-24T16:45:00+08:00'))
-
-    await waitFor(() => expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('24h'))
-    await waitFor(() =>
-      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith({
-        page: 1,
-        pageSize: 20,
-        start: nextWindow.start,
-        end: nextWindow.end,
-        effectiveModel: undefined,
-        keyId: undefined,
-      })
-    )
-
-    expect(screen.getByRole('button', { name: '24h' })).toHaveAttribute('aria-pressed', 'true')
+    expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('24h')
+    expect(mainRange24h).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByText('当前余额')).toBeInTheDocument()
-    expect(screen.getByText('使用统计')).toBeInTheDocument()
-    expect(screen.getByText('花费')).toBeInTheDocument()
-    expect(screen.getByText('成功率')).toBeInTheDocument()
     expect(screen.getByText('费用分布')).toBeInTheDocument()
     expect(screen.getByText('请求占比')).toBeInTheDocument()
-    expect(screen.getByText('请求排行')).toBeInTheDocument()
-    expect(screen.getByRole('table')).toBeInTheDocument()
-    expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(21)
-    expect(screen.getAllByTestId('usage-chart')).toHaveLength(2)
+    expect(screen.getByRole('heading', { name: 'Token 使用趋势' })).toBeInTheDocument()
+    expect(screen.getAllByTestId('usage-chart').length).toBeGreaterThanOrEqual(2)
   })
 
-  it('resets pagination to page 1 when the actual-model or key filter changes', async () => {
-    render(<UsageRecordPage />)
-
-    fireEvent.click(screen.getByRole('button', { name: '下一页' }))
-    await waitFor(() =>
-      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          page: 2,
-        })
-      )
-    )
-
-    chooseSelectOption('实际模型', 'gpt-4.1-mini-2026-04-14')
-
-    await waitFor(() =>
-      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          page: 1,
-          effectiveModel: 'gpt-4.1-mini-2026-04-14',
-        })
-      )
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: '下一页' }))
-    await waitFor(() =>
-      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          page: 2,
-          effectiveModel: 'gpt-4.1-mini-2026-04-14',
-        })
-      )
-    )
-
-    chooseSelectOption('KEY', '批处理 (sk-batch...)')
-
-    await waitFor(() =>
-      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          page: 1,
-          effectiveModel: 'gpt-4.1-mini-2026-04-14',
-          keyId: 2,
-        })
-      )
-    )
-  })
-
-  it('keeps the full page layout and keeps the shared filters usable when the analytics endpoint returns 404', async () => {
+  it('keeps the full page layout when the analytics endpoint returns 404', () => {
     mockUseRouterUsageAnalytics.mockReturnValueOnce({
       analytics: null,
       isLoading: false,
@@ -506,9 +278,7 @@ describe('UsageRecordPage', () => {
           id: 1,
           request_id: 'req-1',
           api_key_id: 1,
-          model_name: 'auto',
-          selected_model: 'gpt-4.1-mini-2026-04-14',
-          provider_slug: 'openai',
+          effective_model: 'gpt-4.1-mini-2026-04-14',
           prompt_tokens: 100,
           completion_tokens: 30,
           cached_tokens: 0,
@@ -525,29 +295,6 @@ describe('UsageRecordPage', () => {
           error_msg: null,
           created_at: '2026-04-24T09:05:00',
         },
-        {
-          id: 2,
-          request_id: 'req-2',
-          api_key_id: 1,
-          model_name: 'claude-3-7-sonnet-2026-02-19',
-          selected_model: null,
-          provider_slug: 'anthropic',
-          prompt_tokens: 120,
-          completion_tokens: 40,
-          cached_tokens: 0,
-          total_tokens: 160,
-          cost: 3.5,
-          status: 2,
-          duration_ms: 260,
-          is_stream: false,
-          routing_tier: null,
-          config_version: null,
-          config_source: null,
-          router_trace_id: null,
-          error_code: 'rate_limit',
-          error_msg: 'rate limited',
-          created_at: '2026-04-24T09:35:00',
-        },
       ],
       isLoading: false,
       isError: null,
@@ -560,14 +307,10 @@ describe('UsageRecordPage', () => {
 
     expect(screen.queryByText('使用记录加载失败。')).not.toBeInTheDocument()
     expect(screen.getByText('当前余额')).toBeInTheDocument()
-    expect(screen.getByText('使用统计')).toBeInTheDocument()
-    expect(screen.getByText('花费')).toBeInTheDocument()
-    expect(screen.getByText('成功率')).toBeInTheDocument()
     expect(screen.getByText('费用分布')).toBeInTheDocument()
     expect(screen.getByText('请求占比')).toBeInTheDocument()
-    expect(screen.getByText('请求排行')).toBeInTheDocument()
-    expect(screen.getByRole('table')).toBeInTheDocument()
-    expect(mockUseRouterUsageStats).toHaveBeenLastCalledWith({
+    expect(screen.getByRole('heading', { name: 'Token 使用趋势' })).toBeInTheDocument()
+    expect(mockUseRouterUsageStats).toHaveBeenCalledWith({
       start: analyticsWindow.start,
       end: analyticsWindow.end,
     })
@@ -578,24 +321,10 @@ describe('UsageRecordPage', () => {
       limit: 100,
       maxPages: 20,
     })
-
-    chooseSelectOption('实际模型', 'gpt-4.1-mini-2026-04-14')
-
-    await waitFor(() =>
-      expect(mockUseRouterUsageLogs).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          page: 1,
-          effectiveModel: 'gpt-4.1-mini-2026-04-14',
-        })
-      )
-    )
-
-    expect(screen.getByRole('combobox', { name: '实际模型' })).toHaveTextContent('gpt-4.1-mini-2026-04-14')
-    expect(screen.getAllByTestId('usage-chart')).toHaveLength(2)
   })
 
   it('renders empty analytics as visual chart placeholders without no-data chart copy', () => {
-    mockUseRouterUsageAnalytics.mockReturnValueOnce({
+    mockUseRouterUsageAnalytics.mockReturnValue({
       analytics: {
         ...createAnalyticsFixture(),
         overview: {
@@ -612,21 +341,14 @@ describe('UsageRecordPage', () => {
       isUnsupported: false,
       mutate: jest.fn(),
     })
-    mockUseRouterUsageLogs.mockReturnValueOnce({
-      items: [],
-      total: 0,
-      isLoading: false,
-      isError: null,
-      mutate: jest.fn(),
-    })
 
     render(<UsageRecordPage />)
 
     expect(screen.queryByText('所选时间范围暂无模型花费分布')).not.toBeInTheDocument()
     expect(screen.queryByText('所选时间范围暂无模型请求占比')).not.toBeInTheDocument()
     expect(screen.queryByText('所选时间范围暂无模型请求排行')).not.toBeInTheDocument()
-    expect(screen.getAllByTestId('usage-chart')).toHaveLength(2)
+    expect(screen.getAllByTestId('usage-chart').length).toBeGreaterThanOrEqual(2)
+    fireEvent.click(screen.getByRole('button', { name: '请求排行' }))
     expect(screen.getByTestId('usage-ranking-empty')).toBeInTheDocument()
-    expect(screen.getByText('当前筛选条件下没有请求记录')).toBeInTheDocument()
   })
 })

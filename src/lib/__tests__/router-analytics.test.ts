@@ -21,9 +21,7 @@ process.env.TZ = 'Asia/Shanghai'
 const baseEvent = {
   request_id: 'req_1',
   api_key_id: 1,
-  model_name: 'gpt-4o',
-  selected_model: null as string | null,
-  provider_slug: null as string | null,
+  effective_model: 'gpt-4o',
   prompt_tokens: 100,
   completion_tokens: 50,
   cached_tokens: 0,
@@ -64,9 +62,9 @@ describe('router analytics helpers', () => {
 
   it('builds model and daily trend aggregates', () => {
     const events = [
-      { ...baseEvent, id: 1, status: 1, model_name: 'gpt-4o', created_at: '2026-03-10T12:00:00Z' },
-      { ...baseEvent, id: 2, status: 1, model_name: 'claude-3.5', cost: 1.2, created_at: '2026-03-10T16:00:00Z' },
-      { ...baseEvent, id: 3, status: 1, model_name: 'gpt-4o', cost: 0.1, created_at: '2026-03-11T08:00:00Z' },
+      { ...baseEvent, id: 1, status: 1, effective_model: 'gpt-4o', created_at: '2026-03-10T12:00:00Z' },
+      { ...baseEvent, id: 2, status: 1, effective_model: 'claude-3.5', cost: 1.2, created_at: '2026-03-10T16:00:00Z' },
+      { ...baseEvent, id: 3, status: 1, effective_model: 'gpt-4o', cost: 0.1, created_at: '2026-03-11T08:00:00Z' },
     ]
 
     const modelStats = buildModelUsageStats(events)
@@ -79,8 +77,8 @@ describe('router analytics helpers', () => {
 
   it('normalizes model names and builds dashboard comparison', () => {
     const events = [
-      { ...baseEvent, id: 1, status: 1, model_name: 'gpt-4o-2024-08-06', created_at: '2026-03-10T12:00:00Z' },
-      { ...baseEvent, id: 2, status: 1, model_name: 'claude-3-5-sonnet', cost: 1.2, created_at: '2026-03-10T16:00:00Z' },
+      { ...baseEvent, id: 1, status: 1, effective_model: 'gpt-4o-2024-08-06', created_at: '2026-03-10T12:00:00Z' },
+      { ...baseEvent, id: 2, status: 1, effective_model: 'claude-3-5-sonnet', cost: 1.2, created_at: '2026-03-10T16:00:00Z' },
     ]
 
     expect(normalizeModelLabel('gpt-4o-2024-08-06')).toBe('GPT-4o')
@@ -116,12 +114,12 @@ describe('router analytics helpers', () => {
     expect(formatCurrency(12.5, 'CNY')).toBe('CNY 12.50')
   })
 
-  it('aligns the 24h query window to completed hourly buckets', () => {
+  it('aligns the 24h query window to include the current hour', () => {
     const now = new Date('2026-04-23T10:35:00+08:00')
 
     expect(getBalanceTokenTrendQueryWindow('24h', now)).toEqual({
-      start: '2026-04-22T10:00:00+08:00',
-      end: '2026-04-23T10:00:00+08:00',
+      start: '2026-04-22T11:00:00+08:00',
+      end: '2026-04-23T11:00:00+08:00',
     })
   })
 
@@ -129,7 +127,7 @@ describe('router analytics helpers', () => {
     const now = new Date('2026-04-23T10:35:00+08:00')
     const stats: RouterUsageStat[] = [
       {
-        stat_hour: '2026-04-22T10:00:00+08:00',
+        stat_hour: '2026-04-22T11:00:00+08:00',
         request_count: 3,
         success_count: 3,
         error_count: 0,
@@ -140,7 +138,7 @@ describe('router analytics helpers', () => {
         total_cost: 0.9,
       },
       {
-        stat_hour: '2026-04-22T10:00:00+08:00',
+        stat_hour: '2026-04-22T11:00:00+08:00',
         request_count: 2,
         success_count: 2,
         error_count: 0,
@@ -151,7 +149,7 @@ describe('router analytics helpers', () => {
         total_cost: 0.4,
       },
       {
-        stat_hour: '2026-04-23T09:00:00+08:00',
+        stat_hour: '2026-04-23T10:00:00+08:00',
         request_count: 4,
         success_count: 4,
         error_count: 0,
@@ -167,7 +165,7 @@ describe('router analytics helpers', () => {
 
     expect(viewModel.points).toHaveLength(24)
     expect(viewModel.points[0]).toMatchObject({
-      bucketStart: '2026-04-22T02:00:00.000Z',
+      bucketStart: '2026-04-22T03:00:00.000Z',
       promptTokens: 200,
       completionTokens: 100,
       cachedTokens: 50,
@@ -178,7 +176,7 @@ describe('router analytics helpers', () => {
       cachedTokens: 0,
     })
     expect(viewModel.points[23]).toMatchObject({
-      bucketStart: '2026-04-23T01:00:00.000Z',
+      bucketStart: '2026-04-23T02:00:00.000Z',
       promptTokens: 200,
       completionTokens: 100,
       cachedTokens: 50,

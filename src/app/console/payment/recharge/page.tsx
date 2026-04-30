@@ -64,7 +64,6 @@ export default function RechargePage() {
                   <th className="px-6 py-4 font-medium">状态</th>
                   <th className="px-6 py-4 font-medium">支付渠道</th>
                   <th className="px-6 py-4 font-medium">支付时间</th>
-                  <th className="px-6 py-4 font-medium">创建时间</th>
                   <th className="px-6 py-4 font-medium">备注</th>
                 </tr>
               </thead>
@@ -80,7 +79,6 @@ export default function RechargePage() {
                       </td>
                       <td className="px-6 py-5 text-sm">{order.payment_channel_label}</td>
                       <td className="px-6 py-5 text-sm">{formatDateTime(order.paid_at)}</td>
-                      <td className="px-6 py-5 text-sm">{formatDateTime(order.created_at)}</td>
                       <td className="px-6 py-5 text-sm text-gray-500">{order.remark || '-'}</td>
                     </tr>
                   )

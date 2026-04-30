@@ -2,7 +2,8 @@ import config from './tailwind.config'
 
 describe('tailwind primary brand palette', () => {
   it('uses the homepage blue brand colors for global primary tokens', () => {
-    expect(config.theme?.extend?.colors?.primary).toEqual({
+    const colors = config.theme?.extend?.colors as Record<string, unknown>
+    expect(colors?.primary).toEqual({
       50: '#eff6ff',
       100: '#dbeafe',
       200: '#bfdbfe',

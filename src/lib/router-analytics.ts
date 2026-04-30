@@ -121,7 +121,7 @@ function formatLocalDayKey(date: Date) {
 const BALANCE_TOKEN_TREND_LEGEND = ['输入 Tokens', '输出 Tokens', '缓存 Tokens'] as const
 
 export function getBalanceTokenTrendQueryWindow(range: BalanceTokenTrendRange, now: Date = new Date()) {
-  const endDate = startOfHour(now)
+  const endDate = addHours(startOfHour(now), 1)
 
   if (range === '24h') {
     return {
@@ -322,7 +322,7 @@ export function usageSummaryToAggregate(summary: RouterUsageSummary | null): Usa
 export function buildModelUsageStats(events: RouterUsageEvent[]) {
   const bucket = new Map<string, ModelUsageStat>()
   events.forEach((event) => {
-    const model = normalizeModelLabel(event.model_name || 'unknown')
+    const model = normalizeModelLabel(event.effective_model || 'unknown')
     const current = bucket.get(model) ?? {
       model,
       requests: 0,
@@ -542,6 +542,11 @@ export function extractCurrency(summary: RouterUsageSummary | null) {
 export function formatCurrency(amount: number, currency: string) {
   const normalizedCurrency = currency || 'CNY'
   return `${normalizedCurrency} ${amount.toFixed(2)}`
+}
+
+export function formatCurrencyDetail(amount: number, currency: string) {
+  const normalizedCurrency = currency || 'CNY'
+  return `${normalizedCurrency} ${amount.toFixed(6)}`
 }
 
 export function formatCompactNumber(value: number) {

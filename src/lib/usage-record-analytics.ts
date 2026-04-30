@@ -221,8 +221,8 @@ export function toUsageRecordQueryValue(value: string | undefined) {
   return toShanghaiApiDateTime(value)
 }
 
-export function resolveUsageEventEffectiveModel(event: Pick<RouterUsageEvent, 'selected_model' | 'model_name'>) {
-  return event.selected_model || event.model_name || '-'
+export function resolveUsageEventEffectiveModel(event: Pick<RouterUsageEvent, 'effective_model'>) {
+  return event.effective_model || '-'
 }
 
 export function normalizeSuccessRateToPercent(value: number) {

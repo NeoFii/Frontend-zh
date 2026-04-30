@@ -40,9 +40,7 @@ interface BackendUsageLogItem {
   id: number
   request_id: string
   api_key_id: number | null
-  model_name: string
-  selected_model: string | null
-  provider_slug: string | null
+  effective_model: string
   prompt_tokens: number
   completion_tokens: number
   cached_tokens: number
@@ -149,7 +147,6 @@ interface BackendTopupOrderItem {
   payment_no: string | null
   paid_at: string | null
   remark: string | null
-  created_at: string
   updated_at: string
 }
 
@@ -164,7 +161,6 @@ export interface TopupOrderItem {
   payment_no: string | null
   paid_at: string | null
   remark: string | null
-  created_at: string
   updated_at: string
 }
 
@@ -203,9 +199,7 @@ export interface RouterUsageEvent {
   id: number
   request_id: string
   api_key_id: number | null
-  model_name: string
-  selected_model: string | null
-  provider_slug: string | null
+  effective_model: string
   prompt_tokens: number
   completion_tokens: number
   cached_tokens: number
@@ -394,7 +388,7 @@ export function transactionTypeMeta(type: number) {
 }
 
 function centsToCurrency(value: number | null | undefined) {
-  return (value ?? 0) / 100
+  return (value ?? 0) / 1_000_000
 }
 
 export function paymentChannelLabel(paymentChannel: string) {
@@ -487,9 +481,7 @@ function normalizeUsageLog(item: BackendUsageLogItem): RouterUsageEvent {
     id: item.id,
     request_id: item.request_id,
     api_key_id: item.api_key_id,
-    model_name: item.model_name,
-    selected_model: item.selected_model,
-    provider_slug: item.provider_slug,
+    effective_model: item.effective_model,
     prompt_tokens: item.prompt_tokens,
     completion_tokens: item.completion_tokens,
     cached_tokens: item.cached_tokens,

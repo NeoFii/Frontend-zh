@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import dynamic from 'next/dynamic'
 import * as echarts from 'echarts/core'
-import { BarChart, PieChart } from 'echarts/charts'
+import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
 import type { RouterUsageAnalyticsRange } from '@/lib/api/router'
@@ -12,25 +12,25 @@ import {
   useRouterBalance,
   useRouterUsageAnalytics,
   useRouterUsageEvents,
-  useRouterUsageLogs,
   useRouterUsageStats,
 } from '@/hooks/useRouterUsage'
-import { useRouterKeys } from '@/hooks/useRouterKeys'
 import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
 import ErrorBanner from '@/components/ui/ErrorBanner'
-import EmptyState from '@/components/ui/EmptyState'
-import Pagination from '@/components/ui/Pagination'
-import { Select } from '@/components/ui/Select'
-import { formatCompactNumber, formatCurrency, formatDateTime } from '@/lib/router-analytics'
+import {
+  buildBalanceTokenTrendViewModel,
+  formatCompactNumber,
+  formatCurrency,
+  formatCurrencyDetail,
+  formatTokenAxisValue,
+  getBalanceTokenTrendQueryWindow,
+  type BalanceTokenTrendRange,
+} from '@/lib/router-analytics'
 import {
   buildUsageRecordAnalyticsWindow,
   buildUsageRecordAnalyticsViewModel,
   buildUsageRecordFallbackAnalytics,
   buildUsageRecordFallbackOverview,
-  buildUsageRecordTimeWindow,
   normalizeSuccessRateToPercent,
-  resolveUsageEventEffectiveModel,
-  toUsageRecordQueryValue,
   USAGE_RECORD_RANGES,
 } from '@/lib/usage-record-analytics'
 
@@ -43,7 +43,10 @@ const ReactECharts = dynamic(() => import('echarts-for-react'), {
   ),
 })
 
-echarts.use([BarChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
+echarts.use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
+
+const TREND_RANGE_OPTIONS: BalanceTokenTrendRange[] = ['24h', '7d', '30d']
+const TREND_COLORS = ['#2563eb', '#f97316', '#10b981']
 
 function SummaryValueLoading() {
   return <div className="mt-4 h-8 w-24 animate-pulse rounded-lg bg-gray-100" />
@@ -105,19 +108,12 @@ function PanelLoadingState() {
   return <div className="h-[320px] animate-pulse rounded-lg bg-gray-100" />
 }
 
-function isSuccessStatus(status: number) {
-  return status === 1 || status === 200
-}
-
 export default function UsageRecordPage() {
-  const initialWindow = useMemo(() => buildUsageRecordTimeWindow('8h'), [])
   const [range, setRange] = useState<RouterUsageAnalyticsRange>('8h')
-  const [page, setPage] = useState(1)
-  const [startInput, setStartInput] = useState(initialWindow.startInput)
-  const [endInput, setEndInput] = useState(initialWindow.endInput)
-  const [effectiveModel, setEffectiveModel] = useState('')
-  const [keyId, setKeyId] = useState('')
+  const [rightPanelTab, setRightPanelTab] = useState<'donut' | 'ranking'>('donut')
+  const [trendRange, setTrendRange] = useState<BalanceTokenTrendRange>('24h')
   const analyticsWindow = useMemo(() => buildUsageRecordAnalyticsWindow(range), [range])
+  const trendWindow = useMemo(() => getBalanceTokenTrendQueryWindow(trendRange), [trendRange])
 
   const { balance, isLoading: balanceLoading, isError: balanceError, mutate: mutateBalance } = useRouterBalance()
   const {
@@ -127,7 +123,6 @@ export default function UsageRecordPage() {
     isUnsupported: analyticsUnsupported,
     mutate: mutateAnalytics,
   } = useRouterUsageAnalytics(range)
-  const { keys, isError: keysError, mutate: mutateKeys } = useRouterKeys()
   const fallbackEnabled = analyticsUnsupported || Boolean(analyticsError)
   const {
     stats: fallbackStats,
@@ -152,28 +147,11 @@ export default function UsageRecordPage() {
     limit: 100,
     maxPages: 20,
   })
-
-  useEffect(() => {
-    const nextWindow = buildUsageRecordTimeWindow(range)
-    setStartInput(nextWindow.startInput)
-    setEndInput(nextWindow.endInput)
-    setPage(1)
-  }, [range])
-
-  const logsFilter = useMemo(
-    () => ({
-      page,
-      pageSize: 20,
-      start: toUsageRecordQueryValue(startInput),
-      end: toUsageRecordQueryValue(endInput),
-      effectiveModel: effectiveModel || undefined,
-      keyId: keyId ? Number(keyId) : undefined,
-    }),
-    [effectiveModel, endInput, keyId, page, startInput]
-  )
-
-  const { items: logItems, total: logTotal, isLoading: logsLoading, isError: logsError, mutate: mutateLogs } =
-    useRouterUsageLogs(logsFilter)
+  const {
+    stats: trendStats,
+    isLoading: trendStatsLoading,
+    isError: trendStatsError,
+  } = useRouterUsageStats(trendWindow)
 
   const fallbackOverview = useMemo(
     () => buildUsageRecordFallbackOverview(fallbackStats, fallbackEvents),
@@ -201,34 +179,67 @@ export default function UsageRecordPage() {
   const currency = analyticsData?.currency || balance?.currency || 'CNY'
   const summaryOverview = analyticsData?.overview ?? fallbackOverview
   const successRate = normalizeSuccessRateToPercent(summaryOverview.success_rate)
-  const totalPages = Math.ceil(logTotal / 20)
-  const keyMap = useMemo(
-    () => new Map(keys.map((item) => [item.id, `${item.name} (${item.token_preview})`])),
-    [keys]
-  )
-  const modelOptions = useMemo(
-    () => Array.from(new Set(analyticsData?.models.map((item) => item.effective_model) ?? [])),
-    [analyticsData?.models]
-  )
-  const effectiveModelOptions = useMemo(
-    () => [
-      { value: '', label: '全部' },
-      ...modelOptions.map((item) => ({ value: item, label: item })),
-    ],
-    [modelOptions]
-  )
-  const keyOptions = useMemo(
-    () => [
-      { value: '', label: '全部' },
-      ...keys.map((item) => ({
-        value: String(item.id),
-        label: `${item.name} (${item.token_preview})`,
-      })),
-    ],
-    [keys]
-  )
   const analyticsAreaLoading = !analyticsData && (analyticsLoading || (fallbackEnabled && fallbackInitialLoading))
   const analyticsAreaError = !analyticsData && !analyticsAreaLoading && Boolean(analyticsError) && Boolean(fallbackEventsError)
+
+  const trendViewModel = useMemo(() => buildBalanceTokenTrendViewModel(trendStats, trendRange), [trendStats, trendRange])
+  const trendHasData = trendViewModel.hasData
+
+  const trendOption = useMemo(
+    () => ({
+      color: TREND_COLORS,
+      tooltip: {
+        trigger: 'axis',
+        valueFormatter: (value: number) => `${value.toLocaleString('zh-CN')} Tokens`,
+      },
+      legend: {
+        data: trendViewModel.legend,
+        top: 0,
+        textStyle: { color: '#64748b', fontSize: 12 },
+      },
+      grid: {
+        left: 12,
+        right: 12,
+        top: 56,
+        bottom: 12,
+        containLabel: true,
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: trendViewModel.xAxis,
+        axisLine: { lineStyle: { color: '#e2e8f0' } },
+        axisTick: { show: false },
+        axisLabel: { color: '#64748b' },
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: {
+          color: '#64748b',
+          formatter: (value: number) => formatTokenAxisValue(value),
+        },
+        splitLine: { lineStyle: { color: '#f1f5f9' } },
+      },
+      series: trendViewModel.series.map((series, index) => ({
+        ...series,
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        symbol: 'circle',
+        lineStyle: {
+          width: trendHasData ? 3 : 2,
+          color: trendHasData ? TREND_COLORS[index] : '#cbd5e1',
+        },
+        itemStyle: {
+          color: trendHasData ? TREND_COLORS[index] : '#cbd5e1',
+        },
+        emphasis: {
+          focus: 'series',
+        },
+      })),
+    }),
+    [trendHasData, trendViewModel]
+  )
 
   const stackedBarOption = useMemo(
     () => ({
@@ -239,7 +250,7 @@ export default function UsageRecordPage() {
           const header = params[0]?.axisValueLabel ?? ''
           const rows = params
             .filter((item) => item.value > 0)
-            .map((item) => `${item.seriesName}: ${formatCurrency(item.value, currency)}`)
+            .map((item) => `${item.seriesName}: ${formatCurrencyDetail(item.value, currency)}`)
             .join('<br/>')
           return rows ? `${header}<br/>${rows}` : `${header}<br/>暂无花费`
         },
@@ -278,7 +289,7 @@ export default function UsageRecordPage() {
         type: 'bar',
         stack: 'cost',
         emphasis: { focus: 'series' },
-        itemStyle: { color: item.color, borderRadius: [6, 6, 0, 0] },
+        itemStyle: { color: item.color },
         data: item.data.map((value) => Number(value.toFixed(6))),
       })),
     }),
@@ -320,7 +331,7 @@ export default function UsageRecordPage() {
           type: 'bar',
           silent: true,
           barMaxWidth: 24,
-          itemStyle: { color: '#e5e7eb', borderRadius: [6, 6, 0, 0] },
+          itemStyle: { color: '#e5e7eb' },
           data: labels.map(() => 0),
         },
       ],
@@ -385,7 +396,6 @@ export default function UsageRecordPage() {
 
   const summaryLoading = analyticsAreaLoading
   const summaryError = analyticsAreaError
-  const logsInitialLoading = logsLoading && logItems.length === 0
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
@@ -395,7 +405,7 @@ export default function UsageRecordPage() {
             <ConsolePageHeader
               badge="USAGE RECORD"
               title="使用记录"
-              description="同一时间范围统一驱动总览、模型分析与请求明细。"
+              description="同一时间范围统一驱动总览与模型分析。"
             />
             <div className="mt-5 inline-flex rounded-full bg-gray-100 p-1">
               {USAGE_RECORD_RANGES.map((option) => (
@@ -418,13 +428,12 @@ export default function UsageRecordPage() {
         </div>
       </section>
 
-      {(balanceError || keysError) && (
+      {balanceError && (
         <ErrorBanner
           message="基础数据加载失败。"
           onRetry={() => {
             void mutateBalance()
             void mutateAnalytics()
-            void mutateKeys()
           }}
         />
       )}
@@ -472,7 +481,7 @@ export default function UsageRecordPage() {
         />
       </section>
 
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr_1fr]">
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_1fr]">
         <PanelShell title="费用分布">
           {analyticsAreaLoading ? (
             <PanelLoadingState />
@@ -493,7 +502,25 @@ export default function UsageRecordPage() {
           )}
         </PanelShell>
 
-        <PanelShell title="请求占比">
+        <section className="rounded-lg border border-gray-100 bg-white p-5 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
+          <div className="mb-4 inline-flex rounded-full bg-gray-100 p-1">
+            {([['donut', '请求占比'], ['ranking', '请求排行']] as const).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={rightPanelTab === key}
+                onClick={() => setRightPanelTab(key)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                  rightPanelTab === key
+                    ? 'bg-white text-gray-950 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.75)]'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           {analyticsAreaLoading ? (
             <PanelLoadingState />
           ) : analyticsAreaError ? (
@@ -505,25 +532,10 @@ export default function UsageRecordPage() {
                 void mutateFallbackEvents()
               }}
             />
-          ) : (
+          ) : rightPanelTab === 'donut' ? (
             <ReactECharts
               option={analyticsViewModel.hasData ? donutOption : emptyDonutOption}
               style={{ height: '320px', width: '100%' }}
-            />
-          )}
-        </PanelShell>
-
-        <PanelShell title="请求排行">
-          {analyticsAreaLoading ? (
-            <PanelLoadingState />
-          ) : analyticsAreaError ? (
-            <ErrorBanner
-              message="模型分析暂时不可用。"
-              onRetry={() => {
-                void mutateAnalytics()
-                void mutateFallbackStats()
-                void mutateFallbackEvents()
-              }}
             />
           ) : analyticsViewModel.hasData ? (
             <div className="space-y-3">
@@ -532,17 +544,17 @@ export default function UsageRecordPage() {
                   key={item.model}
                   className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs text-gray-500">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-xs text-gray-500">
                       {index + 1}
                     </span>
-                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }}></span>
-                    <div>
-                      <p className="text-sm text-gray-950">{item.model}</p>
+                    <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: item.color }}></span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-gray-950">{item.model}</p>
                       <p className="text-xs text-gray-500">{formatCurrency(item.totalCost, currency)}</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="shrink-0 text-right">
                     <p className="text-sm text-gray-950">{formatCompactNumber(item.requestCount)} 次</p>
                     <p className="text-xs text-gray-500">{item.requestSharePercent.toFixed(1)}%</p>
                   </div>
@@ -552,158 +564,50 @@ export default function UsageRecordPage() {
           ) : (
             <EmptyRankingState />
           )}
-        </PanelShell>
+        </section>
       </section>
 
       <section className="rounded-lg border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-        <div className="flex flex-col gap-4 border-b border-gray-100 pb-5 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-4 border-b border-gray-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className="text-lg text-gray-950">请求明细</h3>
+            <h3 className="text-lg text-gray-900">Token 使用趋势</h3>
           </div>
-          <span className="text-sm text-gray-400">共 {logTotal} 条</span>
-        </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[1.1fr_1.1fr_1fr_1fr_auto]">
-          <div>
-            <label htmlFor="usage-record-start" className="mb-1 block text-xs text-gray-500">
-              开始时间
-            </label>
-            <input
-              id="usage-record-start"
-              aria-label="开始时间"
-              type="datetime-local"
-              value={startInput}
-              onChange={(event) => {
-                setStartInput(event.target.value)
-                setPage(1)
-              }}
-              className="w-full rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
-            />
-          </div>
-          <div>
-            <label htmlFor="usage-record-end" className="mb-1 block text-xs text-gray-500">
-              结束时间
-            </label>
-            <input
-              id="usage-record-end"
-              aria-label="结束时间"
-              type="datetime-local"
-              value={endInput}
-              onChange={(event) => {
-                setEndInput(event.target.value)
-                setPage(1)
-              }}
-              className="w-full rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
-            />
-          </div>
-          <div>
-            <label id="usage-record-model-label" className="mb-1 block text-xs text-gray-500">
-              实际模型
-            </label>
-            <Select
-              value={effectiveModel}
-              onChange={(nextValue) => {
-                setEffectiveModel(nextValue)
-                setPage(1)
-              }}
-              options={effectiveModelOptions}
-              className="w-full"
-              ariaLabelledBy="usage-record-model-label"
-              triggerClassName="rounded-2xl"
-              menuClassName="rounded-2xl"
-            />
-          </div>
-          <div>
-            <label id="usage-record-key-label" className="mb-1 block text-xs text-gray-500">
-              KEY
-            </label>
-            <Select
-              value={keyId}
-              onChange={(nextValue) => {
-                setKeyId(nextValue)
-                setPage(1)
-              }}
-              options={keyOptions}
-              className="w-full"
-              ariaLabelledBy="usage-record-key-label"
-              triggerClassName="rounded-2xl"
-              menuClassName="rounded-2xl"
-            />
-          </div>
-          <div className="flex items-end">
-            <button
-              type="button"
-              onClick={() => {
-                const nextWindow = buildUsageRecordTimeWindow(range)
-                setStartInput(nextWindow.startInput)
-                setEndInput(nextWindow.endInput)
-                setEffectiveModel('')
-                setKeyId('')
-                setPage(1)
-              }}
-              className="w-full rounded-2xl border border-gray-200 px-4 py-2 text-sm text-gray-600 transition hover:bg-gray-50"
-            >
-              重置筛选
-            </button>
+          <div className="inline-flex rounded-full bg-gray-100 p-1">
+            {TREND_RANGE_OPTIONS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={trendRange === option}
+                onClick={() => setTrendRange(option)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  trendRange === option
+                    ? 'bg-white text-gray-950 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.75)]'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="mt-6">
-          {logsInitialLoading ? (
-            <div className="h-40 animate-pulse rounded-lg bg-gray-100" />
-          ) : logsError ? (
-            <ErrorBanner message="请求明细加载失败。" onRetry={() => mutateLogs()} />
-          ) : logItems.length === 0 ? (
-            <EmptyState title="当前筛选条件下没有请求记录" description="调整筛选条件或等待新的 Router 调用。" />
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-100 text-gray-400">
-                      <th className="px-3 py-3 font-normal">时间</th>
-                      <th className="px-3 py-3 font-normal">请求模型</th>
-                      <th className="px-3 py-3 font-normal">实际模型</th>
-                      <th className="px-3 py-3 font-normal">KEY</th>
-                      <th className="px-3 py-3 font-normal">服务商</th>
-                      <th className="px-3 py-3 font-normal">Tokens</th>
-                      <th className="px-3 py-3 font-normal">费用</th>
-                      <th className="px-3 py-3 font-normal">状态</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {logItems.map((event) => (
-                      <tr key={event.id} className="border-b border-gray-50 text-gray-700">
-                        <td className="px-3 py-3">{formatDateTime(event.created_at)}</td>
-                        <td className="px-3 py-3">{event.model_name}</td>
-                        <td className="px-3 py-3">{resolveUsageEventEffectiveModel(event)}</td>
-                        <td className="px-3 py-3">{keyMap.get(event.api_key_id ?? -1) || '-'}</td>
-                        <td className="px-3 py-3">{event.provider_slug || '-'}</td>
-                        <td className="px-3 py-3">{formatCompactNumber(event.total_tokens)}</td>
-                        <td className="px-3 py-3">{formatCurrency(event.cost, currency)}</td>
-                        <td className="px-3 py-3">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs ${
-                              isSuccessStatus(event.status)
-                                ? 'bg-green-50 text-green-700'
-                                : event.status === 3
-                                  ? 'bg-amber-50 text-amber-700'
-                                  : 'bg-red-50 text-red-600'
-                            }`}
-                          >
-                            {isSuccessStatus(event.status) ? '成功' : event.status === 3 ? '已退款' : '错误'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+        <div className="mt-6 h-[360px]">
+          {trendStatsLoading ? (
+            <div className="flex h-full flex-col justify-center gap-4 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-6">
+              <p className="text-sm text-gray-500">正在加载 Token 趋势...</p>
+              <div className="space-y-3">
+                <div className="h-3 w-full animate-pulse rounded-full bg-gray-200" />
+                <div className="h-3 w-5/6 animate-pulse rounded-full bg-gray-200" />
+                <div className="h-3 w-2/3 animate-pulse rounded-full bg-gray-200" />
               </div>
-
-              {totalPages > 1 && (
-                <Pagination page={page - 1} totalPages={totalPages} onPageChange={(nextPage) => setPage(nextPage + 1)} />
-              )}
-            </>
+            </div>
+          ) : trendStatsError ? (
+            <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-red-200 bg-red-50/60 px-6 text-center text-sm text-red-600">
+              Token 趋势加载失败，请稍后重试。
+            </div>
+          ) : (
+            <ReactECharts option={trendOption} style={{ height: '100%', width: '100%' }} />
           )}
         </div>
       </section>
