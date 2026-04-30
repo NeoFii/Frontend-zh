@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { BrandLogo } from '@/components/brand/BrandLogo'
+import { useAuthStore } from '@/stores/auth'
+import { useUser } from '@/hooks/useUser'
 
 interface NavItem { name: string; path: string; children?: NavItem[]; external?: boolean }
 
@@ -15,6 +17,10 @@ export default function AppHeader() {
   const [isHidden, setIsHidden] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const pathname = usePathname()
+
+  useUser({ enabled: true })
+  const sessionStatus = useAuthStore((state) => state.sessionStatus)
+  const isLoggedIn = sessionStatus === 'authenticated'
 
   // 动态导航项
   const navItems: NavItem[] = [
@@ -31,7 +37,7 @@ export default function AppHeader() {
 
   // 处理登录按钮点击
   const handleAuthClick = () => {
-    router.push('/login')
+    router.push(isLoggedIn ? '/console' : '/login')
   }
 
   // 滚动处理
@@ -184,7 +190,7 @@ export default function AppHeader() {
               onClick={handleAuthClick}
               className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 transition-colors duration-300"
             >
-              登录
+              {isLoggedIn ? '控制台' : '登录'}
             </button>
           </div>
 
@@ -264,7 +270,7 @@ export default function AppHeader() {
                 onClick={handleAuthClick}
                 className="block w-full text-center px-4 py-3 bg-gray-900 text-white rounded-xl text-[15px] font-semibold hover:bg-gray-800 transition-colors duration-200"
               >
-                登录
+                {isLoggedIn ? '控制台' : '登录'}
               </button>
             </div>
           </div>

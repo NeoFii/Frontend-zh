@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import * as echarts from 'echarts/core'
@@ -30,51 +30,23 @@ type BenchmarkPoint = {
   successRate: number
   cost: number
   category: 'router' | 'frontier'
-  note: string
 }
 
 const benchmarkPoints: BenchmarkPoint[] = [
-  {
-    name: 'Eucal AI',
-    successRate: 88.7,
-    cost: 2.04,
-    category: 'router',
-    note: 'TierFlow 动态路由',
-  },
-  {
-    name: 'Claude-opus-4.6',
-    successRate: 83.1,
-    cost: 14.2,
-    category: 'frontier',
-    note: '固定高价模型',
-  },
-  {
-    name: 'GPT-5.4',
-    successRate: 81.8,
-    cost: 12.6,
-    category: 'frontier',
-    note: '固定高价模型',
-  },
-  {
-    name: 'Gemini-3.0-pro',
-    successRate: 78.4,
-    cost: 8.9,
-    category: 'frontier',
-    note: '固定模型',
-  },
-  {
-    name: 'DeepSeek-R2',
-    successRate: 71.2,
-    cost: 1.72,
-    category: 'frontier',
-    note: '低成本模型',
-  },
+  { name: 'TierFlow', successRate: 88.8, cost: 0.64, category: 'router' },
+  { name: 'Claude-opus-4.6', successRate: 81.6, cost: 2.43, category: 'frontier' },
+  { name: 'GPT-5.4', successRate: 79.4, cost: 1.34, category: 'frontier' },
+  { name: 'Claude-sonnet-4.5', successRate: 80, cost: 2.14, category: 'frontier' },
+  { name: 'Gemini-3.1-pro', successRate: 77.5, cost: 1.14, category: 'frontier' },
+  { name: 'Qwen3.5-397B', successRate: 80.4, cost: 0.75, category: 'frontier' },
+  { name: 'Claude-haiku-4.5', successRate: 77.4, cost: 0.6, category: 'frontier' },
+  { name: 'Qwen3.5-27B', successRate: 78.5, cost: 0.45, category: 'frontier' },
 ]
 
 const leaderBoard = [
-  { rank: 1, model: 'Eucal AI / TierFlow', success: '88.7%', cost: '¥2.04', verdict: '最高成功率，成本低于 Claude/GPT' },
-  { rank: 2, model: 'Claude-opus-4.6', success: '83.1%', cost: '¥14.20', verdict: '强推理，单次任务成本高' },
-  { rank: 3, model: 'GPT-5.4', success: '81.8%', cost: '¥12.60', verdict: '通用能力强，价格带偏高' },
+  { rank: 1, model: 'TierFlow', score: '88.8%', cost: '$0.64', highlight: true },
+  { rank: 2, model: 'Claude-opus-4.6', score: '81.6%', cost: '$2.43', highlight: false },
+  { rank: 3, model: 'GPT-5.4', score: '79.4%', cost: '$1.34', highlight: false },
 ]
 
 const workflowSteps = [
@@ -92,13 +64,6 @@ const workflowSteps = [
   },
 ]
 
-const scenarios = [
-  { title: 'Browser Agent', metric: '88.7%', detail: 'OpenClaw 网页任务成功率', accent: 'bg-emerald-500' },
-  { title: 'Code Agent', metric: '-68%', detail: '相对固定 Claude/GPT 的调用成本', accent: 'bg-blue-500' },
-  { title: 'Research Agent', metric: 'ms', detail: '按上下文与检索阶段切换模型', accent: 'bg-amber-500' },
-  { title: 'Ops Agent', metric: 'HA', detail: '供应商限流时自动故障转移', accent: 'bg-violet-500' },
-]
-
 const apiSnippet = `import OpenAI from 'openai';
 
 const client = new OpenAI({
@@ -107,7 +72,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: 'nexus-auto',
+  model: 'auto',
   messages: [
     {
       role: 'user',
@@ -128,24 +93,24 @@ function BenchmarkScatterChart() {
   const option = useMemo(
     () => ({
       color: ['#0f172a'],
-      grid: { left: 54, right: 24, top: 24, bottom: 46 },
+      grid: { left: 54, right: 32, top: 32, bottom: 46 },
       tooltip: {
         trigger: 'item',
-        formatter: (params: { data: { name: string; value: [number, number]; note: string } }) =>
-          `${params.data.name}<br/>成本 ¥${params.data.value[0]} / 成功率 ${params.data.value[1]}%<br/>${params.data.note}`,
+        formatter: (params: { data: { name: string; value: [number, number] } }) =>
+          `${params.data.name}<br/>Avg Score ${params.data.value[1]}% · $${params.data.value[0]}`,
       },
       xAxis: {
-        name: '成本',
+        name: 'Avg Cost ($)',
         nameLocation: 'middle',
         nameGap: 30,
         min: 0,
-        max: 16,
-        axisLabel: { formatter: '¥{value}', color: '#64748b' },
+        max: 3,
+        axisLabel: { formatter: '${value}', color: '#64748b' },
         splitLine: { lineStyle: { color: '#e2e8f0' } },
       },
       yAxis: {
-        name: '成功率',
-        min: 65,
+        name: 'Avg Score (%)',
+        min: 74,
         max: 92,
         axisLabel: { formatter: '{value}%', color: '#64748b' },
         splitLine: { lineStyle: { color: '#e2e8f0' } },
@@ -153,22 +118,22 @@ function BenchmarkScatterChart() {
       series: [
         {
           type: 'scatter',
-          symbolSize: (value: [number, number]) => (value[1] >= 88 ? 22 : 15),
+          symbolSize: (value: [number, number]) => (value[1] >= 88 ? 22 : 14),
           data: benchmarkPoints.map((point) => ({
             name: point.name,
             value: [point.cost, point.successRate] as [number, number],
-            note: point.note,
             itemStyle: {
               color: point.category === 'router' ? '#2563eb' : '#94a3b8',
               borderColor: point.category === 'router' ? '#1d4ed8' : '#64748b',
               borderWidth: 1,
             },
             label: {
-              show: point.name === 'Eucal AI',
+              show: true,
               formatter: point.name,
-              position: 'top',
-              color: '#1d4ed8',
-              fontWeight: 700,
+              position: point.category === 'router' ? 'top' : 'right',
+              color: point.category === 'router' ? '#1d4ed8' : '#64748b',
+              fontWeight: point.category === 'router' ? 700 : 400,
+              fontSize: 11,
             },
           })),
         },
@@ -177,7 +142,7 @@ function BenchmarkScatterChart() {
     []
   )
 
-  return <ReactECharts option={option} style={{ height: 340, width: '100%' }} />
+  return <ReactECharts option={option} style={{ height: 360, width: '100%' }} />
 }
 
 function SectionHeading(props: { eyebrow: string; title: string; description: string }) {
@@ -195,27 +160,17 @@ export default function Home() {
   useUser({ enabled: true })
   const sessionStatus = useAuthStore((state) => state.sessionStatus)
   const isLoggedIn = sessionStatus === 'authenticated'
-  const [copied, setCopied] = useState(false)
-
   const handleCtaClick = () => {
     router.push(isLoggedIn ? '/console/account/basic-information' : '/login')
-  }
-
-  const copyBaseUrl = async () => {
-    if (!navigator.clipboard) return
-
-    await navigator.clipboard.writeText(BASE_URL)
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 2000)
   }
 
   return (
     <div className="relative overflow-x-hidden bg-[#f8fafc] text-slate-950 selection:bg-blue-700 selection:text-white">
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_460px] lg:px-8 lg:py-24">
-          <Reveal>
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800">
+          <Reveal className="h-full">
+            <div className="flex h-full flex-col">
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-800 self-start">
                 PinchBench · OpenClaw 实测
               </div>
               <h1 className="mt-8 max-w-4xl text-4xl font-bold tracking-tight text-slate-950 md:text-6xl">
@@ -226,7 +181,7 @@ export default function Home() {
                 <span className="block">让智能体用对模型，而不是用贵模型</span>
                 <span className="block">Eucal AI 的 TierFlow 会根据任务阶段、实时成本与可用性自动选择模型。</span>
               </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-auto flex flex-col gap-3 pt-8 sm:flex-row">
                 <button
                   type="button"
                   onClick={handleCtaClick}
@@ -244,24 +199,11 @@ export default function Home() {
                   查看文档
                 </a>
               </div>
-              <div className="mt-8 flex max-w-2xl flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Base URL</p>
-                  <p className="mt-1 break-all font-mono text-sm text-slate-900">{BASE_URL}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={copyBaseUrl}
-                  className="inline-flex shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-                >
-                  {copied ? '已复制' : '复制'}
-                </button>
-              </div>
             </div>
           </Reveal>
 
-          <Reveal delay={120}>
-            <div className="grid gap-4 self-center">
+          <Reveal delay={120} className="h-full">
+            <div className="grid h-full gap-4 content-end">
               <div className="rounded-lg border border-slate-200 bg-slate-950 p-5 text-white shadow-xl shadow-slate-200">
                 <p className="text-sm font-semibold uppercase tracking-wider text-blue-200">PinchBench 实测</p>
                 <div className="mt-5 grid grid-cols-2 gap-4">
@@ -305,33 +247,54 @@ export default function Home() {
           <Reveal>
             <SectionHeading
               eyebrow="Benchmark"
-              title="把成本和成功率放在同一张图上"
-              description="参考页的 canvas 图表已收敛为 ECharts 组件，Eucal AI 的 PinchBench 成功率统一修正为 88.7。"
+              title="成本 vs 综合得分"
+              description="基于 PinchBench 多任务评测，对比 TierFlow 动态路由与固定前沿模型在平均得分和调用成本上的表现。"
             />
           </Reveal>
           <div className="mt-12 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-            <Reveal delay={120}>
-              <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <Reveal delay={120} className="h-full">
+              <div className="h-full rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
                 <BenchmarkScatterChart />
+                <p className="mt-2 text-center text-xs text-slate-400">
+                  数据来源：<a href="https://pinchbench.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-500">pinchbench.com</a>
+                </p>
               </div>
             </Reveal>
-            <Reveal delay={180}>
-              <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+            <Reveal delay={180} className="h-full">
+              <div className="h-full rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-950">排行榜</h3>
                 <div className="mt-5 space-y-4">
                   {leaderBoard.map((item) => (
-                    <div key={item.model} className="border-b border-slate-100 pb-4 last:border-0 last:pb-0">
+                    <div
+                      key={item.model}
+                      className={`rounded-lg border pb-4 last:pb-0 ${
+                        item.highlight
+                          ? 'border-blue-200 bg-blue-50/60 p-4'
+                          : 'border-slate-100 px-0 pt-0'
+                      }`}
+                    >
                       <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-semibold text-blue-700">#{item.rank}</p>
-                          <p className="font-semibold text-slate-950">{item.model}</p>
-                        </div>
-                        <div className="text-right text-sm text-slate-600">
-                          <p>{item.success}</p>
-                          <p>{item.cost}</p>
+                        <div className="flex items-center gap-3">
+                          <span className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                            item.highlight ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-500'
+                          }`}>
+                            {item.rank}
+                          </span>
+                          <span className={`font-semibold ${item.highlight ? 'text-blue-700' : 'text-slate-950'}`}>
+                            {item.model}
+                          </span>
                         </div>
                       </div>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">{item.verdict}</p>
+                      <div className="mt-3 flex items-center gap-6 pl-10 text-sm">
+                        <div>
+                          <span className="text-slate-500">Avg Score </span>
+                          <span className={`font-semibold ${item.highlight ? 'text-blue-700' : 'text-slate-900'}`}>{item.score}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500">Cost </span>
+                          <span className={`font-semibold ${item.highlight ? 'text-blue-700' : 'text-slate-900'}`}>{item.cost}</span>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -366,30 +329,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-20 md:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <SectionHeading
-              eyebrow="Use cases"
-              title="场景矩阵"
-              description="同一个 nexus-auto 入口覆盖浏览器、代码、研究和运维智能体，让模型策略跟随任务变化。"
-            />
-          </Reveal>
-          <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-            {scenarios.map((scenario, index) => (
-              <Reveal key={scenario.title} delay={index * 90}>
-                <div className="h-full rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                  <div className={`h-1.5 w-12 rounded-full ${scenario.accent}`} />
-                  <h3 className="mt-5 text-lg font-bold text-slate-950">{scenario.title}</h3>
-                  <p className="mt-4 text-3xl font-bold text-slate-950">{scenario.metric}</p>
-                  <p className="mt-3 text-sm leading-6 text-slate-600">{scenario.detail}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="border-y border-slate-200 bg-slate-950 py-20 text-white md:py-24">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[420px_minmax(0,1fr)] lg:px-8">
           <Reveal>
@@ -397,10 +336,10 @@ export default function Home() {
               <p className="text-sm font-semibold uppercase tracking-wider text-blue-300">Developer API</p>
               <h2 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">开发者接入</h2>
               <p className="mt-5 text-base leading-7 text-slate-300">
-                保持 OpenAI SDK 调用方式，只替换 baseURL，并把模型名设置为 nexus-auto。Eucal AI 负责后续模型选择、重试和成本控制。
+                保持 OpenAI SDK 调用方式，只替换 baseURL，并把模型名设置为 auto。Eucal AI 负责后续模型选择、重试和成本控制。
               </p>
               <p className="mt-5 inline-flex rounded-lg border border-slate-700 px-3 py-2 font-mono text-sm text-blue-200">
-                nexus-auto
+                auto
               </p>
             </div>
           </Reveal>
