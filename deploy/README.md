@@ -3,16 +3,18 @@
 ## 目录
 
 1. [环境要求](#环境要求)
-2. [快速开始](#快速开始)
-3. [配置说明](#配置说明)
-4. [构建与运行](#构建与运行)
-5. [镜像导出与离线部署](#镜像导出与离线部署)
-6. [镜像推送到 Registry](#镜像推送到-registry)
-7. [健康检查与监控](#健康检查与监控)
-8. [更新与回滚](#更新与回滚)
-9. [故障排查](#故障排查)
-10. [Nginx 反向代理方案（可选）](#nginx-反向代理方案可选)
-11. [架构说明](#架构说明)
+2. [部署架构](#部署架构)
+3. [快速开始](#快速开始)
+4. [配置说明](#配置说明)
+5. [构建与运行](#构建与运行)
+6. [与后端同服务器部署](#与后端同服务器部署)
+7. [镜像导出与离线部署](#镜像导出与离线部署)
+8. [镜像推送到 Registry](#镜像推送到-registry)
+9. [健康检查与监控](#健康检查与监控)
+10. [更新与回滚](#更新与回滚)
+11. [故障排查](#故障排查)
+12. [Nginx 反向代理方案（可选）](#nginx-反向代理方案可选)
+13. [架构说明](#架构说明)
 
 ---
 
@@ -24,14 +26,49 @@
 | Docker Compose | 2.0+ | `docker compose version` |
 | 可用内存 | 1 GB（构建时建议 2 GB+） | `free -h` |
 
-此外，以下后端服务需要提前部署并加入 `eucal_network` Docker 网络：
+此外，以下后端服务需要提前部署完毕（在另外的节点上）：
 
-| 服务 | 默认容器名 | 默认端口 | 用途 |
-|------|-----------|---------|------|
-| 主后端 API | `eucal_backend` | 8000 | 用户认证、模型目录等 |
-| Router API | `eucal_router` | 8003 | API Key、计费、用量等 |
+| 服务 | 节点 | 默认端口 | 用途 |
+|------|------|---------|------|
+| user-service | 后端节点 | 8000 | 用户认证、计费、API Key |
+| router-service | GPU 节点 | 8003 | API 网关、智能路由 |
 
-> 如果后端尚未部署，前端可以正常构建和启动，但页面功能会因 API 不可达而报错。
+> 前端节点与后端/GPU 节点通过**内网 IP** 通信。如果后端尚未部署，前端可以正常构建和启动，但页面功能会因 API 不可达而报错。
+
+## 部署架构
+
+推荐三节点架构，前端节点独立部署，通过内网访问后端服务：
+
+```
+┌──────────────────────────────────────────────┐
+│          前端节点 (2H2G) — Server A           │
+│                                              │
+│  ┌──────────────────┐  ┌──────────────────┐  │
+│  │  eucal-admin     │  │ eucal-frontend-zh│  │
+│  │      :3001       │  │      :3000       │  │
+│  └──────────────────┘  └──────────────────┘  │
+│  ┌──────────────────────────────────────────┐│
+│  │  Nginx (:80/:443)                        ││
+│  └──────────────────────────────────────────┘│
+└──────────────────────────────────────────────┘
+        │                   │
+        │ 内网 :8000         │ 内网 :8003
+        ▼                   ▼
+┌────────────────────┐  ┌────────────────────┐
+│  后端节点 (2H4G)    │  │  GPU 节点           │
+│  ┌──────────────┐  │  │  ┌──────────────┐  │
+│  │ user-service │  │  │  │router-service│  │
+│  │    :8000     │  │  │  │   :8003      │  │
+│  └──────────────┘  │  │  └──────────────┘  │
+│  ┌──────────────┐  │  │  ┌──────────────┐  │
+│  │admin-service │  │  │  │  inference   │  │
+│  │    :8001     │  │  │  │   :8004      │  │
+│  └──────────────┘  │  │  └──────────────┘  │
+│  + MySQL + Redis   │  │                    │
+└────────────────────┘  └────────────────────┘
+```
+
+浏览器访问前端 → Next.js 将 `/api/*` 代理到后端节点的 user-service，`/router-api/*` 代理到 GPU 节点的 router-service。
 
 ## 快速开始
 
@@ -42,8 +79,9 @@ cd deploy
 # 2. 创建配置文件
 cp .env.example .env
 
-# 3. 编辑 .env —— 至少确认 API_URL 和 ROUTER_API_URL 指向正确的后端地址
-#    如果后端也在同一台机器的 Docker 中运行，默认值即可
+# 3. 编辑 .env —— 必须修改 API_URL 和 ROUTER_API_URL 为实际内网 IP
+#    API_URL=http://<BACKEND_IP>:8000
+#    ROUTER_API_URL=http://<GPU_IP>:8003
 vim .env
 
 # 4. 赋予脚本执行权限（仅首次）
@@ -53,7 +91,7 @@ chmod +x deploy.sh
 ./deploy.sh up
 ```
 
-启动后访问 `http://<服务器IP>:3000` 即可看到页面。端口可通过 `.env` 中的 `FRONTEND_PORT` 修改。
+启动后通过 Nginx 域名访问，或临时使用 `http://<前端节点IP>:3000` 测试。端口可通过 `.env` 中的 `FRONTEND_PORT` 修改。
 
 ## 配置说明
 
@@ -80,9 +118,9 @@ chmod +x deploy.sh
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `API_URL` | `http://eucal_backend:8000` | 主后端 API 地址（Docker 网络中用容器名） |
-| `ROUTER_API_URL` | `http://eucal_router:8003` | Router API 地址 |
-| `FRONTEND_PORT` | `3000` | 宿主机对外暴露端口 |
+| `API_URL` | `http://<BACKEND_IP>:8000` | user-service 内网地址 |
+| `ROUTER_API_URL` | `http://<GPU_IP>:8003` | router-service 内网地址 |
+| `FRONTEND_PORT` | `3000` | 宿主机映射端口（仅 localhost） |
 
 ### 镜像分发配置（可选）
 
@@ -105,7 +143,7 @@ chmod +x deploy.sh
 ./deploy.sh push      # 构建并推送镜像到 Registry
 ```
 
-> `deploy.sh` 会自动检查 Docker 是否安装、`.env` 是否存在、`eucal_network` 网络是否创建。
+> `deploy.sh` 会自动检查 Docker 是否安装、`.env` 是否存在、`eucal_frontend_network` 网络是否创建。
 
 ### 使用 docker compose（等效命令）
 
@@ -128,6 +166,113 @@ vim .env
 # 方式 2: 命令行临时覆盖（不修改 .env）
 NEXT_PUBLIC_COMPANY_NAME="My Company" docker compose up -d --build
 ```
+
+## 三节点架构部署（推荐）
+
+实际生产部署使用三节点架构：
+
+| 节点 | 配置 | 服务 |
+|------|------|------|
+| 前端节点 | 2H2G | eucal-admin + Frontend-zh + Nginx |
+| 后端节点 | 2H4G | MySQL + Redis + admin-service + user-service |
+| GPU 节点 | 视模型而定 | router-service + inference-service |
+
+前端容器通过**内网 IP** 访问后端节点的 user-service 和 GPU 节点的 router-service。
+
+### 网络配置
+
+前端节点上有两个前端容器（admin + zh），共用一个本地网络：
+
+```bash
+docker network create eucal_frontend_network
+```
+
+`docker-compose.yml` 中网络配置：
+
+```yaml
+networks:
+  eucal_network:
+    name: eucal_frontend_network
+    external: true
+```
+
+> 前端节点不需要也无法加入 `eucal_backend_network`（那是后端节点的内部网络）。跨节点通信必须通过宿主机网卡（即内网 IP）。
+
+### 环境变量
+
+修改 `.env` 中的代理目标，使用各节点的内网 IP：
+
+```bash
+# user-service 部署在后端节点
+API_URL=http://<BACKEND_IP>:8000
+
+# router-service 部署在 GPU 节点
+ROUTER_API_URL=http://<GPU_IP>:8003
+
+# 前端只监听 localhost，由 Nginx 反代
+FRONTEND_PORT=3000
+```
+
+`docker-compose.yml` 端口绑定改为只监听本机：
+
+```yaml
+services:
+  frontend:
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
+```
+
+### 启动顺序
+
+```bash
+# 1. 确认后端节点和 GPU 节点的服务已启动
+curl -s http://<BACKEND_IP>:8000/api/v1/health
+curl -s http://<GPU_IP>:8003/health
+
+# 2. 创建本地网络（如不存在）
+docker network create eucal_frontend_network 2>/dev/null || true
+
+# 3. 启动前端
+cd deploy
+./deploy.sh up
+```
+
+### 验证连通性
+
+```bash
+# 从前端容器内测试到 user-service
+docker exec eucal_frontend_zh wget -qO- http://<BACKEND_IP>:8000/api/v1/health
+
+# 从前端容器内测试到 router-service
+docker exec eucal_frontend_zh wget -qO- http://<GPU_IP>:8003/health
+
+# 通过 Next.js 代理访问
+curl -s http://127.0.0.1:3000/api/v1/health
+curl -s http://127.0.0.1:3000/router-api/health
+```
+
+### 防火墙配置（前端节点）
+
+```bash
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw enable
+```
+
+> 后端节点和 GPU 节点的防火墙也要相应配置，仅允许前端节点的内网 IP 访问对应端口。详见后端仓库 `DEPLOY.md` 中的"防火墙配置"章节。
+
+### 完整部署流程
+
+后端节点和 GPU 节点的部署见后端仓库的 `DEPLOY.md`，包含：
+- 三节点架构图与端口规划
+- 后端节点（MySQL + Redis + admin + user）配置
+- GPU 节点（router + inference）配置
+- 共享密钥管理
+- 跨节点防火墙规则
+- 内网通信速查表
 
 ## 镜像导出与离线部署
 
@@ -157,7 +302,7 @@ docker load < ../eucal-frontend-zh-*.tar.gz
 # 4. 创建配置并启动
 cp .env.example .env
 vim .env                          # 修改 API_URL、ROUTER_API_URL 等
-docker network create eucal_network   # 如果不存在
+docker network create eucal_frontend_network   # 如果不存在
 docker compose up -d              # 无需 --build，直接使用已加载的镜像
 ```
 
@@ -224,7 +369,7 @@ git checkout <previous-commit>
 docker compose logs frontend
 
 # 检查常见原因
-docker network inspect eucal_network    # 网络不存在？→ docker network create eucal_network
+docker network inspect eucal_frontend_network    # 网络不存在？→ docker network create eucal_frontend_network
 ss -tlnp | grep 3000                   # 端口被占用？→ 修改 .env 中的 FRONTEND_PORT
 cat .env                                # 配置有误？→ 对照 .env.example 检查
 ```
@@ -232,14 +377,20 @@ cat .env                                # 配置有误？→ 对照 .env.example
 ### 页面打开后 API 报 502/503
 
 ```bash
-# 确认后端容器在同一网络中运行
-docker network inspect eucal_network | grep -A2 'eucal_backend\|eucal_router'
+# 确认后端节点和 GPU 节点的服务可达
+curl -s http://<BACKEND_IP>:8000/api/v1/health
+curl -s http://<GPU_IP>:8003/health
 
 # 确认前端容器内的环境变量指向正确
 docker compose exec frontend env | grep -E 'API_URL|ROUTER_API_URL'
 
-# 从前端容器内测试后端连通性
-docker compose exec frontend wget -qO- http://eucal_backend:8000/api/health || echo "后端不可达"
+# 从前端容器内测试到后端节点的连通性
+docker compose exec frontend wget -qO- http://<BACKEND_IP>:8000/api/v1/health || echo "user-service 不可达"
+docker compose exec frontend wget -qO- http://<GPU_IP>:8003/health || echo "router-service 不可达"
+
+# 检查防火墙
+# 在后端节点：ufw status | grep 8000
+# 在 GPU 节点：ufw status | grep 8003
 ```
 
 ### 构建失败
@@ -272,21 +423,26 @@ deploy:
 ## 架构说明
 
 ```
-                        Docker 网络: eucal_network
-┌─────────────────────────────────────────────────────────────┐
-│                                                             │
-│   浏览器 ──► [eucal_frontend_zh:3000]                       │
-│                  │                  │                        │
-│                  │ /api/*           │ /router-api/*          │
-│                  ▼                  ▼                        │
-│          [eucal_backend:8000]  [eucal_router:8003]           │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+   前端节点 (eucal_frontend_network)         后端节点                GPU 节点
+┌──────────────────────────────┐    ┌───────────────────┐    ┌──────────────────┐
+│                              │    │                   │    │                  │
+│ 浏览器 ──► [eucal_frontend_zh]│    │ [user-service     │    │ [router-service  │
+│             :3000             │    │   :8000]          │    │   :8003]         │
+│              │                │    │                   │    │                  │
+│              │ /api/*  ───────┼────┤───►              │    │                  │
+│              │                │    │                   │    │                  │
+│              │ /router-api/* ─┼────┼──────────────────┼────┼───►              │
+│              ▼                │    │                   │    │                  │
+└──────────────────────────────┘    └───────────────────┘    └──────────────────┘
+       │                              内网 IP                       内网 IP
+       │ Docker 网络
+       └─► [eucal-admin :3001] (并存，由 Nginx 按域名分发)
 ```
 
 - 浏览器访问 `/api/*` 和 `/router-api/*` 时，请求发送到前端容器（同源）
-- Next.js 通过 `rewrites` 将请求转发到对应的后端服务
-- 所有容器通过 `eucal_network` 互通，使用容器名作为主机名
+- Next.js 通过 `rewrites` 将请求转发到后端节点的 user-service 和 GPU 节点的 router-service
+- 跨节点通信通过宿主机网卡（即内网 IP），由防火墙限制只允许前端节点访问
+- 前端节点上 admin 和 zh 两个前端共用 `eucal_frontend_network`（无强依赖，独立运行也可）
 
 ## deploy 目录结构
 

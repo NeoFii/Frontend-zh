@@ -30,9 +30,9 @@ check_prerequisites() {
 }
 
 ensure_network() {
-    if ! docker network inspect eucal_network >/dev/null 2>&1; then
-        info "创建 Docker 网络 eucal_network..."
-        docker network create eucal_network
+    if ! docker network inspect eucal_frontend_network >/dev/null 2>&1; then
+        info "创建 Docker 网络 eucal_frontend_network..."
+        docker network create eucal_frontend_network
     fi
 }
 

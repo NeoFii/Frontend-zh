@@ -54,9 +54,9 @@ ENV HOSTNAME=0.0.0.0
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# 运行时变量 — 服务端代理目标，可在 docker-compose 或 docker run -e 时覆盖
-ENV API_URL=http://eucal_backend:8000
-ENV ROUTER_API_URL=http://eucal_router:8003
+# 运行时变量 — 服务端代理目标，必须在 docker-compose 或 docker run -e 时覆盖为实际内网 IP
+ENV API_URL=http://127.0.0.1:8000
+ENV ROUTER_API_URL=http://127.0.0.1:8003
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD wget -qO- http://localhost:3000/ || exit 1

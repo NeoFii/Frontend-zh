@@ -4,11 +4,10 @@
 #   1. cp .env.example .env  并修改配置
 #   2. docker compose up -d --build
 #
-# 前提条件:
-#   - eucal_network 网络已创建: docker network create eucal_network
-#   - 后端服务已在同一网络中运行:
-#     - 主后端 API (默认 eucal_backend:8000)
-#     - Router API  (默认 eucal_router:8003)
+# 三节点架构前提条件:
+#   - eucal_frontend_network 网络已创建: docker network create eucal_frontend_network
+#   - 后端节点的 user-service 通过内网可达 (默认 :8000)
+#   - GPU 节点的 router-service 通过内网可达 (默认 :8003)
 
 services:
   frontend:
@@ -30,11 +29,12 @@ services:
     environment:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
-      API_URL: ${API_URL:-http://eucal_backend:8000}
-      ROUTER_API_URL: ${ROUTER_API_URL:-http://eucal_router:8003}
+      API_URL: ${API_URL:-http://127.0.0.1:8000}
+      ROUTER_API_URL: ${ROUTER_API_URL:-http://127.0.0.1:8003}
 
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      # 默认只监听本机，由 Nginx 反代
+      - "127.0.0.1:${FRONTEND_PORT:-3000}:3000"
 
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
@@ -57,5 +57,5 @@ services:
 
 networks:
   eucal_network:
-    name: eucal_network
+    name: eucal_frontend_network
     external: true

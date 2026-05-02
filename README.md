@@ -109,3 +109,13 @@ chmod +x deploy.sh
 ```
 
 部署配置位于 `deploy/` 目录，包含 Dockerfile、docker-compose.yml、部署脚本和 Nginx 参考配置。
+
+推荐三节点架构：
+
+| 节点 | 配置 | 服务 |
+|------|------|------|
+| 前端节点 | 2H2G | eucal-admin + Frontend-zh + Nginx |
+| 后端节点 | 2H4G | MySQL + Redis + admin-service + user-service |
+| GPU 节点 | 视模型而定 | router-service + inference-service |
+
+服务间通过内网 IP 通信。完整的多节点部署流程见后端仓库的 `DEPLOY.md`。
