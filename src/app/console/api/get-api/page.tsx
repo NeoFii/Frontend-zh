@@ -543,7 +543,10 @@ export default function GetApiPage() {
             <pre className="mt-4 overflow-x-auto text-sm leading-7 text-gray-100">{`curl -X POST ${baseUrl}/chat/completions \\
   -H "Authorization: Bearer YOUR_ROUTER_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{"model":"smart-router","messages":[{"role":"user","content":"Hello"}]}'`}</pre>
+  -d '{"model":"auto","messages":[{"role":"user","content":"Hello"}]}'`}</pre>
+            <p className="mt-3 text-xs leading-6 text-gray-400">
+              <code className="rounded bg-gray-900 px-1.5 py-0.5 text-gray-200">model</code> 必须填管理员配置的允许别名（默认 <code className="rounded bg-gray-900 px-1.5 py-0.5 text-gray-200">auto</code>），平台会根据请求内容自动路由到合适的底层模型。
+            </p>
           </div>
         </div>
       </section>

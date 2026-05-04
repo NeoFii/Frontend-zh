@@ -2,8 +2,11 @@
 import type { NextRequest } from 'next/server'
 
 const protectedPaths = ['/console']
-const ACCESS_COOKIE_NAME = 'access_token'
-const REFRESH_COOKIE_NAME = 'refresh_token'
+// Cookie names are namespaced (`user_*`) so the user and admin front-ends can
+// coexist on the same domain. Must match `_set_auth_cookies` in
+// services/user-service/src/controllers/auth.py.
+const ACCESS_COOKIE_NAME = 'user_access_token'
+const REFRESH_COOKIE_NAME = 'user_refresh_token'
 
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
