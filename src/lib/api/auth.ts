@@ -27,6 +27,12 @@ export interface UserInfo {
   email_verified_at: string | null
   last_login_at: string | null
   created_at: string
+  /** 用户级 RPM 上限。null 表示未单独设置，使用 default_rpm。 */
+  rpm_limit?: number | null
+  /** 未单独设置时使用的全局默认 RPM。 */
+  default_rpm?: number
+  /** 最近 60 秒滚动窗口内消耗的 token 数（实时 TPM）。 */
+  current_tpm?: number
 }
 
 export interface AuthSessionData {

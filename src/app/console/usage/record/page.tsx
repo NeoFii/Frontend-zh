@@ -14,6 +14,7 @@ import {
   useRouterUsageEvents,
   useRouterUsageStats,
 } from '@/hooks/useRouterUsage'
+import { useUser } from '@/hooks/useUser'
 import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
 import ErrorBanner from '@/components/ui/ErrorBanner'
 import {
@@ -114,6 +115,14 @@ export default function UsageRecordPage() {
   const [trendRange, setTrendRange] = useState<BalanceTokenTrendRange>('24h')
   const analyticsWindow = useMemo(() => buildUsageRecordAnalyticsWindow(range), [range])
   const trendWindow = useMemo(() => getBalanceTokenTrendQueryWindow(trendRange), [trendRange])
+
+  // RPM/TPM 实时指标。SWR 在路由切换时自动刷新；TPM 是 60s 滑动窗口，
+  // 当前页面停留时不强制 polling，避免无谓的请求。
+  const { user } = useUser()
+  const defaultRpm = user?.default_rpm ?? 20
+  const rpmDisplay = user?.rpm_limit != null ? String(user.rpm_limit) : `${defaultRpm}`
+  const rpmIsDefault = user?.rpm_limit == null
+  const tpmDisplay = (user?.current_tpm ?? 0).toLocaleString()
 
   const { balance, isLoading: balanceLoading, isError: balanceError, mutate: mutateBalance } = useRouterBalance()
   const {
@@ -423,6 +432,24 @@ export default function UsageRecordPage() {
                   {option}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 xl:min-w-[280px]">
+            <div className="rounded-lg border border-white/60 bg-white/80 px-4 py-3 shadow-[0_10px_30px_-22px_rgba(15,23,42,0.4)] backdrop-blur">
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-gray-400">RPM</p>
+              <p className="mt-1.5 text-2xl tracking-tight text-gray-950">
+                {rpmDisplay}
+                {rpmIsDefault && (
+                  <span className="ml-1.5 align-middle text-[10px] font-medium text-gray-400">默认</span>
+                )}
+              </p>
+              <p className="mt-1 text-[11px] text-gray-500">每分钟请求上限</p>
+            </div>
+            <div className="rounded-lg border border-white/60 bg-white/80 px-4 py-3 shadow-[0_10px_30px_-22px_rgba(15,23,42,0.4)] backdrop-blur">
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-gray-400">TPM</p>
+              <p className="mt-1.5 text-2xl tracking-tight text-gray-950">{tpmDisplay}</p>
+              <p className="mt-1 text-[11px] text-gray-500">最近 60 秒 tokens/min</p>
             </div>
           </div>
         </div>

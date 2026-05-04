@@ -324,6 +324,11 @@ export default function BasicInformationPage() {
 
   const userStatus = user?.status === 1 ? '正常' : '已禁用'
   const emailStatus = user?.email_verified_at ? '邮箱已验证' : '邮箱未验证'
+  const defaultRpm = user?.default_rpm ?? 20
+  const rpmDisplay = user?.rpm_limit != null
+    ? `${user.rpm_limit} 次/分钟`
+    : `${defaultRpm} 次/分钟（默认）`
+  const tpmDisplay = `${(user?.current_tpm ?? 0).toLocaleString()} tokens/分钟`
   const rows = [
     { label: '邮箱', value: user?.email || '-' },
     { label: '用户 UID', value: user?.uid ? String(user.uid) : '-' },
@@ -333,6 +338,8 @@ export default function BasicInformationPage() {
       value: emailStatus,
       tone: user?.email_verified_at ? 'text-emerald-600' : 'text-amber-600',
     },
+    { label: 'RPM 限制', value: rpmDisplay },
+    { label: '实时 TPM', value: tpmDisplay },
     { label: '注册时间', value: formatDateTime(user?.created_at) },
     { label: '最近登录', value: formatDateTime(user?.last_login_at) },
   ]
