@@ -3,11 +3,11 @@
 import React from 'react'
 import useSWR from 'swr'
 import Link from 'next/link'
-import Image from 'next/image'
 import { getModelBySlug } from '@/lib/api/model-catalog'
 import type { ModelDetail } from '@/types/model'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { formatFenPerMillionTokens } from '@/lib/pricing'
+import { ProviderIcon } from '@/components/ProviderIcon'
 
 interface ModelDetailClientProps {
   modelId: string
@@ -71,11 +71,12 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
         <div className="mb-8">
           {/* Logo + 标题 */}
           <div className="flex items-center gap-4 mb-4">
-            {model.vendor.logo_url && (
-              <div className="relative w-12 h-12 flex-shrink-0">
-                <Image src={model.vendor.logo_url} alt={model.vendor.name} fill className="object-contain" />
-              </div>
-            )}
+            <ProviderIcon
+              providerId={model.vendor.slug}
+              name={model.vendor.name}
+              logoUrl={model.vendor.logo_url}
+              size={48}
+            />
             <h1 className="text-[28px] lg:text-[32px] font-normal text-[#181E25]">
               {model.vendor.name}
               <span className="text-[#C4C9D0] mx-2">/</span>

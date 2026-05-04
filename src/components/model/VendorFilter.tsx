@@ -6,8 +6,8 @@
  */
 
 import React from 'react'
-import Image from 'next/image'
 import type { ModelVendor } from '@/types/model'
+import { ProviderIcon } from '@/components/ProviderIcon'
 
 interface VendorFilterProps {
   /** 厂商列表（由父组件 getVendors() 获取后传入） */
@@ -74,16 +74,12 @@ export const VendorFilter: React.FC<VendorFilterProps> = ({
               `}
             >
               {/* 厂商 Logo */}
-              {vendor.logo_url && (
-                <div className="relative w-5 h-5 flex-shrink-0">
-                  <Image
-                    src={vendor.logo_url}
-                    alt={vendor.name}
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              )}
+              <ProviderIcon
+                providerId={vendor.slug}
+                name={vendor.name}
+                logoUrl={vendor.logo_url}
+                size={20}
+              />
               <span className="text-[13px]">{vendor.name}</span>
             </button>
           )

@@ -7,9 +7,9 @@
 
 import React from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import type { ModelListItem } from '@/types/model'
 import { formatFenPerMillionTokens } from '@/lib/pricing'
+import { ProviderIcon } from '@/components/ProviderIcon'
 
 interface ModelCardProps {
   model: ModelListItem
@@ -32,19 +32,13 @@ export const ModelCard: React.FC<ModelCardProps> = ({ model }) => {
       <div className="group bg-white border border-gray-100 rounded-xl p-5 hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col h-full">
         {/* 头部：研发商 Logo + 分类 */}
         <div className="flex items-center justify-between mb-3">
-          {/* 研发商 Logo */}
-          {model.vendor.logo_url ? (
-            <div className="relative w-[42px] h-[42px] flex-shrink-0">
-              <Image
-                src={model.vendor.logo_url}
-                alt={model.vendor.name}
-                fill
-                className="object-contain"
-              />
-            </div>
-          ) : (
-            <span />
-          )}
+          <ProviderIcon
+            providerId={model.vendor.slug}
+            name={model.vendor.name}
+            logoUrl={model.vendor.logo_url}
+            size={42}
+            className="rounded-xl"
+          />
           {primaryCategory ? (
             <span className="px-3 py-1 text-[12px] text-[#666666] bg-[#F3F4F6] rounded-full">
               {primaryCategory.name}

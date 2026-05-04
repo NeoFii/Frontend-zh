@@ -4,11 +4,12 @@
  */
 
 import React from 'react'
-import Image from 'next/image'
 
 interface ProviderIconProps {
   providerId: string
   name: string
+  /** 后端返回的 logo URL，优先级最高；缺省时按 providerId 拼接 /icons/providers/{id}.png */
+  logoUrl?: string | null
   size?: number
   className?: string
 }
@@ -64,23 +65,27 @@ const FallbackIcon: React.FC<{ name: string; providerId: string; size: number }>
 export const ProviderIcon: React.FC<ProviderIconProps> = ({
   providerId,
   name,
+  logoUrl,
   size = 40,
   className = '',
 }) => {
   const [useFallback, setUseFallback] = React.useState(false)
 
-  // 如果图标加载失败，使用备用方案
   if (useFallback) {
     return <FallbackIcon name={name} providerId={providerId} size={size} />
   }
 
+  const src = logoUrl && logoUrl.trim() !== ''
+    ? logoUrl
+    : `/icons/providers/${providerId}.png`
+
   return (
-    <Image
-      src={`/icons/providers/${providerId}.png`}
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
       alt={name}
       width={size}
       height={size}
-      unoptimized
       className={`rounded-md object-cover flex-shrink-0 ${className}`}
       onError={() => setUseFallback(true)}
     />
