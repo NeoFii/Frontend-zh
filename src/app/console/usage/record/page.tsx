@@ -253,30 +253,27 @@ export default function UsageRecordPage() {
   const stackedBarOption = useMemo(
     () => ({
       tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' },
-        formatter: (
-          params: Array<{
-            axisValueLabel: string
-            seriesName: string
-            value: number
-            marker?: string
-            color?: string
-          }>
-        ) => {
-          const header = params[0]?.axisValueLabel ?? ''
-          const nonZero = params.filter((item) => item.value > 0)
-          const rows = nonZero
-            .map(
-              (item) =>
-                `${item.marker ?? ''}${item.seriesName}：${formatCurrencyDetail(item.value, currency)}`
-            )
-            .join('<br/>')
-          if (!rows) {
-            return `${header}<br/>暂无花费`
-          }
-          const total = nonZero.reduce((sum, item) => sum + item.value, 0)
-          return `${header}<br/>${rows}<br/><span style="display:inline-block;width:10px;"></span>总计：${formatCurrencyDetail(total, currency)}`
+        trigger: 'item',
+        backgroundColor: '#fff',
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+        textStyle: { color: '#111827', fontSize: 13 },
+        extraCssText:
+          'box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-radius: 12px; padding: 10px 14px;',
+        formatter: (params: {
+          seriesName?: string
+          value?: number
+          marker?: string
+          name?: string
+        }) => {
+          const seriesName = params.seriesName ?? '-'
+          const bucket = params.name ?? ''
+          const cost = formatCurrencyDetail(
+            typeof params.value === 'number' ? params.value : 0,
+            currency
+          )
+          const header = bucket ? `${bucket}　` : ''
+          return `${params.marker ?? ''}${seriesName}<br/>${header}花费：${cost}`
         },
       },
       legend: {
@@ -379,47 +376,42 @@ export default function UsageRecordPage() {
     }
   }, [analyticsViewModel.stackedBar.labels])
 
-  const donutOption = useMemo(
-    () => ({
+  const donutOption = useMemo(() => {
+    const donutData = analyticsViewModel.donut.filter((item) => item.requestCount > 0)
+    return {
       tooltip: {
         trigger: 'item',
-        formatter: (params: { name: string; data: { requestCount: number; requestSharePercent: number } }) =>
-          `${params.name}<br/>${formatCompactNumber(params.data.requestCount)} 次请求 (${params.data.requestSharePercent.toFixed(1)}%)`,
+        backgroundColor: '#fff',
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+        textStyle: { color: '#111827', fontSize: 13 },
+        extraCssText:
+          'box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-radius: 12px; padding: 10px 14px;',
+        formatter: (p: { name?: string; value?: number; percent?: number }) => {
+          const name = p.name && p.name.length > 0 ? p.name : '-'
+          const requests = typeof p.value === 'number' ? p.value.toLocaleString('zh-CN') : '0'
+          const percent = typeof p.percent === 'number' ? p.percent : 0
+          return `${name}<br/>调用 ${requests} 次 (${percent}%)`
+        },
       },
+      legend: { show: false },
       series: [
         {
           type: 'pie',
-          radius: ['46%', '64%'],
+          radius: ['40%', '70%'],
           center: ['50%', '50%'],
           avoidLabelOverlap: true,
-          label: {
-            show: true,
-            position: 'outside',
-            formatter: '{b|{b}}\n{c|{d}%}',
-            rich: {
-              b: { fontSize: 12, color: '#334155', lineHeight: 18 },
-              c: { fontSize: 11, color: '#64748b', lineHeight: 16 },
-            },
-          },
-          labelLine: {
-            show: true,
-            length: 8,
-            length2: 8,
-            smooth: false,
-          },
-          labelLayout: { hideOverlap: true },
-          data: analyticsViewModel.donut.map((item) => ({
-            value: item.requestCount,
+          itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+          label: { show: true, fontSize: 12, color: '#6b7280' },
+          data: donutData.map((item) => ({
             name: item.model,
-            requestCount: item.requestCount,
-            requestSharePercent: item.requestSharePercent,
+            value: item.requestCount,
             itemStyle: { color: item.color },
           })),
         },
       ],
-    }),
-    [analyticsViewModel.donut]
-  )
+    }
+  }, [analyticsViewModel.donut])
 
   const emptyDonutOption = useMemo(
     () => ({
@@ -427,11 +419,12 @@ export default function UsageRecordPage() {
       series: [
         {
           type: 'pie',
-          radius: ['46%', '64%'],
+          radius: ['40%', '70%'],
           center: ['50%', '50%'],
           silent: true,
           label: { show: false },
           emphasis: { disabled: true },
+          itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
           data: [
             {
               value: 1,
@@ -565,6 +558,7 @@ export default function UsageRecordPage() {
             />
           ) : (
             <ReactECharts
+              notMerge
               option={analyticsViewModel.hasData ? stackedBarOption : emptyStackedBarOption}
               style={{ height: '320px', width: '100%' }}
             />
@@ -603,6 +597,7 @@ export default function UsageRecordPage() {
             />
           ) : rightPanelTab === 'donut' ? (
             <ReactECharts
+              notMerge
               option={analyticsViewModel.hasData ? donutOption : emptyDonutOption}
               style={{ height: '320px', width: '100%' }}
             />

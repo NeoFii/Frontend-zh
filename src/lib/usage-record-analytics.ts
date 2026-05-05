@@ -353,7 +353,11 @@ export function buildUsageRecordAnalyticsViewModel(
 
   const topModels = rawModels.slice(0, TOP_MODEL_LIMIT)
   const tailModels = rawModels.slice(TOP_MODEL_LIMIT)
-  const totalRequests = analytics?.overview.total_requests ?? rawModels.reduce((sum, item) => sum + item.request_count, 0)
+  const overviewTotalRequests = analytics?.overview.total_requests
+  const totalRequests =
+    typeof overviewTotalRequests === 'number' && overviewTotalRequests > 0
+      ? overviewTotalRequests
+      : rawModels.reduce((sum, item) => sum + item.request_count, 0)
 
   const groupedModels = topModels.map((item) => ({
     model: item.effective_model,
