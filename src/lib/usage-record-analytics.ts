@@ -7,7 +7,16 @@ import type {
 } from '@/lib/api/router'
 import { formatShanghaiDateTimeLocalInput, toShanghaiApiDateTime } from '@/lib/time'
 
-const MODEL_COLOR_PALETTE = ['#0f172a', '#2563eb', '#ea580c', '#059669', '#7c3aed', '#dc2626', '#0891b2', '#ca8a04']
+const MODEL_COLOR_PALETTE = [
+  '#2563eb', // blue-600
+  '#ea580c', // orange-600
+  '#059669', // emerald-600
+  '#7c3aed', // violet-600
+  '#dc2626', // red-600
+  '#0891b2', // cyan-600
+  '#ca8a04', // yellow-600
+  '#db2777', // pink-600
+]
 const OTHER_MODEL_LABEL = '其他'
 const OTHER_MODEL_COLOR = '#94a3b8'
 const TOP_MODEL_LIMIT = 8
@@ -386,14 +395,27 @@ export function buildUsageRecordAnalyticsViewModel(
     ),
   }))
 
+  // 退化分支：当时间桶内 cost 全为 0（后端未填充 bucket cost / 全部免费请求 / 错误响应），
+  // 但模型聚合层仍存在 totalCost > 0 时，用单类目「汇总」堆叠柱保证左图与右环形图同步可见。
+  const seriesHasCost = series.some((item) => item.data.some((value) => value > 0))
+  const totalsHaveCost = models.some((item) => item.totalCost > 0)
+  const stackedBar =
+    !seriesHasCost && totalsHaveCost
+      ? {
+          labels: ['汇总'],
+          series: models.map((item) => ({
+            model: item.model,
+            color: item.color,
+            data: [Number(item.totalCost.toFixed(6))],
+          })),
+        }
+      : { labels, series }
+
   return {
     models,
     donut: models,
     ranking: models,
-    stackedBar: {
-      labels,
-      series,
-    },
+    stackedBar,
     colorMap,
     hasData:
       (analytics?.overview.total_requests ?? 0) > 0 ||

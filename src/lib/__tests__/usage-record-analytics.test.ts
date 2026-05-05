@@ -214,4 +214,51 @@ describe('usage record analytics helpers', () => {
       { effective_model: 'gpt-4.1-mini-2026-04-14', total_cost: 1 },
     ])
   })
+
+  it('falls back to a single 汇总 aggregate bar when bucket costs are all zero but model totals exist', () => {
+    const fixture: RouterUsageAnalytics = {
+      range: '8h',
+      granularity: 'hour',
+      start: '2026-04-24T00:00:00Z',
+      end: '2026-04-24T02:00:00Z',
+      currency: 'CNY',
+      overview: {
+        total_requests: 5,
+        success_requests: 5,
+        success_rate: 1,
+        total_cost: 12,
+      },
+      models: [
+        { effective_model: 'model-a', request_count: 3, request_share: 0.6, total_cost: 9 },
+        { effective_model: 'model-b', request_count: 2, request_share: 0.4, total_cost: 3 },
+      ],
+      buckets: [
+        { bucket_start: '2026-04-24T00:00:00Z', label: '08:00', costs: [] },
+        { bucket_start: '2026-04-24T01:00:00Z', label: '09:00', costs: [] },
+      ],
+    }
+
+    const viewModel = buildUsageRecordAnalyticsViewModel(fixture)
+
+    expect(viewModel.hasData).toBe(true)
+    expect(viewModel.stackedBar.labels).toEqual(['汇总'])
+    expect(viewModel.stackedBar.series.map((item) => ({ model: item.model, data: item.data }))).toEqual([
+      { model: 'model-a', data: [9] },
+      { model: 'model-b', data: [3] },
+    ])
+    // 颜色仍与 donut / ranking 共享同一个 colorMap
+    expect(viewModel.stackedBar.series[0].color).toBe(viewModel.colorMap['model-a'])
+    expect(viewModel.stackedBar.series[1].color).toBe(viewModel.colorMap['model-b'])
+  })
+
+  it('uses a palette that contains neither pure black nor pure white', () => {
+    const viewModel = buildUsageRecordAnalyticsViewModel(createAnalyticsFixture())
+    const blackish = new Set(['#000', '#000000', '#0f172a', '#020617'])
+    const whitish = new Set(['#fff', '#ffffff', '#f8fafc'])
+    for (const color of Object.values(viewModel.colorMap)) {
+      const normalized = color.toLowerCase()
+      expect(blackish.has(normalized)).toBe(false)
+      expect(whitish.has(normalized)).toBe(false)
+    }
+  })
 })

@@ -255,41 +255,65 @@ export default function UsageRecordPage() {
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'shadow' },
-        formatter: (params: Array<{ axisValueLabel: string; seriesName: string; value: number }>) => {
+        formatter: (
+          params: Array<{
+            axisValueLabel: string
+            seriesName: string
+            value: number
+            marker?: string
+            color?: string
+          }>
+        ) => {
           const header = params[0]?.axisValueLabel ?? ''
-          const rows = params
-            .filter((item) => item.value > 0)
-            .map((item) => `${item.seriesName}: ${formatCurrencyDetail(item.value, currency)}`)
+          const nonZero = params.filter((item) => item.value > 0)
+          const rows = nonZero
+            .map(
+              (item) =>
+                `${item.marker ?? ''}${item.seriesName}：${formatCurrencyDetail(item.value, currency)}`
+            )
             .join('<br/>')
-          return rows ? `${header}<br/>${rows}` : `${header}<br/>暂无花费`
+          if (!rows) {
+            return `${header}<br/>暂无花费`
+          }
+          const total = nonZero.reduce((sum, item) => sum + item.value, 0)
+          return `${header}<br/>${rows}<br/><span style="display:inline-block;width:10px;"></span>总计：${formatCurrencyDetail(total, currency)}`
         },
       },
       legend: {
+        type: 'scroll',
         top: 0,
+        left: 'center',
+        icon: 'circle',
+        itemWidth: 10,
+        itemHeight: 10,
+        itemGap: 12,
+        pageIconColor: '#64748b',
+        pageTextStyle: { color: '#64748b', fontSize: 11 },
         data: analyticsViewModel.stackedBar.series.map((item) => item.model),
-        textStyle: { color: '#64748b', fontSize: 12 },
+        textStyle: { color: '#475569', fontSize: 12 },
       },
       grid: {
-        left: 12,
-        right: 12,
-        top: 48,
-        bottom: 12,
+        left: 16,
+        right: 16,
+        top: 56,
+        bottom: 16,
         containLabel: true,
       },
       xAxis: {
         type: 'category',
         data: analyticsViewModel.stackedBar.labels,
-        axisLine: { lineStyle: { color: '#e2e8f0' } },
+        axisLine: { lineStyle: { color: '#cbd5e1' } },
         axisTick: { show: false },
-        axisLabel: { color: '#64748b' },
+        axisLabel: { color: '#475569', fontSize: 12 },
       },
       yAxis: {
         type: 'value',
-        axisLine: { show: false },
+        axisLine: { show: true, lineStyle: { color: '#cbd5e1' } },
         axisTick: { show: false },
         axisLabel: {
-          color: '#64748b',
-          formatter: (value: number) => value.toFixed(2),
+          color: '#475569',
+          fontSize: 11,
+          formatter: (value: number) => value.toFixed(6),
         },
         splitLine: { lineStyle: { color: '#f1f5f9' } },
       },
@@ -297,6 +321,7 @@ export default function UsageRecordPage() {
         name: item.model,
         type: 'bar',
         stack: 'cost',
+        barMaxWidth: 48,
         emphasis: { focus: 'series' },
         itemStyle: { color: item.color },
         data: item.data.map((value) => Number(value.toFixed(6))),
@@ -311,32 +336,39 @@ export default function UsageRecordPage() {
 
     return {
       tooltip: { show: false },
-      legend: { show: false },
+      legend: {
+        top: 0,
+        left: 'center',
+        icon: 'circle',
+        itemWidth: 10,
+        itemHeight: 10,
+        textStyle: { color: '#94a3b8', fontSize: 12 },
+        data: ['暂无数据'],
+      },
       grid: {
-        left: 12,
-        right: 12,
-        top: 24,
-        bottom: 12,
+        left: 16,
+        right: 16,
+        top: 56,
+        bottom: 16,
         containLabel: true,
       },
       xAxis: {
         type: 'category',
         data: labels,
-        axisLine: { lineStyle: { color: '#e2e8f0' } },
+        axisLine: { lineStyle: { color: '#cbd5e1' } },
         axisTick: { show: false },
-        axisLabel: { show: false },
+        axisLabel: { color: '#94a3b8', fontSize: 12 },
       },
       yAxis: {
         type: 'value',
-        min: 0,
-        max: 1,
-        axisLine: { show: false },
+        axisLine: { show: true, lineStyle: { color: '#cbd5e1' } },
         axisTick: { show: false },
-        axisLabel: { show: false },
+        axisLabel: { color: '#94a3b8', fontSize: 11, formatter: (value: number) => value.toFixed(6) },
         splitLine: { lineStyle: { color: '#f1f5f9' } },
       },
       series: [
         {
+          name: '暂无数据',
           type: 'bar',
           silent: true,
           barMaxWidth: 24,
@@ -357,15 +389,25 @@ export default function UsageRecordPage() {
       series: [
         {
           type: 'pie',
-          radius: ['52%', '72%'],
-          center: ['50%', '52%'],
+          radius: ['46%', '64%'],
+          center: ['50%', '50%'],
+          avoidLabelOverlap: true,
           label: {
+            show: true,
+            position: 'outside',
             formatter: '{b|{b}}\n{c|{d}%}',
             rich: {
               b: { fontSize: 12, color: '#334155', lineHeight: 18 },
               c: { fontSize: 11, color: '#64748b', lineHeight: 16 },
             },
           },
+          labelLine: {
+            show: true,
+            length: 8,
+            length2: 8,
+            smooth: false,
+          },
+          labelLayout: { hideOverlap: true },
           data: analyticsViewModel.donut.map((item) => ({
             value: item.requestCount,
             name: item.model,
@@ -385,8 +427,8 @@ export default function UsageRecordPage() {
       series: [
         {
           type: 'pie',
-          radius: ['52%', '72%'],
-          center: ['50%', '52%'],
+          radius: ['46%', '64%'],
+          center: ['50%', '50%'],
           silent: true,
           label: { show: false },
           emphasis: { disabled: true },
