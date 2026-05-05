@@ -27,7 +27,7 @@ describe('proxy config', () => {
 
     expect(resolvePublicApiBaseUrl()).toBe('/api/v1')
     expect(resolveModelCatalogApiBaseUrl()).toBe('/api/v1')
-    expect(resolveRouterOpenAIBaseUrl()).toBe('/router-api/v1')
+    expect(resolveRouterOpenAIBaseUrl()).toBe('http://47.99.200.103:8003/v1')
     expect(resolveProxyTargets()).toEqual({
       apiUrl: 'http://127.0.0.1:8000',
       routerApiUrl: 'http://127.0.0.1:8003',

@@ -236,7 +236,7 @@ export default function GetApiPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [baseUrl, setBaseUrl] = useState('/router-api/v1')
+  const [baseUrl, setBaseUrl] = useState('http://47.99.200.103:8003/v1')
   const [revealedKey, setRevealedKey] = useState<string | null>(null)
   const { showToast, ToastContainer } = useToast()
 

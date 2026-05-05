@@ -11,7 +11,7 @@ import Reveal from '@/components/Reveal'
 import { useUser } from '@/hooks/useUser'
 import { useAuthStore } from '@/stores/auth'
 
-const BASE_URL = 'https://api.eucal.ai/v1/chat/completions'
+const BASE_URL = 'http://47.99.200.103:8003/v1/chat/completions'
 const DOCS_URL = 'https://neofii.github.io/TierFlow-Doc/'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), {
