@@ -477,7 +477,7 @@ export default function UsageRecordPage() {
 
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
-      <section className="overflow-hidden rounded-lg border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_32%),linear-gradient(145deg,#f8fafc_0%,#ffffff_62%,#eff6ff_100%)] p-7 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.45)]">
+      <section className="rounded-lg border border-gray-200 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.16),_transparent_32%),linear-gradient(145deg,#f8fafc_0%,#ffffff_62%,#eff6ff_100%)] p-7 shadow-[0_28px_80px_-52px_rgba(15,23,42,0.45)]">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <ConsolePageHeader
@@ -506,18 +506,19 @@ export default function UsageRecordPage() {
                   className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
                 />
               </div>
-            </div>
-            <div className="mt-3">
-              <Select
-                value={selectedKeyId}
-                onChange={setSelectedKeyId}
-                options={keyOptions}
-                placeholder="全部 Key"
-                ariaLabel="按 API Key 筛选"
-                className="w-48"
-                triggerClassName="rounded-2xl"
-                menuClassName="rounded-2xl"
-              />
+              <div className="relative">
+                <label className="mb-1 block text-xs text-gray-500">API Key</label>
+                <Select
+                  value={selectedKeyId}
+                  onChange={setSelectedKeyId}
+                  options={keyOptions}
+                  placeholder="全部 Key"
+                  ariaLabel="按 API Key 筛选"
+                  className="w-48"
+                  triggerClassName="rounded-2xl"
+                  menuClassName="rounded-2xl"
+                />
+              </div>
             </div>
           </div>
 
