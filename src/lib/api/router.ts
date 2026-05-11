@@ -801,6 +801,11 @@ export interface AlipayCreateOrderResult {
   form_html: string
 }
 
+export interface AlipayPrecreateResult {
+  order_no: string
+  qr_url: string
+}
+
 export interface AlipayOrderStatus {
   order_no: string
   status: number
@@ -811,6 +816,12 @@ export interface AlipayOrderStatus {
 export function createAlipayOrder(params: AlipayCreateOrderParams) {
   return http
     .post<RouterApiResponse<AlipayCreateOrderResult>>('/billing/alipay/create-order', params)
+    .then((res) => res.data)
+}
+
+export function createAlipayPrecreate(params: AlipayCreateOrderParams) {
+  return http
+    .post<RouterApiResponse<AlipayPrecreateResult>>('/billing/alipay/precreate', params)
     .then((res) => res.data)
 }
 
