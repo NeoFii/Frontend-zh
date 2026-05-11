@@ -32,7 +32,7 @@ import {
   normalizeSuccessRateToPercent,
   toUsageRecordQueryValue,
 } from '@/lib/usage-record-analytics'
-import { formatShanghaiDateTimeLocalInput, toShanghaiApiDateTime } from '@/lib/time'
+import { formatShanghaiDateTimeLocalInput } from '@/lib/time'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), {
   ssr: false,
@@ -115,20 +115,10 @@ export default function UsageRecordPage() {
   const [endTime, setEndTime] = useState(() => formatShanghaiDateTimeLocalInput())
   const [selectedKeyId, setSelectedKeyId] = useState('')
   const [rightPanelTab, setRightPanelTab] = useState<'donut' | 'ranking'>('donut')
-  const [trendStart, setTrendStart] = useState(() => {
-    const d = new Date(); d.setHours(0, 0, 0, 0)
-    return formatShanghaiDateTimeLocalInput(d)
-  })
-  const [trendEnd, setTrendEnd] = useState(() => formatShanghaiDateTimeLocalInput())
 
   const analyticsStart = toUsageRecordQueryValue(startTime)
   const analyticsEnd = toUsageRecordQueryValue(endTime)
   const apiKeyId = selectedKeyId ? Number(selectedKeyId) : undefined
-
-  const trendWindow = useMemo(() => ({
-    start: toShanghaiApiDateTime(trendStart) ?? '',
-    end: toShanghaiApiDateTime(trendEnd) ?? '',
-  }), [trendStart, trendEnd])
 
   const { keys } = useRouterKeys()
   const keyOptions = useMemo(
@@ -193,7 +183,11 @@ export default function UsageRecordPage() {
     stats: trendStats,
     isLoading: trendStatsLoading,
     isError: trendStatsError,
-  } = useRouterUsageStats(trendWindow)
+  } = useRouterUsageStats(
+    analyticsStart && analyticsEnd
+      ? { start: analyticsStart, end: analyticsEnd, apiKeyId }
+      : undefined
+  )
 
   const fallbackOverview = useMemo(
     () => buildUsageRecordFallbackOverview(fallbackStats, fallbackEvents),
@@ -225,7 +219,7 @@ export default function UsageRecordPage() {
   const analyticsAreaLoading = !analyticsData && (analyticsLoading || (fallbackEnabled && fallbackInitialLoading))
   const analyticsAreaError = !analyticsData && !analyticsAreaLoading && Boolean(analyticsError) && Boolean(fallbackEventsError)
 
-  const trendViewModel = useMemo(() => buildBalanceTokenTrendViewModelFromWindow(trendStats, trendWindow.start, trendWindow.end), [trendStats, trendWindow])
+  const trendViewModel = useMemo(() => buildBalanceTokenTrendViewModelFromWindow(trendStats, analyticsStart ?? '', analyticsEnd ?? ''), [trendStats, analyticsStart, analyticsEnd])
   const trendHasData = trendViewModel.hasData
 
   const trendOption = useMemo(
@@ -684,33 +678,8 @@ export default function UsageRecordPage() {
       </section>
 
       <section className="rounded-lg border border-gray-100 bg-white p-6 shadow-[0_22px_50px_-34px_rgba(15,23,42,0.35)]">
-        <div className="flex flex-col gap-4 border-b border-gray-100 pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg text-gray-900">Token 使用趋势</h3>
-          </div>
-
-          <div className="flex flex-wrap items-end gap-3">
-            <div>
-              <label htmlFor="trend-start" className="mb-1 block text-xs text-gray-500">开始时间</label>
-              <input
-                id="trend-start"
-                type="datetime-local"
-                value={trendStart}
-                onChange={(e) => setTrendStart(e.target.value)}
-                className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
-              />
-            </div>
-            <div>
-              <label htmlFor="trend-end" className="mb-1 block text-xs text-gray-500">结束时间</label>
-              <input
-                id="trend-end"
-                type="datetime-local"
-                value={trendEnd}
-                onChange={(e) => setTrendEnd(e.target.value)}
-                className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
-              />
-            </div>
-          </div>
+        <div className="border-b border-gray-100 pb-5">
+          <h3 className="text-lg text-gray-900">Token 使用趋势</h3>
         </div>
 
         <div className="mt-6 h-[360px]">
