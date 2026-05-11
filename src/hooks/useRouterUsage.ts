@@ -9,7 +9,7 @@ import {
   fetchRouterUsageSummary,
   fetchVoucherRedemptions,
 } from '@/lib/api/router'
-import type { RouterUsageAnalyticsRange } from '@/lib/api/router'
+import type { RouterUsageAnalyticsRange, RouterUsageAnalyticsParams } from '@/lib/api/router'
 
 type ErrorWithStatus = {
   response?: {
@@ -54,9 +54,32 @@ export function useRouterUsageSummary(keyId?: number) {
   }
 }
 
-export function useRouterUsageAnalytics(range: RouterUsageAnalyticsRange) {
-  const cacheKey = ['router-usage-analytics', range]
-  const { data, error, isLoading, mutate } = useSWR(cacheKey, () => fetchRouterUsageAnalytics(range), {
+export interface UseRouterUsageAnalyticsOptions {
+  range?: RouterUsageAnalyticsRange
+  start?: string
+  end?: string
+  apiKeyId?: number
+}
+
+export function useRouterUsageAnalytics(options: UseRouterUsageAnalyticsOptions) {
+  const cacheKey = [
+    'router-usage-analytics',
+    options.range ?? '',
+    options.start ?? '',
+    options.end ?? '',
+    options.apiKeyId ?? 'all',
+  ]
+  const params: RouterUsageAnalyticsParams = {}
+  if (options.start && options.end) {
+    params.start = options.start
+    params.end = options.end
+  } else {
+    params.range = options.range ?? '8h'
+  }
+  if (options.apiKeyId) {
+    params.api_key_id = options.apiKeyId
+  }
+  const { data, error, isLoading, mutate } = useSWR(cacheKey, () => fetchRouterUsageAnalytics(params), {
     revalidateOnFocus: false,
     dedupingInterval: 15000,
     keepPreviousData: true,

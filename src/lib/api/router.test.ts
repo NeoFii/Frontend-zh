@@ -302,7 +302,7 @@ describe('user-service backed router console API', () => {
     })
 
     const { fetchRouterUsageAnalytics } = await import('./router')
-    const response = await fetchRouterUsageAnalytics('8h')
+    const response = await fetchRouterUsageAnalytics({ range: '8h' })
 
     expect(mockGet).toHaveBeenCalledWith('/billing/usage/analytics', {
       params: {

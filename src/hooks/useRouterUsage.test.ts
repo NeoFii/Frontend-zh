@@ -31,7 +31,7 @@ describe('useRouterUsageAnalytics', () => {
       mutate: jest.fn(),
     })
 
-    const { result } = renderHook(() => useRouterUsageAnalytics('8h'))
+    const { result } = renderHook(() => useRouterUsageAnalytics({ range: '8h' }))
     const options = mockedUseSWR.mock.calls[0][2]
     const revalidate = jest.fn()
 
@@ -43,7 +43,7 @@ describe('useRouterUsageAnalytics', () => {
   })
 
   it('keeps previous analytics data while a new range loads', () => {
-    renderHook(() => useRouterUsageAnalytics('8h'))
+    renderHook(() => useRouterUsageAnalytics({ range: '8h' }))
 
     expect(mockedUseSWR.mock.calls[0][2]).toEqual(expect.objectContaining({ keepPreviousData: true }))
   })

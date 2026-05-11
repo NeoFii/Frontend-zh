@@ -99,7 +99,7 @@ interface BackendUsageAnalyticsBucket {
 }
 
 interface BackendUsageAnalyticsData {
-  range: RouterUsageAnalyticsRange
+  range: string | null
   granularity: string
   start: string
   end: string
@@ -256,7 +256,7 @@ export interface RouterUsageAnalyticsBucket {
 }
 
 export interface RouterUsageAnalytics {
-  range: RouterUsageAnalyticsRange
+  range: string | null
   granularity: string
   start: string
   end: string
@@ -681,10 +681,17 @@ export function fetchRouterBalance() {
   }))
 }
 
-export function fetchRouterUsageAnalytics(range: RouterUsageAnalyticsRange) {
+export interface RouterUsageAnalyticsParams {
+  range?: RouterUsageAnalyticsRange
+  start?: string
+  end?: string
+  api_key_id?: number
+}
+
+export function fetchRouterUsageAnalytics(params: RouterUsageAnalyticsParams) {
   return http
     .get<RouterApiResponse<BackendUsageAnalyticsData>>('/billing/usage/analytics', {
-      params: { range },
+      params,
     })
     .then((response) => ({
       ...response,

@@ -14,9 +14,11 @@ import {
   useRouterUsageEvents,
   useRouterUsageStats,
 } from '@/hooks/useRouterUsage'
+import { useRouterKeys } from '@/hooks/useRouterKeys'
 import { useUser } from '@/hooks/useUser'
 import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
 import ErrorBanner from '@/components/ui/ErrorBanner'
+import { Select } from '@/components/ui/Select'
 import {
   buildBalanceTokenTrendViewModel,
   formatCompactNumber,
@@ -32,6 +34,7 @@ import {
   buildUsageRecordFallbackAnalytics,
   buildUsageRecordFallbackOverview,
   normalizeSuccessRateToPercent,
+  toUsageRecordQueryValue,
   USAGE_RECORD_RANGES,
 } from '@/lib/usage-record-analytics'
 
@@ -110,11 +113,35 @@ function PanelLoadingState() {
 }
 
 export default function UsageRecordPage() {
-  const [range, setRange] = useState<RouterUsageAnalyticsRange>('8h')
+  const [range, setRange] = useState<RouterUsageAnalyticsRange | null>('8h')
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
+  const [selectedKeyId, setSelectedKeyId] = useState('')
   const [rightPanelTab, setRightPanelTab] = useState<'donut' | 'ranking'>('donut')
   const [trendRange, setTrendRange] = useState<BalanceTokenTrendRange>('24h')
-  const analyticsWindow = useMemo(() => buildUsageRecordAnalyticsWindow(range), [range])
+
+  const isCustomMode = range === null && customStart !== '' && customEnd !== ''
+  const analyticsStart = isCustomMode ? toUsageRecordQueryValue(customStart) : undefined
+  const analyticsEnd = isCustomMode ? toUsageRecordQueryValue(customEnd) : undefined
+  const apiKeyId = selectedKeyId ? Number(selectedKeyId) : undefined
+
+  const analyticsWindow = useMemo(
+    () => (range ? buildUsageRecordAnalyticsWindow(range) : null),
+    [range]
+  )
   const trendWindow = useMemo(() => getBalanceTokenTrendQueryWindow(trendRange), [trendRange])
+
+  const { keys } = useRouterKeys()
+  const keyOptions = useMemo(
+    () => [
+      { value: '', label: '全部 Key' },
+      ...keys.map((item) => ({
+        value: String(item.id),
+        label: `${item.name} (${item.token_preview})`,
+      })),
+    ],
+    [keys]
+  )
 
   // RPM/TPM 实时指标。SWR 在路由切换时自动刷新；TPM 是 60s 滑动窗口，
   // 当前页面停留时不强制 polling，避免无谓的请求。
@@ -131,16 +158,23 @@ export default function UsageRecordPage() {
     isError: analyticsError,
     isUnsupported: analyticsUnsupported,
     mutate: mutateAnalytics,
-  } = useRouterUsageAnalytics(range)
+  } = useRouterUsageAnalytics({
+    range: range ?? undefined,
+    start: analyticsStart,
+    end: analyticsEnd,
+    apiKeyId: apiKeyId,
+  })
   const fallbackEnabled = analyticsUnsupported || Boolean(analyticsError)
+  const fallbackWindow = analyticsWindow ?? (analyticsStart && analyticsEnd ? { start: analyticsStart, end: analyticsEnd } : null)
   const {
     stats: fallbackStats,
     mutate: mutateFallbackStats,
   } = useRouterUsageStats(
-    fallbackEnabled
+    fallbackEnabled && fallbackWindow
       ? {
-          start: analyticsWindow.start,
-          end: analyticsWindow.end,
+          start: fallbackWindow.start,
+          end: fallbackWindow.end,
+          apiKeyId: apiKeyId,
         }
       : undefined
   )
@@ -150,9 +184,10 @@ export default function UsageRecordPage() {
     isError: fallbackEventsError,
     mutate: mutateFallbackEvents,
   } = useRouterUsageEvents({
-    enabled: fallbackEnabled,
-    start: analyticsWindow.start,
-    end: analyticsWindow.end,
+    enabled: fallbackEnabled && !!fallbackWindow,
+    start: fallbackWindow?.start,
+    end: fallbackWindow?.end,
+    keyId: apiKeyId,
     limit: 100,
     maxPages: 20,
   })
@@ -177,7 +212,7 @@ export default function UsageRecordPage() {
     }
 
     return buildUsageRecordFallbackAnalytics({
-      range,
+      range: range ?? '24h',
       stats: fallbackStats,
       events: fallbackEvents,
       currency: balance?.currency || 'CNY',
@@ -457,7 +492,11 @@ export default function UsageRecordPage() {
                   key={option}
                   type="button"
                   aria-pressed={range === option}
-                  onClick={() => setRange(option)}
+                  onClick={() => {
+                    setRange(option)
+                    setCustomStart('')
+                    setCustomEnd('')
+                  }}
                   className={`rounded-full px-4 py-2 text-sm font-medium transition ${
                     range === option
                       ? 'bg-white text-gray-950 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.75)]'
@@ -467,6 +506,54 @@ export default function UsageRecordPage() {
                   {option}
                 </button>
               ))}
+              <button
+                type="button"
+                aria-pressed={isCustomMode}
+                onClick={() => setRange(null)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                  isCustomMode
+                    ? 'bg-white text-gray-950 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.75)]'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                自定义
+              </button>
+            </div>
+            {range === null && (
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <div>
+                  <label htmlFor="usage-custom-start" className="mb-1 block text-xs text-gray-500">开始时间</label>
+                  <input
+                    id="usage-custom-start"
+                    type="datetime-local"
+                    value={customStart}
+                    onChange={(e) => setCustomStart(e.target.value)}
+                    className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="usage-custom-end" className="mb-1 block text-xs text-gray-500">结束时间</label>
+                  <input
+                    id="usage-custom-end"
+                    type="datetime-local"
+                    value={customEnd}
+                    onChange={(e) => setCustomEnd(e.target.value)}
+                    className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
+                  />
+                </div>
+              </div>
+            )}
+            <div className="mt-3">
+              <Select
+                value={selectedKeyId}
+                onChange={setSelectedKeyId}
+                options={keyOptions}
+                placeholder="全部 Key"
+                ariaLabel="按 API Key 筛选"
+                className="w-48"
+                triggerClassName="rounded-2xl"
+                menuClassName="rounded-2xl"
+              />
             </div>
           </div>
 
