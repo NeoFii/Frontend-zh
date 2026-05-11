@@ -2,7 +2,6 @@ import React from 'react'
 import '@testing-library/jest-dom'
 import { fireEvent, render, screen } from '@testing-library/react'
 import UsageRecordPage from './page'
-import { buildUsageRecordAnalyticsWindow } from '@/lib/usage-record-analytics'
 
 const mockChartRender = jest.fn()
 const mockUseRouterBalance = jest.fn()
@@ -144,10 +143,11 @@ describe('UsageRecordPage', () => {
     })
   })
 
-  it('defaults to the 8h range and renders four summary cards, analytics panels, and token trend', () => {
+  it('defaults to today range and renders four summary cards, analytics panels, and token trend', () => {
     render(<UsageRecordPage />)
 
-    expect(screen.getByRole('button', { name: '8h' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByLabelText('开始时间')).toBeInTheDocument()
+    expect(screen.getByLabelText('结束时间')).toBeInTheDocument()
     expect(screen.getByText('当前余额')).toBeInTheDocument()
     expect(screen.getByText('使用统计')).toBeInTheDocument()
     expect(screen.getByText('花费')).toBeInTheDocument()
@@ -157,12 +157,6 @@ describe('UsageRecordPage', () => {
     expect(screen.getByText('请求排行')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Token 使用趋势' })).toBeInTheDocument()
     expect(screen.queryByText('请求明细')).not.toBeInTheDocument()
-    expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('8h')
-
-    const trendRangeButtons = ['24h', '7d', '30d']
-    for (const label of trendRangeButtons) {
-      expect(screen.getAllByRole('button', { name: label }).length).toBeGreaterThanOrEqual(1)
-    }
   })
 
   it('uses sidebar-matched rounded-lg on the main card containers', () => {
@@ -212,38 +206,14 @@ describe('UsageRecordPage', () => {
     expect(screen.getByRole('heading', { name: 'Token 使用趋势' })).toBeInTheDocument()
   })
 
-  it('refreshes analytics when the global range changes without affecting the trend range', () => {
+  it('renders datetime pickers for time range selection', () => {
     render(<UsageRecordPage />)
 
-    const mainRange24h = screen.getAllByRole('button', { name: '24h' })[0]
-    fireEvent.click(mainRange24h)
-
-    expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('24h')
+    const startInputs = screen.getAllByLabelText('开始时间')
+    const endInputs = screen.getAllByLabelText('结束时间')
+    expect(startInputs.length).toBeGreaterThanOrEqual(1)
+    expect(endInputs.length).toBeGreaterThanOrEqual(1)
     expect(screen.getByRole('heading', { name: 'Token 使用趋势' })).toBeInTheDocument()
-  })
-
-  it('keeps the current usage layout visible while a new range loads with previous data', () => {
-    const previousAnalytics = createAnalyticsFixture()
-    mockUseRouterUsageAnalytics.mockImplementation((nextRange: string) => ({
-      analytics: previousAnalytics,
-      isLoading: nextRange === '24h',
-      isError: null,
-      isUnsupported: false,
-      mutate: jest.fn(),
-    }))
-
-    render(<UsageRecordPage />)
-
-    const mainRange24h = screen.getAllByRole('button', { name: '24h' })[0]
-    fireEvent.click(mainRange24h)
-
-    expect(mockUseRouterUsageAnalytics).toHaveBeenLastCalledWith('24h')
-    expect(mainRange24h).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByText('当前余额')).toBeInTheDocument()
-    expect(screen.getByText('费用分布')).toBeInTheDocument()
-    expect(screen.getByText('请求占比')).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Token 使用趋势' })).toBeInTheDocument()
-    expect(screen.getAllByTestId('usage-chart').length).toBeGreaterThanOrEqual(2)
   })
 
   it('keeps the full page layout when the analytics endpoint returns 404', () => {

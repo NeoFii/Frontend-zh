@@ -341,6 +341,88 @@ export function buildUsageRecordFallbackAnalytics(options: {
   }
 }
 
+export function buildUsageRecordFallbackAnalyticsFromWindow(options: {
+  start: string
+  end: string
+  stats?: RouterUsageStat[]
+  events?: RouterUsageEvent[]
+  currency?: string
+}): RouterUsageAnalytics {
+  const startDate = new Date(options.start)
+  const endDate = new Date(options.end)
+  const durationMs = endDate.getTime() - startDate.getTime()
+  const granularity: UsageRecordAnalyticsWindow['granularity'] = durationMs <= 48 * 60 * 60 * 1000 ? 'hour' : 'day'
+
+  const bucketStarts: Date[] = []
+  const bucketCosts = new Map<string, Map<string, number>>()
+  const modelStats = new Map<string, { requestCount: number; totalCost: number }>()
+
+  for (let bucketStart = new Date(startDate); bucketStart < endDate; bucketStart = addGranularity(bucketStart, granularity)) {
+    bucketStarts.push(new Date(bucketStart))
+    bucketCosts.set(bucketStart.toISOString(), new Map())
+  }
+
+  const overview = buildUsageRecordFallbackOverview(options.stats ?? [], options.events ?? [])
+
+  for (const event of options.events ?? []) {
+    const createdAt = new Date(event.created_at)
+    if (Number.isNaN(createdAt.getTime())) continue
+
+    const effectiveModel = resolveUsageEventEffectiveModel(event)
+    const bucketStart = toAnalyticsBucketStart(createdAt, granularity)
+    const bucketKey = bucketStart.toISOString()
+    const costs = bucketCosts.get(bucketKey)
+    const currentModel = modelStats.get(effectiveModel) ?? { requestCount: 0, totalCost: 0 }
+
+    currentModel.requestCount += 1
+    currentModel.totalCost += event.cost
+    modelStats.set(effectiveModel, currentModel)
+
+    if (costs) {
+      costs.set(effectiveModel, (costs.get(effectiveModel) ?? 0) + event.cost)
+    }
+  }
+
+  const models = Array.from(modelStats.entries())
+    .sort((left, right) => {
+      if (right[1].requestCount !== left[1].requestCount) return right[1].requestCount - left[1].requestCount
+      if (right[1].totalCost !== left[1].totalCost) return right[1].totalCost - left[1].totalCost
+      return left[0].localeCompare(right[0])
+    })
+    .map(([effectiveModel, stats]) => ({
+      effective_model: effectiveModel,
+      request_count: stats.requestCount,
+      request_share: overview.total_requests > 0 ? stats.requestCount / overview.total_requests : 0,
+      total_cost: Number(stats.totalCost.toFixed(6)),
+    }))
+
+  return {
+    range: null,
+    granularity,
+    start: options.start,
+    end: options.end,
+    currency: options.currency ?? 'CNY',
+    overview: {
+      ...overview,
+      total_cost: Number(overview.total_cost.toFixed(6)),
+    },
+    models,
+    buckets: bucketStarts.map((bucketStart) => ({
+      bucket_start: bucketStart.toISOString(),
+      label: formatAnalyticsBucketLabel(bucketStart, granularity),
+      costs: Array.from(bucketCosts.get(bucketStart.toISOString())?.entries() ?? [])
+        .sort((left, right) => {
+          if (right[1] !== left[1]) return right[1] - left[1]
+          return left[0].localeCompare(right[0])
+        })
+        .map(([effectiveModel, totalCost]) => ({
+          effective_model: effectiveModel,
+          total_cost: Number(totalCost.toFixed(6)),
+        })),
+    })),
+  }
+}
+
 export function buildUsageRecordAnalyticsViewModel(
   analytics: RouterUsageAnalytics | null
 ): UsageRecordAnalyticsViewModel {

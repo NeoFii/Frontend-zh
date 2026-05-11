@@ -242,6 +242,79 @@ export function buildBalanceTokenTrendViewModel(
   }
 }
 
+export function buildBalanceTokenTrendViewModelFromWindow(
+  stats: RouterUsageStat[],
+  start: string,
+  end: string,
+): BalanceTokenTrendViewModel {
+  const startDate = toDate(start)
+  const endDate = toDate(end)
+  const durationMs = endDate.getTime() - startDate.getTime()
+  const isHourly = durationMs <= 48 * 60 * 60 * 1000
+  const hourlyBuckets = mergeUsageStatsByHour(stats)
+  const points: BalanceTokenTrendPoint[] = []
+
+  if (isHourly) {
+    const cursor = startOfHour(startDate)
+    while (cursor <= endDate) {
+      const bucket = hourlyBuckets.get(cursor.getTime()) ?? {
+        bucketStart: cursor.toISOString(),
+        label: formatHourLabel(cursor),
+        promptTokens: 0,
+        completionTokens: 0,
+        cachedTokens: 0,
+      }
+      points.push(bucket)
+      cursor.setTime(cursor.getTime() + 60 * 60 * 1000)
+    }
+  } else {
+    const dailyTotals = new Map<string, Pick<BalanceTokenTrendPoint, 'promptTokens' | 'completionTokens' | 'cachedTokens'>>()
+
+    hourlyBuckets.forEach((bucket) => {
+      const bucketDate = toDate(bucket.bucketStart)
+      if (bucketDate < startDate || bucketDate >= endDate) return
+      const dayKey = formatLocalDayKey(bucketDate)
+      const current = dailyTotals.get(dayKey) ?? { promptTokens: 0, completionTokens: 0, cachedTokens: 0 }
+      current.promptTokens += bucket.promptTokens
+      current.completionTokens += bucket.completionTokens
+      current.cachedTokens += bucket.cachedTokens
+      dailyTotals.set(dayKey, current)
+    })
+
+    const cursor = startOfDay(startDate)
+    while (cursor <= endDate) {
+      const dayKey = formatLocalDayKey(cursor)
+      const total = dailyTotals.get(dayKey)
+      points.push({
+        bucketStart: cursor.toISOString(),
+        label: formatMonthDayLabel(cursor),
+        promptTokens: total?.promptTokens ?? 0,
+        completionTokens: total?.completionTokens ?? 0,
+        cachedTokens: total?.cachedTokens ?? 0,
+      })
+      cursor.setDate(cursor.getDate() + 1)
+    }
+  }
+
+  const promptSeries = points.map((point) => point.promptTokens)
+  const completionSeries = points.map((point) => point.completionTokens)
+  const cachedSeries = points.map((point) => point.cachedTokens)
+
+  return {
+    start,
+    end,
+    points,
+    xAxis: points.map((point) => point.label),
+    legend: [...BALANCE_TOKEN_TREND_LEGEND],
+    series: [
+      { name: BALANCE_TOKEN_TREND_LEGEND[0], data: promptSeries },
+      { name: BALANCE_TOKEN_TREND_LEGEND[1], data: completionSeries },
+      { name: BALANCE_TOKEN_TREND_LEGEND[2], data: cachedSeries },
+    ],
+    hasData: [...promptSeries, ...completionSeries, ...cachedSeries].some((value) => value > 0),
+  }
+}
+
 export function filterUsageEventsByRange(
   events: RouterUsageEvent[],
   range: UsageRange,

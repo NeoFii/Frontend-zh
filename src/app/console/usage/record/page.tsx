@@ -7,7 +7,6 @@ import * as echarts from 'echarts/core'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import { CanvasRenderer } from 'echarts/renderers'
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components'
-import type { RouterUsageAnalyticsRange } from '@/lib/api/router'
 import {
   useRouterBalance,
   useRouterUsageAnalytics,
@@ -20,23 +19,20 @@ import ConsolePageHeader from '@/components/ui/ConsolePageHeader'
 import ErrorBanner from '@/components/ui/ErrorBanner'
 import { Select } from '@/components/ui/Select'
 import {
-  buildBalanceTokenTrendViewModel,
+  buildBalanceTokenTrendViewModelFromWindow,
   formatCompactNumber,
   formatCurrency,
   formatCurrencyDetail,
   formatTokenAxisValue,
-  getBalanceTokenTrendQueryWindow,
-  type BalanceTokenTrendRange,
 } from '@/lib/router-analytics'
 import {
-  buildUsageRecordAnalyticsWindow,
   buildUsageRecordAnalyticsViewModel,
-  buildUsageRecordFallbackAnalytics,
+  buildUsageRecordFallbackAnalyticsFromWindow,
   buildUsageRecordFallbackOverview,
   normalizeSuccessRateToPercent,
   toUsageRecordQueryValue,
-  USAGE_RECORD_RANGES,
 } from '@/lib/usage-record-analytics'
+import { formatShanghaiDateTimeLocalInput, toShanghaiApiDateTime } from '@/lib/time'
 
 const ReactECharts = dynamic(() => import('echarts-for-react'), {
   ssr: false,
@@ -49,7 +45,6 @@ const ReactECharts = dynamic(() => import('echarts-for-react'), {
 
 echarts.use([BarChart, LineChart, PieChart, GridComponent, LegendComponent, TooltipComponent, CanvasRenderer])
 
-const TREND_RANGE_OPTIONS: BalanceTokenTrendRange[] = ['24h', '7d', '30d']
 const TREND_COLORS = ['#2563eb', '#f97316', '#10b981']
 
 function SummaryValueLoading() {
@@ -113,23 +108,27 @@ function PanelLoadingState() {
 }
 
 export default function UsageRecordPage() {
-  const [range, setRange] = useState<RouterUsageAnalyticsRange | null>('8h')
-  const [customStart, setCustomStart] = useState('')
-  const [customEnd, setCustomEnd] = useState('')
+  const [startTime, setStartTime] = useState(() => {
+    const d = new Date(); d.setHours(0, 0, 0, 0)
+    return formatShanghaiDateTimeLocalInput(d)
+  })
+  const [endTime, setEndTime] = useState(() => formatShanghaiDateTimeLocalInput())
   const [selectedKeyId, setSelectedKeyId] = useState('')
   const [rightPanelTab, setRightPanelTab] = useState<'donut' | 'ranking'>('donut')
-  const [trendRange, setTrendRange] = useState<BalanceTokenTrendRange>('24h')
+  const [trendStart, setTrendStart] = useState(() => {
+    const d = new Date(); d.setHours(0, 0, 0, 0)
+    return formatShanghaiDateTimeLocalInput(d)
+  })
+  const [trendEnd, setTrendEnd] = useState(() => formatShanghaiDateTimeLocalInput())
 
-  const isCustomMode = range === null && customStart !== '' && customEnd !== ''
-  const analyticsStart = isCustomMode ? toUsageRecordQueryValue(customStart) : undefined
-  const analyticsEnd = isCustomMode ? toUsageRecordQueryValue(customEnd) : undefined
+  const analyticsStart = toUsageRecordQueryValue(startTime)
+  const analyticsEnd = toUsageRecordQueryValue(endTime)
   const apiKeyId = selectedKeyId ? Number(selectedKeyId) : undefined
 
-  const analyticsWindow = useMemo(
-    () => (range ? buildUsageRecordAnalyticsWindow(range) : null),
-    [range]
-  )
-  const trendWindow = useMemo(() => getBalanceTokenTrendQueryWindow(trendRange), [trendRange])
+  const trendWindow = useMemo(() => ({
+    start: toShanghaiApiDateTime(trendStart) ?? '',
+    end: toShanghaiApiDateTime(trendEnd) ?? '',
+  }), [trendStart, trendEnd])
 
   const { keys } = useRouterKeys()
   const keyOptions = useMemo(
@@ -159,13 +158,12 @@ export default function UsageRecordPage() {
     isUnsupported: analyticsUnsupported,
     mutate: mutateAnalytics,
   } = useRouterUsageAnalytics({
-    range: range ?? undefined,
     start: analyticsStart,
     end: analyticsEnd,
     apiKeyId: apiKeyId,
   })
   const fallbackEnabled = analyticsUnsupported || Boolean(analyticsError)
-  const fallbackWindow = analyticsWindow ?? (analyticsStart && analyticsEnd ? { start: analyticsStart, end: analyticsEnd } : null)
+  const fallbackWindow = analyticsStart && analyticsEnd ? { start: analyticsStart, end: analyticsEnd } : null
   const {
     stats: fallbackStats,
     mutate: mutateFallbackStats,
@@ -211,13 +209,14 @@ export default function UsageRecordPage() {
       return null
     }
 
-    return buildUsageRecordFallbackAnalytics({
-      range: range ?? '24h',
+    return buildUsageRecordFallbackAnalyticsFromWindow({
+      start: fallbackWindow!.start,
+      end: fallbackWindow!.end,
       stats: fallbackStats,
       events: fallbackEvents,
       currency: balance?.currency || 'CNY',
     })
-  }, [balance?.currency, fallbackEnabled, fallbackEvents, fallbackEventsError, fallbackInitialLoading, fallbackStats, range])
+  }, [balance?.currency, fallbackEnabled, fallbackEvents, fallbackEventsError, fallbackInitialLoading, fallbackStats, fallbackWindow])
   const analyticsData = analytics ?? fallbackAnalytics
   const analyticsViewModel = useMemo(() => buildUsageRecordAnalyticsViewModel(analyticsData), [analyticsData])
   const currency = analyticsData?.currency || balance?.currency || 'CNY'
@@ -226,7 +225,7 @@ export default function UsageRecordPage() {
   const analyticsAreaLoading = !analyticsData && (analyticsLoading || (fallbackEnabled && fallbackInitialLoading))
   const analyticsAreaError = !analyticsData && !analyticsAreaLoading && Boolean(analyticsError) && Boolean(fallbackEventsError)
 
-  const trendViewModel = useMemo(() => buildBalanceTokenTrendViewModel(trendStats, trendRange), [trendStats, trendRange])
+  const trendViewModel = useMemo(() => buildBalanceTokenTrendViewModelFromWindow(trendStats, trendWindow.start, trendWindow.end), [trendStats, trendWindow])
   const trendHasData = trendViewModel.hasData
 
   const trendOption = useMemo(
@@ -486,63 +485,28 @@ export default function UsageRecordPage() {
               title="使用记录"
               description="同一时间范围统一驱动总览与模型分析。"
             />
-            <div className="mt-5 inline-flex rounded-full bg-gray-100 p-1">
-              {USAGE_RECORD_RANGES.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  aria-pressed={range === option}
-                  onClick={() => {
-                    setRange(option)
-                    setCustomStart('')
-                    setCustomEnd('')
-                  }}
-                  className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                    range === option
-                      ? 'bg-white text-gray-950 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.75)]'
-                      : 'text-gray-500 hover:text-gray-900'
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
-              <button
-                type="button"
-                aria-pressed={isCustomMode}
-                onClick={() => setRange(null)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  isCustomMode
-                    ? 'bg-white text-gray-950 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.75)]'
-                    : 'text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                自定义
-              </button>
-            </div>
-            {range === null && (
-              <div className="mt-3 flex flex-wrap items-end gap-3">
-                <div>
-                  <label htmlFor="usage-custom-start" className="mb-1 block text-xs text-gray-500">开始时间</label>
-                  <input
-                    id="usage-custom-start"
-                    type="datetime-local"
-                    value={customStart}
-                    onChange={(e) => setCustomStart(e.target.value)}
-                    className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="usage-custom-end" className="mb-1 block text-xs text-gray-500">结束时间</label>
-                  <input
-                    id="usage-custom-end"
-                    type="datetime-local"
-                    value={customEnd}
-                    onChange={(e) => setCustomEnd(e.target.value)}
-                    className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
-                  />
-                </div>
+            <div className="mt-5 flex flex-wrap items-end gap-3">
+              <div>
+                <label htmlFor="usage-start" className="mb-1 block text-xs text-gray-500">开始时间</label>
+                <input
+                  id="usage-start"
+                  type="datetime-local"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
+                />
               </div>
-            )}
+              <div>
+                <label htmlFor="usage-end" className="mb-1 block text-xs text-gray-500">结束时间</label>
+                <input
+                  id="usage-end"
+                  type="datetime-local"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
+                />
+              </div>
+            </div>
             <div className="mt-3">
               <Select
                 value={selectedKeyId}
@@ -724,22 +688,27 @@ export default function UsageRecordPage() {
             <h3 className="text-lg text-gray-900">Token 使用趋势</h3>
           </div>
 
-          <div className="inline-flex rounded-full bg-gray-100 p-1">
-            {TREND_RANGE_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                aria-pressed={trendRange === option}
-                onClick={() => setTrendRange(option)}
-                className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                  trendRange === option
-                    ? 'bg-white text-gray-950 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.75)]'
-                    : 'text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                {option}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-end gap-3">
+            <div>
+              <label htmlFor="trend-start" className="mb-1 block text-xs text-gray-500">开始时间</label>
+              <input
+                id="trend-start"
+                type="datetime-local"
+                value={trendStart}
+                onChange={(e) => setTrendStart(e.target.value)}
+                className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
+              />
+            </div>
+            <div>
+              <label htmlFor="trend-end" className="mb-1 block text-xs text-gray-500">结束时间</label>
+              <input
+                id="trend-end"
+                type="datetime-local"
+                value={trendEnd}
+                onChange={(e) => setTrendEnd(e.target.value)}
+                className="rounded-2xl border border-gray-200 px-3 py-2 text-sm outline-none transition focus:border-gray-950"
+              />
+            </div>
           </div>
         </div>
 
