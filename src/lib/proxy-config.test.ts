@@ -15,6 +15,7 @@ describe('proxy config', () => {
     delete process.env.NEXT_PUBLIC_API_URL
     delete process.env.NEXT_PUBLIC_MODEL_CATALOG_API_BASE_URL
     delete process.env.NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL
+    delete process.env.NEXT_PUBLIC_ROUTER_ANTHROPIC_BASE_URL
     delete process.env.API_URL
     delete process.env.ROUTER_API_URL
 
@@ -23,11 +24,13 @@ describe('proxy config', () => {
       resolveProxyTargets,
       resolvePublicApiBaseUrl,
       resolveRouterOpenAIBaseUrl,
+      resolveRouterAnthropicBaseUrl,
     } = await import('@/lib/proxy-config')
 
     expect(resolvePublicApiBaseUrl()).toBe('/api/v1')
     expect(resolveModelCatalogApiBaseUrl()).toBe('/api/v1')
     expect(resolveRouterOpenAIBaseUrl()).toBe('http://47.99.200.103:8003/v1')
+    expect(resolveRouterAnthropicBaseUrl()).toBe('http://47.99.200.103:8003/v1/anthropic')
     expect(resolveProxyTargets()).toEqual({
       apiUrl: 'http://127.0.0.1:8000',
       routerApiUrl: 'http://127.0.0.1:8003',
@@ -38,6 +41,7 @@ describe('proxy config', () => {
     process.env.NEXT_PUBLIC_API_BASE_URL = ' https://example.com/api/v1/ '
     process.env.NEXT_PUBLIC_MODEL_CATALOG_API_BASE_URL = ' https://models.example.com/catalog/ '
     process.env.NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL = ' https://gateway.example.com/v1/ '
+    process.env.NEXT_PUBLIC_ROUTER_ANTHROPIC_BASE_URL = ' https://gateway.example.com/v1/anthropic/ '
     process.env.API_URL = ' http://127.0.0.1:9001/ '
     process.env.ROUTER_API_URL = ' http://127.0.0.1:9003/ '
 
@@ -46,11 +50,13 @@ describe('proxy config', () => {
       resolveProxyTargets,
       resolvePublicApiBaseUrl,
       resolveRouterOpenAIBaseUrl,
+      resolveRouterAnthropicBaseUrl,
     } = await import('@/lib/proxy-config')
 
     expect(resolvePublicApiBaseUrl()).toBe('https://example.com/api/v1')
     expect(resolveModelCatalogApiBaseUrl()).toBe('https://models.example.com/catalog')
     expect(resolveRouterOpenAIBaseUrl()).toBe('https://gateway.example.com/v1')
+    expect(resolveRouterAnthropicBaseUrl()).toBe('https://gateway.example.com/v1/anthropic')
     expect(resolveProxyTargets()).toEqual({
       apiUrl: 'http://127.0.0.1:9001',
       routerApiUrl: 'http://127.0.0.1:9003',

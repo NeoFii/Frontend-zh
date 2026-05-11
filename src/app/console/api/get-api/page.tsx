@@ -237,11 +237,13 @@ export default function GetApiPage() {
   const [noticeMessage, setNoticeMessage] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [baseUrl, setBaseUrl] = useState('http://47.99.200.103:8003/v1')
+  const [anthropicBaseUrl, setAnthropicBaseUrl] = useState('http://47.99.200.103:8003/v1/anthropic')
   const [revealedKey, setRevealedKey] = useState<string | null>(null)
   const { showToast, ToastContainer } = useToast()
 
   useEffect(() => {
     setBaseUrl(proxyConfig.resolveRouterOpenAIBaseUrl())
+    setAnthropicBaseUrl(proxyConfig.resolveRouterAnthropicBaseUrl())
   }, [])
 
   const visibleKeys = useMemo(() => [...keys].sort((left, right) => left.id - right.id), [keys])
@@ -351,6 +353,11 @@ export default function GetApiPage() {
     showToast(ok ? 'Base URL 已复制' : '复制失败，请手动复制', ok ? 'success' : 'error')
   }
 
+  async function handleCopyAnthropicBaseUrl() {
+    const ok = await copyToClipboard(anthropicBaseUrl)
+    showToast(ok ? 'Anthropic Base URL 已复制' : '复制失败，请手动复制', ok ? 'success' : 'error')
+  }
+
   return (
     <div className="space-y-6" style={{ fontFamily: 'MiSans, sans-serif' }}>
       <section className="rounded-lg bg-[#f7f7f8] px-8 py-7 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.2)] ring-1 ring-inset ring-gray-100">
@@ -361,20 +368,38 @@ export default function GetApiPage() {
               API Key 长期有效。请勿把密钥公开到共享环境，妥善保管并定期轮换密钥，避免因未授权使用造成安全风险或资金损失。
             </p>
           </div>
-          <div className="shrink-0">
-            <p className="text-sm text-gray-500">OpenAI compatible baseURL</p>
-            <div className="mt-2 flex items-center gap-3">
-              <div className="min-w-0 rounded-lg border border-[#cbd5e1] bg-[#eef3fa] px-4 py-3 text-sm text-gray-900 shadow-inner lg:min-w-[320px]">
-                <span className="block truncate">{baseUrl}</span>
+          <div className="shrink-0 space-y-4">
+            <div>
+              <p className="text-sm text-gray-500">OpenAI compatible baseURL</p>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="min-w-0 rounded-lg border border-[#cbd5e1] bg-[#eef3fa] px-4 py-3 text-sm text-gray-900 shadow-inner lg:min-w-[320px]">
+                  <span className="block truncate">{baseUrl}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyBaseUrl}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50"
+                  title="复制 BaseURL"
+                >
+                  <CopyIcon />
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleCopyBaseUrl}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50"
-                title="复制 BaseURL"
-              >
-                <CopyIcon />
-              </button>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Anthropic compatible baseURL</p>
+              <div className="mt-2 flex items-center gap-3">
+                <div className="min-w-0 rounded-lg border border-[#cbd5e1] bg-[#eef3fa] px-4 py-3 text-sm text-gray-900 shadow-inner lg:min-w-[320px]">
+                  <span className="block truncate">{anthropicBaseUrl}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyAnthropicBaseUrl}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50"
+                  title="复制 Anthropic BaseURL"
+                >
+                  <CopyIcon />
+                </button>
+              </div>
             </div>
           </div>
         </div>
