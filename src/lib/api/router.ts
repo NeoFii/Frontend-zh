@@ -794,46 +794,6 @@ export function fetchTopupOrders(params?: { page?: number; page_size?: number })
     }))
 }
 
-export interface AlipayCreateOrderParams {
-  amount: number
-  device: 'pc' | 'mobile'
-}
-
-export interface AlipayCreateOrderResult {
-  order_no: string
-  form_html: string
-}
-
-export interface AlipayPrecreateResult {
-  order_no: string
-  qr_url: string
-}
-
-export interface AlipayOrderStatus {
-  order_no: string
-  status: number
-  amount: number
-  paid_at: string | null
-}
-
-export function createAlipayOrder(params: AlipayCreateOrderParams) {
-  return http
-    .post<RouterApiResponse<AlipayCreateOrderResult>>('/billing/alipay/create-order', params)
-    .then((res) => res.data)
-}
-
-export function createAlipayPrecreate(params: AlipayCreateOrderParams) {
-  return http
-    .post<RouterApiResponse<AlipayPrecreateResult>>('/billing/alipay/precreate', params)
-    .then((res) => res.data)
-}
-
-export function fetchAlipayOrderStatus(orderNo: string) {
-  return http
-    .get<RouterApiResponse<AlipayOrderStatus>>(`/billing/alipay/order/${orderNo}/status`)
-    .then((res) => res.data)
-}
-
 export async function fetchAllRouterUsageEvents(options?: {
   key_id?: number
   limit?: number
