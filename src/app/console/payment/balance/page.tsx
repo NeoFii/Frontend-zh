@@ -27,13 +27,28 @@ import {
   usageSummaryToAggregate,
 } from '@/lib/router-analytics'
 import {
-  buildUsageRecordTimeWindow,
   resolveUsageEventEffectiveModel,
   toUsageRecordQueryValue,
 } from '@/lib/usage-record-analytics'
+import { formatShanghaiDateTimeLocalInput } from '@/lib/time'
 
-function isSuccessStatus(status: number) {
-  return status === 1 || status === 200
+const MODEL_PILL_COLORS = [
+  'bg-blue-50 text-blue-700',
+  'bg-orange-50 text-orange-700',
+  'bg-emerald-50 text-emerald-700',
+  'bg-violet-50 text-violet-700',
+  'bg-red-50 text-red-700',
+  'bg-cyan-50 text-cyan-700',
+  'bg-yellow-50 text-yellow-700',
+  'bg-pink-50 text-pink-700',
+]
+
+function getModelPillColor(model: string): string {
+  let hash = 0
+  for (let i = 0; i < model.length; i++) {
+    hash = ((hash << 5) - hash + model.charCodeAt(i)) | 0
+  }
+  return MODEL_PILL_COLORS[Math.abs(hash) % MODEL_PILL_COLORS.length]
 }
 
 export default function BalancePage() {
@@ -43,7 +58,15 @@ export default function BalancePage() {
   const { summary, isLoading: summaryLoading } = useRouterUsageSummary()
   const { events, isLoading: eventsLoading } = useRouterUsageEvents({ limit: 100, maxPages: 10 })
 
-  const initialWindow = useMemo(() => buildUsageRecordTimeWindow('24h'), [])
+  const initialWindow = useMemo(() => {
+    const now = new Date()
+    const startOfToday = new Date(now)
+    startOfToday.setHours(0, 0, 0, 0)
+    return {
+      startInput: formatShanghaiDateTimeLocalInput(startOfToday),
+      endInput: formatShanghaiDateTimeLocalInput(now),
+    }
+  }, [])
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [startInput, setStartInput] = useState(initialWindow.startInput)
@@ -80,10 +103,6 @@ export default function BalancePage() {
 
   const totalPages = Math.ceil(logTotal / pageSize)
   const logsInitialLoading = logsLoading && logItems.length === 0
-  const keyMap = useMemo(
-    () => new Map(keys.map((item) => [item.id, `${item.name} (${item.token_preview})`])),
-    [keys]
-  )
   const modelOptions = useMemo(
     () => Array.from(new Set(logItems.map((item) => resolveUsageEventEffectiveModel(item)).filter((m) => m !== '-'))),
     [logItems]
@@ -100,7 +119,7 @@ export default function BalancePage() {
       { value: '', label: '全部' },
       ...keys.map((item) => ({
         value: String(item.id),
-        label: `${item.name} (${item.token_preview})`,
+        label: item.name,
       })),
     ],
     [keys]
@@ -241,9 +260,11 @@ export default function BalancePage() {
             <button
               type="button"
               onClick={() => {
-                const nextWindow = buildUsageRecordTimeWindow('24h')
-                setStartInput(nextWindow.startInput)
-                setEndInput(nextWindow.endInput)
+                const now = new Date()
+                const startOfToday = new Date(now)
+                startOfToday.setHours(0, 0, 0, 0)
+                setStartInput(formatShanghaiDateTimeLocalInput(startOfToday))
+                setEndInput(formatShanghaiDateTimeLocalInput(now))
                 setEffectiveModel('')
                 setKeyId('')
                 setPage(1)
@@ -268,33 +289,47 @@ export default function BalancePage() {
                 <table className="min-w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 text-gray-400">
-                      <th className="px-3 py-3 font-normal">时间</th>
-                      <th className="px-3 py-3 font-normal">调用模型</th>
-                      <th className="px-3 py-3 font-normal">KEY</th>
-                      <th className="px-3 py-3 font-normal">总 Tokens</th>
-                      <th className="px-3 py-3 font-normal">费用</th>
-                      <th className="px-3 py-3 font-normal">状态</th>
+                      <th className="px-3 py-3 font-normal w-[140px]">时间</th>
+                      <th className="px-3 py-3 font-normal">模型</th>
+                      <th className="px-3 py-3 font-normal">Key</th>
+                      <th className="px-3 py-3 font-normal w-[100px]">输入</th>
+                      <th className="px-3 py-3 font-normal w-[80px]">输出</th>
+                      <th className="px-3 py-3 font-normal w-[100px]">花费</th>
+                      <th className="px-3 py-3 font-normal w-[70px]">状态</th>
                     </tr>
                   </thead>
                   <tbody>
                     {logItems.map((event) => (
                       <tr key={event.id} className="border-b border-gray-50 text-gray-700">
-                        <td className="px-3 py-3">{formatDateTime(event.created_at)}</td>
-                        <td className="px-3 py-3">{resolveUsageEventEffectiveModel(event)}</td>
-                        <td className="px-3 py-3">{keyMap.get(event.api_key_id ?? -1) || '-'}</td>
-                        <td className="px-3 py-3">{formatCompactNumber(event.total_tokens)}</td>
+                        <td className="px-3 py-3 whitespace-nowrap">{formatDateTime(event.created_at)}</td>
+                        <td className="px-3 py-3">
+                          <span className={`inline-block max-w-[120px] truncate rounded-full px-2.5 py-0.5 text-xs font-medium ${getModelPillColor(resolveUsageEventEffectiveModel(event))}`}>
+                            {resolveUsageEventEffectiveModel(event)}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3">
+                          <span className="inline-block max-w-[120px] truncate rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                            {event.api_key_name || '-'}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3">
+                          <div>{formatCompactNumber(event.prompt_tokens)}</div>
+                          {event.cached_tokens > 0 && (
+                            <div className="text-xs text-gray-400">
+                              缓存读 {formatCompactNumber(event.cached_tokens)} tokens
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-3 py-3">{formatCompactNumber(event.completion_tokens)}</td>
                         <td className="px-3 py-3">{formatCurrencyDetail(event.cost, currency)}</td>
                         <td className="px-3 py-3">
-                          <span
-                            className={`rounded-full px-2.5 py-1 text-xs ${
-                              isSuccessStatus(event.status)
-                                ? 'bg-green-50 text-green-700'
-                                : event.status === 3
-                                  ? 'bg-amber-50 text-amber-700'
-                                  : 'bg-red-50 text-red-600'
-                            }`}
-                          >
-                            {isSuccessStatus(event.status) ? '成功' : event.status === 3 ? '已退款' : '错误'}
+                          <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${
+                            event.status === 1 ? 'border-green-200 bg-green-50 text-green-700'
+                              : event.status === 2 ? 'border-red-200 bg-red-50 text-red-700'
+                              : event.status === 3 ? 'border-amber-200 bg-amber-50 text-amber-700'
+                              : 'border-gray-200 bg-gray-50 text-gray-600'
+                          }`}>
+                            {event.status === 1 ? '成功' : event.status === 2 ? '错误' : event.status === 3 ? '已退款' : event.status === 4 ? '中止' : '待处理'}
                           </span>
                         </td>
                       </tr>

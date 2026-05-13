@@ -40,6 +40,7 @@ interface BackendUsageLogItem {
   id: number
   request_id: string
   api_key_id: number | null
+  api_key_name: string | null
   effective_model: string
   prompt_tokens: number
   completion_tokens: number
@@ -199,6 +200,7 @@ export interface RouterUsageEvent {
   id: number
   request_id: string
   api_key_id: number | null
+  api_key_name: string | null
   effective_model: string
   prompt_tokens: number
   completion_tokens: number
@@ -481,6 +483,7 @@ function normalizeUsageLog(item: BackendUsageLogItem): RouterUsageEvent {
     id: item.id,
     request_id: item.request_id,
     api_key_id: item.api_key_id,
+    api_key_name: item.api_key_name,
     effective_model: item.effective_model,
     prompt_tokens: item.prompt_tokens,
     completion_tokens: item.completion_tokens,

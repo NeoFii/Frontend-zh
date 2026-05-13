@@ -613,13 +613,13 @@ export function extractCurrency(summary: RouterUsageSummary | null) {
 }
 
 export function formatCurrency(amount: number, currency: string) {
-  const normalizedCurrency = currency || 'CNY'
-  return `${normalizedCurrency} ${amount.toFixed(2)}`
+  const symbol = (currency || 'CNY') === 'CNY' ? '￥' : currency
+  return `${symbol}${amount.toFixed(2)}`
 }
 
 export function formatCurrencyDetail(amount: number, currency: string) {
-  const normalizedCurrency = currency || 'CNY'
-  return `${normalizedCurrency} ${amount.toFixed(6)}`
+  const symbol = (currency || 'CNY') === 'CNY' ? '￥' : currency
+  return `${symbol}${amount.toFixed(6)}`
 }
 
 export function formatCompactNumber(value: number) {
