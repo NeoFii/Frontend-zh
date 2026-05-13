@@ -111,7 +111,7 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
         </div>
 
         {/* 关键信息卡片 */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-[#F7F8FA] rounded-xl p-5">
             <div className="text-[13px] text-[#666666] mb-1">上下文窗口</div>
             <div className="text-[24px] font-semibold text-[#181E25]">
@@ -131,6 +131,13 @@ export default function ModelDetailClient({ modelId }: ModelDetailClientProps) {
             <div className="text-[13px] text-[#666666] mb-1">每百万输出价格</div>
             <div className="text-[24px] font-semibold text-[#181E25]">
               {formatFenPerMillionTokens(model.price_output_per_m_fen)}
+            </div>
+          </div>
+
+          <div className="bg-[#F7F8FA] rounded-xl p-5">
+            <div className="text-[13px] text-[#666666] mb-1">每百万缓存价格</div>
+            <div className="text-[24px] font-semibold text-[#181E25]">
+              {formatFenPerMillionTokens(model.price_cached_input_per_m_fen)}
             </div>
           </div>
         </section>

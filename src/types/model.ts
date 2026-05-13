@@ -91,6 +91,8 @@ export interface ModelListItem {
   price_input_per_m_fen?: number | null
   /** 每百万输出 token 价格（人民币分，null=未知）*/
   price_output_per_m_fen?: number | null
+  /** 每百万缓存输入 token 价格（人民币分，null=未知）*/
+  price_cached_input_per_m_fen?: number | null
   /** 能力标签，如 ["chat","reasoning","vision","tool_calling"] */
   capability_tags: string[]
   context_window?: number
