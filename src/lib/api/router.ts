@@ -729,9 +729,10 @@ export function fetchRouterUsageStats(params: { start: string; end: string; apiK
 }
 
 export function fetchRouterUsageEvents(params?: RouterListParams) {
+  const { type: _type, ...rest } = params ?? {}
   return http
     .get<RouterApiResponse<BackendPagedResponse<BackendUsageLogItem>>>('/billing/usage/logs', {
-      params: toPagedParams(params),
+      params: toPagedParams(rest),
     })
     .then((response) => ({
       ...response,

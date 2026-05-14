@@ -65,7 +65,7 @@ export async function getModels(params?: {
   }
 }
 
-export async function getModelBySlug(slug: string, n: number = 5): Promise<ModelDetail> {
-  const response = await catalogClient.get<{ data: ModelDetail }>(`/models/${slug}?n=${n}`)
+export async function getModelBySlug(slug: string): Promise<ModelDetail> {
+  const response = await catalogClient.get<{ data: ModelDetail }>(`/models/${slug}`)
   return normalizeModelDetail(response.data)
 }
