@@ -43,15 +43,23 @@ export function normalizeModelCategories<T extends ModelCategory | ModelCategory
 }
 
 export function normalizeModelListItem(model: ModelListItem): ModelListItem {
+  const raw = model as unknown as Record<string, unknown>
   return {
     ...model,
+    price_input_per_m_fen: model.price_input_per_m_fen ?? (raw.sale_input_per_million as number | null) ?? null,
+    price_output_per_m_fen: model.price_output_per_m_fen ?? (raw.sale_output_per_million as number | null) ?? null,
+    price_cached_input_per_m_fen: model.price_cached_input_per_m_fen ?? (raw.sale_cached_input_per_million as number | null) ?? null,
     categories: normalizeModelCategories(model.categories),
   }
 }
 
 export function normalizeModelDetail(model: ModelDetail): ModelDetail {
+  const raw = model as unknown as Record<string, unknown>
   return {
     ...model,
+    price_input_per_m_fen: model.price_input_per_m_fen ?? (raw.sale_input_per_million as number | null) ?? null,
+    price_output_per_m_fen: model.price_output_per_m_fen ?? (raw.sale_output_per_million as number | null) ?? null,
+    price_cached_input_per_m_fen: model.price_cached_input_per_m_fen ?? (raw.sale_cached_input_per_million as number | null) ?? null,
     categories: normalizeModelCategories(model.categories),
   }
 }
