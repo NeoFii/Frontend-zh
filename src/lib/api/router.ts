@@ -729,7 +729,7 @@ export function fetchRouterUsageStats(params: { start: string; end: string; apiK
 }
 
 export function fetchRouterUsageEvents(params?: RouterListParams) {
-  const { type: _type, ...rest } = params ?? {}
+  const { type: _type, ...rest } = params ?? {} // eslint-disable-line @typescript-eslint/no-unused-vars
   return http
     .get<RouterApiResponse<BackendPagedResponse<BackendUsageLogItem>>>('/billing/usage/logs', {
       params: toPagedParams(rest),

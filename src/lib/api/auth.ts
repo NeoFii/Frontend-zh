@@ -69,6 +69,7 @@ export interface RegisterResponse {
 export interface SendCodeResponse {
   code: number
   message: string
+  data: string
 }
 
 /**
@@ -95,6 +96,7 @@ export function sendVerificationCode(email: string): Promise<SendCodeResponse> {
 export interface LogoutResponse {
   code: number
   message: string
+  data: string
 }
 
 export interface UserInfoResponse {
@@ -165,6 +167,7 @@ export interface ResetPasswordParams {
 export interface ResetPasswordResponse {
   code: number
   message: string
+  data: string
 }
 
 export function resetPassword(params: ResetPasswordParams): Promise<ResetPasswordResponse> {
@@ -180,6 +183,7 @@ export interface ChangePasswordParams {
 export interface ChangePasswordResponse {
   code: number
   message: string
+  data: string
 }
 
 export function changePassword(params: ChangePasswordParams): Promise<ChangePasswordResponse> {
