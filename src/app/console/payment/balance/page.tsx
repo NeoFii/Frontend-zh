@@ -289,13 +289,13 @@ export default function BalancePage() {
                 <table className="min-w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 text-gray-400">
-                      <th className="px-3 py-3 font-normal w-[140px]">时间</th>
-                      <th className="px-3 py-3 font-normal">模型</th>
-                      <th className="px-3 py-3 font-normal">Key</th>
-                      <th className="px-3 py-3 font-normal w-[100px]">输入</th>
-                      <th className="px-3 py-3 font-normal w-[80px]">输出</th>
-                      <th className="px-3 py-3 font-normal w-[100px]">花费</th>
-                      <th className="px-3 py-3 font-normal w-[70px]">状态</th>
+                      <th className="px-3 py-3 font-normal whitespace-nowrap">时间</th>
+                      <th className="px-3 py-3 font-normal whitespace-nowrap">模型</th>
+                      <th className="px-3 py-3 font-normal whitespace-nowrap">Key</th>
+                      <th className="px-3 py-3 font-normal whitespace-nowrap">输入</th>
+                      <th className="px-3 py-3 font-normal whitespace-nowrap">输出</th>
+                      <th className="px-3 py-3 font-normal whitespace-nowrap">花费</th>
+                      <th className="px-3 py-3 font-normal whitespace-nowrap">状态</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -312,24 +312,29 @@ export default function BalancePage() {
                             {event.api_key_name || '-'}
                           </span>
                         </td>
-                        <td className="px-3 py-3">
-                          <div>{formatCompactNumber(event.prompt_tokens)}</div>
+                        <td className="px-3 py-3 tabular-nums">
+                          <div>{event.prompt_tokens.toLocaleString()}</div>
                           {event.cached_tokens > 0 && (
                             <div className="text-xs text-gray-400">
-                              缓存读 {formatCompactNumber(event.cached_tokens)} tokens
+                              缓存 {event.cached_tokens.toLocaleString()}
                             </div>
                           )}
                         </td>
-                        <td className="px-3 py-3">{formatCompactNumber(event.completion_tokens)}</td>
+                        <td className="px-3 py-3 tabular-nums">{event.completion_tokens.toLocaleString()}</td>
                         <td className="px-3 py-3">{formatCurrencyDetail(event.cost, currency)}</td>
                         <td className="px-3 py-3">
                           <span className={`inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium ${
-                            event.status === 1 ? 'border-green-200 bg-green-50 text-green-700'
-                              : event.status === 2 ? 'border-red-200 bg-red-50 text-red-700'
-                              : event.status === 3 ? 'border-amber-200 bg-amber-50 text-amber-700'
+                            event.status === 200 ? 'border-green-200 bg-green-50 text-green-700'
+                              : event.status != null && event.status >= 400 ? 'border-red-200 bg-red-50 text-red-700'
                               : 'border-gray-200 bg-gray-50 text-gray-600'
                           }`}>
-                            {event.status === 1 ? '成功' : event.status === 2 ? '错误' : event.status === 3 ? '已退款' : event.status === 4 ? '中止' : '待处理'}
+                            {event.status === 200 ? '成功'
+                              : event.status === 402 ? '余额不足'
+                              : event.status === 429 ? '限流'
+                              : event.status === 499 ? '中止'
+                              : event.status != null && event.status >= 500 ? '上游错误'
+                              : event.status != null && event.status >= 400 ? `错误 ${event.status}`
+                              : '处理中'}
                           </span>
                         </td>
                       </tr>
