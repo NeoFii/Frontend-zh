@@ -106,7 +106,7 @@ function sumCostByModel(
 }
 
 function isUsageEventSuccess(status: number) {
-  return status === 1 || status === 200
+  return status === 200
 }
 
 function addGranularity(date: Date, granularity: UsageRecordAnalyticsWindow['granularity']) {
