@@ -350,7 +350,7 @@ export function summarizeUsageEvents(events: RouterUsageEvent[], currency = 'CNY
   const summary = events.reduce<UsageAggregate>(
     (acc, event) => {
       acc.totalRequests += 1
-      if (event.status === 1) {
+      if (event.status === 200) {
         acc.successRequests += 1
       }
       acc.totalTokens += event.total_tokens
