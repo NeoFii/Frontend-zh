@@ -11,28 +11,20 @@ jest.mock('next/navigation', () => ({
 }))
 
 describe('AppHeader', () => {
-  it('uses the same slash mark logo as the auth pages', () => {
-    render(React.createElement(AppHeader))
+  it('renders the SVG brand mark with gradient fill', () => {
+    const { container } = render(React.createElement(AppHeader))
 
-    const logoMark = screen.getByText('/')
-
-    expect(logoMark).toHaveClass('grid')
-    expect(logoMark).toHaveClass('h-7')
-    expect(logoMark).toHaveClass('w-7')
-    expect(logoMark).toHaveClass('place-items-center')
-    expect(logoMark).toHaveClass('rounded-md')
-    expect(logoMark).toHaveClass('bg-[#111827]')
-    expect(logoMark).toHaveClass('font-mono')
-    expect(logoMark).toHaveClass('font-bold')
-    expect(logoMark).toHaveClass('text-white')
-    expect(screen.queryByText('E')).not.toBeInTheDocument()
+    const svg = container.querySelector('svg')
+    expect(svg).toBeInTheDocument()
+    const gradient = container.querySelector('linearGradient')
+    expect(gradient).toBeInTheDocument()
   })
 
   it('renders the shared brand label in the header logo', () => {
     render(React.createElement(AppHeader))
 
-    expect(screen.getByText('Eucal AI')).toHaveClass('font-semibold', 'group-hover:text-primary-600')
-    expect(screen.getByText('Eucal AI')).not.toHaveClass('font-bold')
+    expect(screen.getByText('TierFlow')).toHaveClass('font-semibold', 'group-hover:text-primary-600')
+    expect(screen.getByText('TierFlow')).not.toHaveClass('font-bold')
   })
 
   it('keeps the login button steady on hover', () => {
@@ -42,6 +34,5 @@ describe('AppHeader', () => {
 
     expect(loginButton).not.toHaveClass('hover:scale-105')
     expect(loginButton).not.toHaveClass('hover:shadow-lg')
-    expect(loginButton).not.toHaveClass('hover:shadow-gray-900/20')
   })
 })

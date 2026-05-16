@@ -21,6 +21,16 @@ const config: Config = {
           800: '#1e40af',
           900: '#1e3a8a',
         },
+        // 首页 TierFlow 品牌色
+        tf: {
+          ink: '#08133d',
+          muted: '#41517d',
+          soft: '#6b7aa7',
+          blue: '#1456ff',
+          'blue-2': '#3487ff',
+          cyan: '#28c8ff',
+          line: '#dbe6ff',
+        },
         // 新增：登录页赛博科技专属配色
         tech: {
           bg: '#F4F7FB',
@@ -40,6 +50,9 @@ const config: Config = {
         'tech-mono': ['"JetBrains Mono"', '"Noto Sans SC"', 'monospace'],
         'tech-display': ['"Orbitron"', '"Noto Sans SC"', 'sans-serif'],
         'tech-sans': ['"Space Grotesk"', '"Noto Sans SC"', 'sans-serif'],
+      },
+      maxWidth: {
+        'tf': '1548px',
       },
       fontSize: {
         // 原有字体大小

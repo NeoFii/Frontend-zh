@@ -17,7 +17,7 @@ describe('Register page', () => {
     expect(screen.queryByRole('link', { name: /TierFlow/ })).not.toBeInTheDocument()
     expect(screen.queryByText('已有账户？')).not.toBeInTheDocument()
     expect(screen.queryByText('Secure signup')).not.toBeInTheDocument()
-    expect(screen.queryByText('© 2026 Eucal AI')).not.toBeInTheDocument()
+    expect(screen.queryByText('© 2026 TierFlow')).not.toBeInTheDocument()
     expect(screen.queryByText('$ tierflow auth register')).not.toBeInTheDocument()
     expect(screen.queryByText('¥20.00')).not.toBeInTheDocument()
 

@@ -24,7 +24,7 @@ describe('AuthLayout', () => {
     expect(screen.getByRole('link', { name: /TierFlow/ })).toHaveAttribute('href', '/')
     expect(screen.getByText('已有账户？')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: '登录' })).toHaveAttribute('href', '/login')
-    expect(screen.getByText('© 2026 Eucal AI')).toBeInTheDocument()
+    expect(screen.getByText('© 2026 TierFlow')).toBeInTheDocument()
     expect(screen.getByText('Secure signup')).toBeInTheDocument()
 
     const aside = container.querySelector('aside')
@@ -55,7 +55,7 @@ describe('AuthLayout', () => {
     expect(screen.queryByText('/')).not.toBeInTheDocument()
     expect(screen.queryByText('TierFlow')).not.toBeInTheDocument()
     expect(screen.queryByText('已有账户？')).not.toBeInTheDocument()
-    expect(screen.queryByText('© 2026 Eucal AI')).not.toBeInTheDocument()
+    expect(screen.queryByText('© 2026 TierFlow')).not.toBeInTheDocument()
     expect(screen.queryByText('Secure signup')).not.toBeInTheDocument()
     expect(screen.queryByText('Auth subtitle')).not.toBeInTheDocument()
     expect(screen.queryByText('terminal')).not.toBeInTheDocument()

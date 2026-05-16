@@ -91,7 +91,7 @@ export default function AuthLayout({
 
         {showFooter && (
           <div className="mt-auto flex justify-between pt-6 font-mono text-xs text-[#9ca3af]">
-            <span>&copy; 2026 Eucal AI</span>
+            <span>&copy; 2026 TierFlow</span>
             <span>{footerRight}</span>
           </div>
         )}

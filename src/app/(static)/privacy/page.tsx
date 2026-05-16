@@ -7,8 +7,8 @@ import type { Metadata } from 'next'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: '隐私政策 - Eucal AI',
-    description: '了解 Eucal AI 如何保护您的隐私',
+    title: '隐私政策 - TierFlow',
+    description: '了解 TierFlow 如何保护您的隐私',
   }
 }
 
@@ -16,7 +16,7 @@ export default async function PrivacyPage() {
   return (
     <LegalPage
       title="隐私政策"
-      description="了解 Eucal AI 如何保护您的隐私"
+      description="了解 TierFlow 如何保护您的隐私"
       lastUpdated="最后更新日期"
       sections={[
         { title: '1. 信息收集', content: '我们收集您在使用服务时提供的信息，包括注册信息、API 调用记录、支付信息等。我们仅收集提供服务所必需的最少信息。' },

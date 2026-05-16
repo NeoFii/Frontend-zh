@@ -6,7 +6,7 @@ export const DEFAULT_USER_API_BASE_URL = proxyConfig.DEFAULT_PUBLIC_API_BASE_URL
 export const siteConfig = {
   // 公司信息
   company: {
-    name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'Eucal AI',
+    name: process.env.NEXT_PUBLIC_COMPANY_NAME || 'TierFlow',
     slogan: '智能 · 创新 · 未来',
     description: '致力于为企业提供高性能 AI 推理优化方案，推动智能化转型。',
   },
@@ -23,5 +23,5 @@ export const siteConfig = {
   icp: '',
 
   // 版权信息
-  copyright: `© ${new Date().getFullYear()} Eucal AI. All rights reserved.`,
+  copyright: `© ${new Date().getFullYear()} TierFlow. All rights reserved.`,
 }

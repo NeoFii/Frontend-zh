@@ -4,29 +4,21 @@ import { render, screen } from '@testing-library/react'
 import { BrandLogo, BrandMark } from './BrandLogo'
 
 describe('BrandLogo', () => {
-  it('renders the default slash mark and Eucal AI label', () => {
-    render(<BrandLogo />)
+  it('renders the SVG mark and TierFlow label', () => {
+    const { container } = render(<BrandLogo />)
 
-    expect(screen.getByText('/')).toHaveClass('bg-[#111827]', 'text-white')
-    expect(screen.getByText('Eucal AI')).toHaveClass('font-semibold')
-    expect(screen.getByText('Eucal AI')).not.toHaveClass('font-bold')
-  })
-
-  it('supports an inverse mark for dark backgrounds', () => {
-    render(<BrandLogo markTone="inverse" />)
-
-    expect(screen.getByText('/')).toHaveClass('bg-white', 'text-[#111827]')
+    expect(container.querySelector('svg')).toBeInTheDocument()
+    expect(screen.getByText('TierFlow')).toHaveClass('font-semibold')
   })
 
   it('renders a custom label', () => {
     render(<BrandLogo label="TierFlow" />)
 
-    expect(screen.getByText('/')).toBeInTheDocument()
     expect(screen.getByText('TierFlow')).toBeInTheDocument()
   })
 
-  it('keeps every slash mark size aligned to the site logo standard', () => {
-    render(
+  it('renders mark at each size without crashing', () => {
+    const { container } = render(
       <>
         <BrandMark size="sm" data-testid="mark-sm" />
         <BrandMark size="md" data-testid="mark-md" />
@@ -35,8 +27,22 @@ describe('BrandLogo', () => {
       </>
     )
 
-    for (const size of ['sm', 'md', 'lg', 'hero']) {
-      expect(screen.getByTestId(`mark-${size}`)).toHaveClass('h-7', 'w-7', 'rounded-md', 'text-base')
-    }
+    expect(container.querySelectorAll('svg').length).toBe(4)
+    expect(screen.getByTestId('mark-sm')).toHaveClass('h-7', 'w-7')
+    expect(screen.getByTestId('mark-lg')).toHaveClass('h-9', 'w-9')
+    expect(screen.getByTestId('mark-hero')).toHaveClass('h-14', 'w-14')
+  })
+
+  it('uses gradient fill for default tone and white for inverse', () => {
+    const { container: defaultContainer } = render(<BrandMark data-testid="default" />)
+    const { container: inverseContainer } = render(<BrandMark tone="inverse" data-testid="inverse" />)
+
+    const defaultGrad = defaultContainer.querySelector('linearGradient')
+    expect(defaultGrad).toBeInTheDocument()
+    expect(defaultGrad?.querySelector('stop')?.getAttribute('stop-color')).toBe('#4A3AF8')
+
+    const inverseGrad = inverseContainer.querySelector('linearGradient')
+    expect(inverseGrad).toBeInTheDocument()
+    expect(inverseGrad?.querySelector('stop')?.getAttribute('stop-color')).toBe('#ffffff')
   })
 })
