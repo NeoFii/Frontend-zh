@@ -2,18 +2,19 @@
 
 # 阶段 1: 安装依赖
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+    apk add --no-cache libc6-compat
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod=false
+RUN pnpm config set registry https://registry.npmmirror.com && \
+    pnpm install --frozen-lockfile --prod=false
 
 # 阶段 2: 构建应用
 FROM node:20-alpine AS builder
 RUN corepack enable && corepack prepare pnpm@9 --activate
 WORKDIR /app
 
-# 构建时变量 — NEXT_PUBLIC_* 会被内联到客户端 JS，修改后需重新构建
 ARG NEXT_PUBLIC_API_BASE_URL=/api/v1
 ARG NEXT_PUBLIC_COMPANY_NAME=Eucal AI
 ARG NEXT_PUBLIC_IMAGE_HOSTS=eucal.ai,www.eucal.ai,neofii.fun
@@ -53,8 +54,6 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# 运行时变量 — 服务端代理目标，必须在 docker-compose 或 docker run -e 时覆盖为实际内网 IP
 ENV API_URL=http://127.0.0.1:8000
 ENV ROUTER_API_URL=http://127.0.0.1:8003
 

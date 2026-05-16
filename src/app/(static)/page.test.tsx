@@ -3,34 +3,6 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import Home from './page'
 
-const mockChartRender = jest.fn()
-
-jest.mock('next/dynamic', () => ({
-  __esModule: true,
-  default: () => (props: { option: unknown }) => {
-    mockChartRender(props)
-    return <div data-testid="benchmark-scatter-chart" />
-  },
-}))
-
-jest.mock('echarts/core', () => ({
-  use: jest.fn(),
-}))
-
-jest.mock('echarts/charts', () => ({
-  ScatterChart: {},
-}))
-
-jest.mock('echarts/renderers', () => ({
-  CanvasRenderer: {},
-}))
-
-jest.mock('echarts/components', () => ({
-  GridComponent: {},
-  LegendComponent: {},
-  TooltipComponent: {},
-}))
-
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: jest.fn(),
@@ -63,59 +35,46 @@ jest.mock('@/components/Reveal', () => {
   }
 })
 
-describe('Home', () => {
-  beforeEach(() => {
-    mockChartRender.mockClear()
-  })
-
-  it('lets the site layout own the semantic main landmark', () => {
+describe('Home (SaaS landing)', () => {
+  it('does not render its own main or footer (SiteLayout provides them)', () => {
     const { container } = render(React.createElement(Home))
 
     expect(container.querySelector('main')).not.toBeInTheDocument()
-    expect(container.firstElementChild).toHaveClass('relative')
-    expect(container.firstElementChild).toHaveClass('overflow-x-hidden')
-  })
-
-  it('renders the evidence-led SaaS homepage sections without layout chrome', () => {
-    const { container } = render(React.createElement(Home))
-
     expect(container.querySelector('footer')).not.toBeInTheDocument()
-    expect(screen.getByText('更高任务成功率')).toBeInTheDocument()
-    expect(screen.getByText('更低调用成本')).toBeInTheDocument()
-    expect(screen.getByText('让智能体用对模型，而不是用贵模型')).toBeInTheDocument()
-    expect(screen.getByText('PinchBench 实测')).toBeInTheDocument()
-    expect(screen.getByText('OpenClaw')).toBeInTheDocument()
-    expect(screen.getAllByText('88.7%').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('¥2.04').length).toBeGreaterThan(0)
-    expect(screen.getByText('工作原理')).toBeInTheDocument()
-    expect(screen.getByText('开发者接入')).toBeInTheDocument()
-    expect(screen.getByText('nexus-auto')).toBeInTheDocument()
-    expect(
-      screen.getByRole('region', { name: '让 Eucal AI 接管下一次模型选择' })
-    ).toBeInTheDocument()
-    expect(screen.queryByText('routeai-auto')).not.toBeInTheDocument()
-    expect(screen.queryByText('Product')).not.toBeInTheDocument()
-    expect(screen.queryByText('Resources')).not.toBeInTheDocument()
   })
 
-  it('passes benchmark scatter data to ECharts with corrected Eucal AI metrics', () => {
+  it('renders hero section with brand word and CTA', () => {
     render(React.createElement(Home))
 
-    expect(screen.getByTestId('benchmark-scatter-chart')).toBeInTheDocument()
-    const chartProps = mockChartRender.mock.calls[0][0]
-    const option = chartProps.option as {
-      series: Array<{
-        data: Array<{ name: string; value: [number, number] }>
-      }>
-    }
-    const points = option.series[0].data
+    expect(screen.getAllByText('TierFlow').length).toBeGreaterThan(0)
+    expect(screen.getByText('智能体时代的 Token 优化引擎')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /获取 API/i })).toBeInTheDocument()
+    expect(screen.getAllByText('查看文档').length).toBeGreaterThan(0)
+  })
 
-    expect(points).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'Eucal AI', value: [2.04, 88.7] }),
-        expect.objectContaining({ name: 'Claude-opus-4.6' }),
-        expect.objectContaining({ name: 'GPT-5.4' }),
-      ])
-    )
+  it('renders BrainNet-8B tech section', () => {
+    render(React.createElement(Home))
+
+    expect(screen.getByText('核心技术 / Core Technology')).toBeInTheDocument()
+    expect(screen.getByText('类脑任务感知模型')).toBeInTheDocument()
+    expect(screen.getAllByText('BrainNet-8B').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('8B').length).toBeGreaterThan(0)
+  })
+
+  it('renders proof section with benchmark data', () => {
+    render(React.createElement(Home))
+
+    expect(screen.getByText(/PinchBench 基准测试/)).toBeInTheDocument()
+    expect(screen.getAllByText('TierFlow').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText('88.7%').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('2.04').length).toBeGreaterThan(0)
+  })
+
+  it('renders provider tags in hero visual', () => {
+    render(React.createElement(Home))
+
+    expect(screen.getByText('GPT')).toBeInTheDocument()
+    expect(screen.getByText('Claude')).toBeInTheDocument()
+    expect(screen.getByText('DeepSeek')).toBeInTheDocument()
   })
 })

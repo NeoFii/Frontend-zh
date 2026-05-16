@@ -1,6 +1,6 @@
-# Eucal AI 前端
+# TierFlow 前端
 
-Eucal AI 统一大模型 API 网关的中文前端，基于 Next.js 14 App Router 构建。
+TierFlow 统一大模型 API 网关的中文前端，基于 Next.js 14 App Router 构建。
 
 ## 技术栈
 

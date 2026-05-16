@@ -1,4 +1,4 @@
-# Eucal AI 中文前端 — Docker 部署指南
+# TierFlow 中文前端 — Docker 部署指南
 
 ## 目录
 
@@ -104,7 +104,7 @@ chmod +x deploy.sh
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `NEXT_PUBLIC_API_BASE_URL` | `/api/v1` | 浏览器端 API 路径前缀 |
-| `NEXT_PUBLIC_COMPANY_NAME` | `Eucal AI` | 公司名称（页面标题/页脚） |
+| `NEXT_PUBLIC_COMPANY_NAME` | `TierFlow` | 公司名称（页面标题/页脚） |
 | `NEXT_PUBLIC_IMAGE_HOSTS` | `eucal.ai,...` | 远程图片域名白名单（逗号分隔） |
 | `NEXT_PUBLIC_ROUTER_API_BASE_URL` | `/router-api/api/v1` | Router API 浏览器端路径 |
 | `NEXT_PUBLIC_ROUTER_OPENAI_BASE_URL` | `/router-api/v1` | OpenAI 兼容接口路径 |

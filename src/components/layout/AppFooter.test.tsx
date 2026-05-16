@@ -4,12 +4,20 @@ import { render, screen } from '@testing-library/react'
 import AppFooter from './AppFooter'
 
 describe('AppFooter', () => {
-  it('uses the shared slash logo instead of the old E mark', () => {
-    render(<AppFooter />)
+  it('renders the SVG brand mark with gradient fill for light background', () => {
+    const { container } = render(<AppFooter />)
 
-    expect(screen.getByText('/')).toHaveClass('bg-white', 'text-[#111827]')
-    expect(screen.getByText('Eucal AI')).toHaveClass('text-white', 'font-semibold')
-    expect(screen.getByText('Eucal AI')).not.toHaveClass('font-bold')
-    expect(screen.queryByText('E')).not.toBeInTheDocument()
+    const gradient = container.querySelector('linearGradient')
+    expect(gradient).toBeInTheDocument()
+    expect(gradient?.querySelector('stop')?.getAttribute('stop-color')).toBe('#4A3AF8')
+
+    expect(screen.getByText('TierFlow')).toHaveClass('font-semibold')
+    expect(screen.getByText('TierFlow')).not.toHaveClass('font-bold')
+  })
+
+  it('uses a light background instead of dark', () => {
+    const { container } = render(<AppFooter />)
+    const footer = container.querySelector('footer')
+    expect(footer?.className).toContain('bg-[#f5f6fb]')
   })
 })

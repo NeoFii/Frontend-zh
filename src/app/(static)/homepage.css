@@ -1,0 +1,618 @@
+/* ========== Homepage — TierFlow SaaS Landing ========== */
+
+/* --- Page background --- */
+.hp-page {
+  background: linear-gradient(116deg, #ffffff 0%, #f7fbff 47%, #eaf3ff 100%);
+  overflow-x: hidden;
+}
+
+/* --- Wrap container --- */
+.hp-wrap {
+  width: min(calc(100% - 64px), 1548px);
+  margin: 0 auto;
+}
+
+/* --- Hero brand word gradient --- */
+.hp-brand-word {
+  color: transparent;
+  background: linear-gradient(180deg, #0457ff 6%, #1e6cff 48%, #8fcdff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 10px 20px rgba(23, 100, 255, 0.12));
+}
+
+/* --- Hero 3D visual --- */
+.hp-visual {
+  position: relative;
+  height: 510px;
+  isolation: isolate;
+  perspective: 1100px;
+  perspective-origin: 54% 38%;
+  height: 420px;
+}
+
+/* --- Chip glow --- */
+.hp-chip-glow {
+  position: absolute;
+  left: 50%;
+  top: 122px;
+  width: 360px;
+  height: 300px;
+  transform: translateX(-50%);
+  z-index: 2;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 45%, rgba(104, 199, 255, 0.42), rgba(20, 91, 255, 0.12) 56%, transparent 72%);
+  filter: blur(18px);
+}
+
+/* --- 3D Cube --- */
+.hp-cube {
+  position: absolute;
+  left: 50%;
+  top: 128px;
+  width: 300px;
+  height: 218px;
+  transform: translateX(-50%) rotateX(8deg) rotateY(-18deg) rotateZ(-4deg);
+  transform-style: preserve-3d;
+  z-index: 4;
+  filter: drop-shadow(0 34px 42px rgba(17, 81, 210, 0.2));
+}
+
+.hp-cube::before {
+  content: "";
+  position: absolute;
+  inset: 18px 20px -28px;
+  transform: translateZ(-24px);
+  border-radius: 40px;
+  background: radial-gradient(ellipse at center, rgba(19, 91, 255, 0.22), transparent 68%);
+  filter: blur(10px);
+}
+
+.hp-cube::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -30px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(28, 114, 255, 0.52), transparent);
+  box-shadow: 0 0 30px rgba(36, 129, 255, 0.48);
+}
+
+.hp-cube-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 34px;
+  backface-visibility: hidden;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.92), rgba(228, 243, 255, 0.5) 42%, rgba(36, 112, 255, 0.9)),
+    radial-gradient(circle at 24% 20%, rgba(255,255,255,0.92), transparent 38%);
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  box-shadow:
+    inset 0 0 38px rgba(255,255,255,0.62),
+    inset -42px -38px 70px rgba(17, 95, 255, 0.34),
+    inset 18px 16px 42px rgba(255,255,255,0.46),
+    0 28px 70px rgba(18, 84, 207, 0.24);
+}
+
+.hp-cube-face-front {
+  transform: translateZ(3px);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(205, 236, 255, 0.58) 32%, rgba(24, 101, 255, 0.94)),
+    linear-gradient(115deg, rgba(255,255,255,0.5), transparent 42%);
+}
+
+/* --- Cube logo bars --- */
+.hp-cube-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 186px;
+  height: 104px;
+  transform: translate(-50%, -50%) translateZ(8px);
+  transform-style: preserve-3d;
+  z-index: 5;
+}
+
+.hp-cube-logo::before,
+.hp-cube-logo::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.48);
+}
+
+.hp-cube-logo::before {
+  left: 0;
+  top: 10px;
+  width: 28px;
+  height: 28px;
+  box-shadow:
+    0 64px 0 #fff,
+    0 8px 20px rgba(255, 255, 255, 0.48);
+}
+
+.hp-cube-logo::after {
+  right: 0;
+  bottom: 0;
+  width: 28px;
+  height: 28px;
+}
+
+.hp-cube-logo-bar {
+  position: absolute;
+  left: 48px;
+  height: 28px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(255, 255, 255, 0.48);
+}
+
+.hp-cube-logo-bar:nth-child(1) { top: 10px; width: 138px; }
+.hp-cube-logo-bar:nth-child(2) { top: 42px; left: 0; width: 186px; }
+.hp-cube-logo-bar:nth-child(3) { top: 74px; width: 88px; }
+
+/* --- Model provider tags --- */
+.hp-tag {
+  position: absolute;
+  min-width: 107px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #cbdcff;
+  border-radius: 9px;
+  color: #101b4b;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 16px 36px rgba(22, 88, 213, 0.11);
+  font-size: 15px;
+  font-weight: 600;
+  backdrop-filter: blur(18px);
+}
+
+.hp-tag::after {
+  content: "";
+  position: absolute;
+  width: 58px;
+  height: 1px;
+  border-top: 1px dashed rgba(24, 103, 255, 0.45);
+}
+
+.hp-tag-openai { left: 126px; top: 54px; }
+.hp-tag-openai::after { right: -59px; top: 28px; }
+.hp-tag-claude { left: 34px; top: 158px; }
+.hp-tag-claude::after { right: -78px; top: 28px; width: 78px; }
+.hp-tag-gemini { left: 0; top: 302px; width: 128px; }
+.hp-tag-gemini::after { right: -66px; top: 28px; }
+.hp-tag-deep { right: 96px; top: 54px; width: 136px; }
+.hp-tag-deep::after { left: -62px; top: 28px; }
+.hp-tag-qwen { right: 16px; top: 176px; width: 104px; }
+.hp-tag-qwen::after { left: -64px; top: 28px; }
+.hp-tag-mini { right: -10px; top: 292px; width: 132px; }
+.hp-tag-mini::after { left: -64px; top: 28px; }
+.hp-tag-stepfun { left: 146px; top: 398px; width: 128px; }
+.hp-tag-stepfun::after { right: -58px; top: 28px; width: 58px; }
+.hp-tag-zhipu { right: 154px; top: 398px; width: 118px; }
+.hp-tag-zhipu::after { display: none; }
+
+/* --- Diamond nodes --- */
+.hp-node {
+  position: absolute;
+  width: 17px;
+  height: 17px;
+  transform: rotate(45deg);
+  border-radius: 3px;
+  background: linear-gradient(135deg, #c9edff, #2b8dff);
+  box-shadow: 0 5px 15px rgba(23, 101, 255, 0.22);
+}
+
+.hp-node:nth-child(1) { left: 182px; top: 28px; }
+.hp-node:nth-child(2) { right: 258px; top: 60px; }
+.hp-node:nth-child(3) { right: 162px; top: 158px; }
+.hp-node:nth-child(4) { left: 70px; top: 284px; }
+.hp-node:nth-child(5) { right: 40px; top: 416px; }
+.hp-node:nth-child(6) { left: 272px; bottom: 48px; }
+
+/* --- Tech model name gradient --- */
+.hp-tech-model-name {
+  color: transparent;
+  background: linear-gradient(100deg, #0667ff 0%, #245bff 46%, #8b32df 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* --- Tech visual (BrainNet diagram) --- */
+.hp-tech-visual {
+  position: relative;
+  min-height: 560px;
+  isolation: isolate;
+}
+
+/* --- Brain core panel --- */
+.hp-brain-core {
+  position: absolute;
+  left: 50%;
+  top: 134px;
+  width: 370px;
+  height: 270px;
+  transform: translateX(-50%);
+  padding: 26px;
+  border: 1px solid rgba(177, 204, 255, 0.78);
+  border-radius: 30px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.92), rgba(235,245,255,0.72)),
+    radial-gradient(circle at 72% 22%, rgba(46, 115, 255, 0.18), transparent 38%);
+  box-shadow:
+    0 28px 64px rgba(37, 89, 198, 0.16),
+    inset 0 0 0 1px rgba(255,255,255,0.62);
+  backdrop-filter: blur(18px);
+  z-index: 2;
+}
+
+/* --- Brain stage (ellipse at bottom) --- */
+.hp-brain-stage {
+  position: absolute;
+  left: 50%;
+  bottom: 54px;
+  width: 400px;
+  height: 84px;
+  transform: translateX(-50%) perspective(860px) rotateX(58deg);
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 34%, rgba(255, 255, 255, 0.95), rgba(216, 232, 255, 0.84) 62%, rgba(120, 166, 255, 0.45)),
+    linear-gradient(180deg, #ffffff, #cfe0ff);
+  border: 2px solid rgba(126, 165, 255, 0.38);
+  box-shadow:
+    0 22px 48px rgba(44, 96, 215, 0.16),
+    inset 0 0 28px rgba(49, 103, 255, 0.18);
+  opacity: 0.7;
+}
+
+.hp-brain-stage::before {
+  content: "";
+  position: absolute;
+  inset: 20px 78px;
+  border-radius: 50%;
+  border: 3px solid rgba(126, 255, 244, 0.56);
+  box-shadow: 0 0 34px rgba(100, 214, 255, 0.62);
+}
+
+/* --- Brain link dashed lines --- */
+.hp-brain-link {
+  position: absolute;
+  height: 1px;
+  border-top: 2px dashed rgba(97, 61, 255, 0.42);
+  z-index: 1;
+}
+
+.hp-brain-link-left { width: 96px; left: 198px; }
+.hp-brain-link-right { width: 96px; right: 198px; }
+.hp-brain-link-l1 { top: 184px; transform: rotate(34deg); }
+.hp-brain-link-l2 { top: 318px; }
+.hp-brain-link-l3 { top: 460px; transform: rotate(-17deg); }
+.hp-brain-link-r1 { top: 184px; transform: rotate(-34deg); }
+.hp-brain-link-r2 { top: 318px; }
+.hp-brain-link-r3 { top: 460px; transform: rotate(17deg); }
+
+/* --- Tech node cards --- */
+.hp-tech-node-card {
+  position: absolute;
+  width: 174px;
+  min-height: 96px;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: start;
+  padding: 18px 16px;
+  border: 1px solid #e0e8f8;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 44px rgba(42, 92, 198, 0.1);
+  backdrop-filter: blur(18px);
+  z-index: 4;
+}
+
+.hp-tech-node-card::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #6b40ff;
+  box-shadow: 0 0 18px rgba(107, 64, 255, 0.78);
+}
+
+.hp-tech-node-card-left::after { right: -15px; }
+.hp-tech-node-card-right::after { left: -15px; }
+
+.hp-node-task { left: 22px; top: 86px; }
+.hp-node-complex { left: 2px; top: 244px; }
+.hp-node-context { left: 28px; top: 396px; }
+.hp-node-map { right: 22px; top: 86px; }
+.hp-node-cost { right: 2px; top: 244px; }
+.hp-node-decision { right: 28px; top: 396px; }
+
+/* --- Bar track with CSS variable width --- */
+.hp-bar-track {
+  position: relative;
+  width: 100%;
+  height: 9px;
+  border-radius: 999px;
+  background: #dce8ff;
+  overflow: hidden;
+}
+
+.hp-bar-track::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--score);
+  border-radius: inherit;
+  background: linear-gradient(90deg, #125bff, #0750e8);
+  box-shadow: 0 0 16px rgba(18, 91, 255, 0.36);
+}
+
+/* --- CTA wrap container (matches v2 .container) --- */
+.hp-cta-wrap {
+  width: min(calc(100% - 64px), 900px);
+  margin: 0 auto;
+}
+
+@media (max-width: 1024px) {
+  .hp-cta-wrap { width: min(calc(100% - 32px), 900px); }
+}
+
+/* --- CTA banner --- */
+.hp-cta-banner {
+  background:
+    radial-gradient(600px 320px at 18% 50%, rgba(72, 155, 255, 0.16), transparent 70%),
+    radial-gradient(500px 320px at 85% 30%, rgba(45, 121, 255, 0.12), transparent 70%),
+    linear-gradient(135deg, #eaf3ff, #f0f6ff 50%, #f7fbff);
+  border: 1px solid #bfd2ff;
+  border-radius: 24px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 70px;
+  padding: 48px 56px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* -- decorative browser window -- */
+.hp-cta-art { position: relative; width: 200px; height: 160px; flex-shrink: 0; }
+
+.hp-cta-browser {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  border: 1px solid #bfd2ff;
+  border-radius: 14px;
+  box-shadow: 0 14px 30px rgba(20, 86, 255, 0.12);
+  overflow: hidden;
+}
+
+.hp-cta-browser-bar {
+  height: 28px;
+  background: #f0f5ff;
+  border-bottom: 1px solid #dbe6ff;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+}
+
+.hp-cta-browser-bar i {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #c8d6f5;
+}
+
+.hp-cta-browser-body {
+  height: calc(100% - 28px);
+  display: grid;
+  place-items: center;
+  color: #1456ff;
+}
+
+/* -- floating shards -- */
+.hp-cta-shard {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #cddcff;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(20, 86, 255, 0.08);
+}
+
+.hp-cta-shard-s1 {
+  width: 70px;
+  height: 50px;
+  left: -34px;
+  bottom: -10px;
+  transform: rotate(-8deg);
+}
+
+.hp-cta-shard-s2 {
+  width: 60px;
+  height: 40px;
+  right: -28px;
+  top: -16px;
+  transform: rotate(10deg);
+}
+
+@media (max-width: 1024px) {
+  .hp-cta-banner {
+    grid-template-columns: 1fr;
+    padding: 36px;
+    gap: 28px;
+  }
+  .hp-cta-art { display: none; }
+}
+
+/* ========== Responsive ========== */
+
+@media (max-width: 1280px) {
+  .hp-visual { height: 480px; }
+  .hp-tech-visual { min-height: 520px; }
+}
+
+@media (max-width: 1024px) {
+  .hp-wrap { width: min(calc(100% - 32px), 1548px); }
+
+  .hp-tech-visual { min-height: 600px; }
+  .hp-brain-core { top: 220px; width: 340px; height: 250px; padding: 22px; }
+  .hp-brain-stage { bottom: 140px; width: 390px; }
+  .hp-brain-link { display: none; }
+
+  .hp-tech-node-card {
+    width: calc(50% - 8px);
+    min-height: 126px;
+  }
+  .hp-tech-node-card::after { display: none; }
+  .hp-node-task { left: 0; top: 0; }
+  .hp-node-map { right: 0; top: 0; }
+  .hp-node-complex { left: 0; top: 140px; }
+  .hp-node-cost { right: 0; top: 140px; }
+  .hp-node-context { left: 0; top: 500px; }
+  .hp-node-decision { right: 0; top: 500px; }
+}
+
+@media (max-width: 640px) {
+  .hp-visual {
+    left: 50%;
+    width: 620px;
+    height: 400px;
+    margin: 28px 0 12px;
+    transform: translateX(-50%) scale(0.62);
+    transform-origin: top center;
+  }
+
+  .hp-tech-visual { min-height: 660px; }
+
+  .hp-tech-node-card {
+    width: 100%;
+    min-height: 98px;
+    grid-template-columns: 34px 1fr;
+    gap: 10px;
+    padding: 16px 14px;
+  }
+
+  .hp-node-task { left: 0; top: 0; }
+  .hp-node-map { left: 0; right: auto; top: 114px; }
+  .hp-node-complex { left: 0; top: 228px; }
+  .hp-node-cost { left: 0; right: auto; top: 342px; }
+  .hp-node-context,
+  .hp-node-decision { display: none; }
+
+  .hp-brain-core {
+    top: 480px;
+    width: min(100%, 340px);
+    height: 250px;
+    padding: 20px;
+  }
+
+  .hp-brain-stage,
+  .hp-brain-label { display: none; }
+
+  .hp-bar-track { display: none; }
+
+  /* Proof table mobile */
+  .hp-rank-row {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    min-height: 0 !important;
+    padding: 14px !important;
+    gap: 12px !important;
+  }
+
+  .hp-rank-row .hp-rank-score,
+  .hp-rank-row .hp-rank-cost {
+    grid-column: 2;
+  }
+
+  .hp-rank-row .hp-rank-score {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .hp-rank-row .hp-rank-cost {
+    font-weight: 900;
+    font-size: 14px;
+  }
+
+  /* Hero mobile */
+  .hp-brand-word {
+    font-size: clamp(42px, 13vw, 52px) !important;
+  }
+
+  .hp-hero-cta {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hp-hero-cta button,
+  .hp-hero-cta a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Tech section mobile */
+  .hp-tech-title {
+    font-size: clamp(24px, 7vw, 30px) !important;
+    letter-spacing: 0 !important;
+    line-height: 1.16 !important;
+  }
+
+  .hp-tech-model-name {
+    font-size: clamp(32px, 10vw, 42px) !important;
+    letter-spacing: 0 !important;
+  }
+
+  .hp-tech-copy {
+    font-size: 14px !important;
+  }
+
+  /* Proof section mobile */
+  .hp-proof-heading {
+    font-size: clamp(22px, 7vw, 28px) !important;
+  }
+
+  .hp-proof-lead {
+    font-size: 15px !important;
+  }
+
+  .hp-benchmark-card {
+    padding: 16px 14px !important;
+  }
+
+  .hp-benchmark-name {
+    font-size: 17px !important;
+  }
+
+  /* CTA mobile */
+  .hp-cta-title {
+    font-size: 22px !important;
+  }
+
+  .hp-cta-desc {
+    font-size: 14px !important;
+  }
+
+  .hp-cta-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hp-cta-actions button,
+  .hp-cta-actions a {
+    width: 100%;
+    justify-content: center;
+  }
+}

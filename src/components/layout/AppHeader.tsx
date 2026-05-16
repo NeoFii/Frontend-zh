@@ -9,7 +9,7 @@ import { useUser } from '@/hooks/useUser'
 
 interface NavItem { name: string; path: string; children?: NavItem[]; external?: boolean }
 
-const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'Eucal AI'
+const companyName = process.env.NEXT_PUBLIC_COMPANY_NAME || 'TierFlow'
 
 export default function AppHeader() {
   const router = useRouter()
@@ -188,7 +188,7 @@ export default function AppHeader() {
           <div className="hidden md:flex items-center gap-4">
             <button
               onClick={handleAuthClick}
-              className="px-6 py-2.5 bg-gray-900 text-white text-[15px] font-semibold rounded-full hover:bg-gray-800 transition-colors duration-300"
+              className="inline-flex items-center justify-center gap-1.5 rounded-[10px] border border-transparent bg-gradient-to-r from-[#3b56ff] to-[#4a3dff] px-5 py-2.5 text-[15px] font-semibold text-white shadow-[0_8px_18px_rgba(60,80,255,0.24)] transition hover:-translate-y-px hover:shadow-[0_12px_24px_rgba(60,80,255,0.32)]"
             >
               {isLoggedIn ? '控制台' : '登录'}
             </button>
@@ -268,7 +268,7 @@ export default function AppHeader() {
             <div className="pt-3 mt-2 border-t border-gray-100/50">
               <button
                 onClick={handleAuthClick}
-                className="block w-full text-center px-4 py-3 bg-gray-900 text-white rounded-xl text-[15px] font-semibold hover:bg-gray-800 transition-colors duration-200"
+                className="block w-full text-center rounded-[10px] bg-gradient-to-r from-[#3b56ff] to-[#4a3dff] px-5 py-2.5 text-[15px] font-semibold text-white shadow-[0_8px_18px_rgba(60,80,255,0.24)] transition hover:-translate-y-px hover:shadow-[0_12px_24px_rgba(60,80,255,0.32)]"
               >
                 {isLoggedIn ? '控制台' : '登录'}
               </button>

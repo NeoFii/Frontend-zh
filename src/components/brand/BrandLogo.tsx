@@ -4,10 +4,10 @@ type BrandLogoSize = 'sm' | 'md' | 'lg' | 'hero'
 type BrandMarkTone = 'default' | 'inverse'
 
 const markSizeClasses: Record<BrandLogoSize, string> = {
-  sm: 'h-7 w-7 rounded-md p-1',
-  md: 'h-7 w-7 rounded-md p-1',
-  lg: 'h-9 w-9 rounded-lg p-1.5',
-  hero: 'h-14 w-14 rounded-xl p-2.5',
+  sm: 'h-7 w-7',
+  md: 'h-7 w-7',
+  lg: 'h-9 w-9',
+  hero: 'h-14 w-14',
 }
 
 const labelSizeClasses: Record<Exclude<BrandLogoSize, 'hero'>, string> = {
@@ -17,13 +17,13 @@ const labelSizeClasses: Record<Exclude<BrandLogoSize, 'hero'>, string> = {
 }
 
 const markToneClasses: Record<BrandMarkTone, string> = {
-  default: 'bg-[#111827]',
-  inverse: 'bg-white',
+  default: '',
+  inverse: '',
 }
 
 const svgFillClasses: Record<BrandMarkTone, string> = {
-  default: 'fill-white',
-  inverse: 'fill-[#111827]',
+  default: '',
+  inverse: '',
 }
 
 const joinClasses = (...classes: Array<string | undefined>) =>
@@ -54,7 +54,22 @@ export function BrandMark({ className, size = 'sm', tone = 'default', ...props }
       {...props}
     >
       <svg viewBox="0 0 100 64" fill="none" xmlns="http://www.w3.org/2000/svg" className={joinClasses('h-full w-full', svgFillClasses[tone])}>
-        <g>
+        <defs>
+          <linearGradient id={`tierflow-grad-${tone}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            {tone === 'inverse' ? (
+              <>
+                <stop offset="0%" stopColor="#ffffff" />
+                <stop offset="100%" stopColor="#ffffff" />
+              </>
+            ) : (
+              <>
+                <stop offset="0%" stopColor="#4A3AF8" />
+                <stop offset="100%" stopColor="#256BFB" />
+              </>
+            )}
+          </linearGradient>
+        </defs>
+        <g fill={`url(#tierflow-grad-${tone})`}>
           <rect x="0" y="0" width="16" height="16" rx="8" />
           <rect x="24" y="0" width="76" height="16" rx="8" />
           <rect x="0" y="24" width="100" height="16" rx="8" />
@@ -69,7 +84,7 @@ export function BrandMark({ className, size = 'sm', tone = 'default', ...props }
 
 export function BrandLogo({
   className,
-  label = 'Eucal AI',
+  label = 'TierFlow',
   labelClassName,
   markClassName,
   markTone = 'default',

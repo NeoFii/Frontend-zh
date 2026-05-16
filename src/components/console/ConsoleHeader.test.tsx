@@ -8,8 +8,8 @@ describe('ConsoleHeader', () => {
     render(<ConsoleHeader />)
 
     expect(screen.getByText('/')).toHaveClass('bg-[#111827]', 'text-white')
-    expect(screen.getByText('Eucal AI')).toHaveClass('font-semibold')
-    expect(screen.getByText('Eucal AI')).not.toHaveClass('font-bold')
+    expect(screen.getByText('TierFlow')).toHaveClass('font-semibold')
+    expect(screen.getByText('TierFlow')).not.toHaveClass('font-bold')
     expect(screen.queryByText('E')).not.toBeInTheDocument()
   })
 })

@@ -33,7 +33,7 @@ describe('Login page', () => {
     expect(screen.queryByText('TierFlow')).not.toBeInTheDocument()
     expect(screen.queryByText('还没有账户？')).not.toBeInTheDocument()
     expect(screen.queryByText('Secure auth')).not.toBeInTheDocument()
-    expect(screen.queryByText('© 2026 Eucal AI')).not.toBeInTheDocument()
+    expect(screen.queryByText('© 2026 TierFlow')).not.toBeInTheDocument()
     expect(screen.queryByText('$ tierflow auth login')).not.toBeInTheDocument()
     expect(screen.queryByText('¥20.00')).not.toBeInTheDocument()
 

@@ -126,7 +126,7 @@ export default function AboutClient() {
                       <BouncingText text="专注于 AI 技术创新" delayOffset={0.6} isLoaded={isLoaded} />
                     </h2>
                     <div className="space-y-4 text-slate-600 text-base leading-relaxed mb-8">
-                      <p>Eucal AI 成立于2026年，是一家专注于人工智能技术研发与应用的创新型科技公司。我们致力于将前沿的 AI 技术转化为实际的商业价值，为企业提供智能化的解决方案。</p>
+                      <p>TierFlow 成立于2026年，是一家专注于人工智能技术研发与应用的创新型科技公司。我们致力于将前沿的 AI 技术转化为实际的商业价值，为企业提供智能化的解决方案。</p>
                       <p>我们的团队由来自全球顶尖高校和科技公司的 AI 专家组成，在机器学习、自然语言处理、计算机视觉等领域拥有深厚的技术积累。</p>
                     </div>
 
@@ -174,7 +174,7 @@ export default function AboutClient() {
                         />
                         {/* 品牌名称同样使用跳出动画 */}
                         <div className="text-slate-900 font-bold text-3xl tracking-tight mb-3 h-10">
-                          <BouncingText text="Eucal AI" delayOffset={0.8} isLoaded={isLoaded} />
+                          <BouncingText text="TierFlow" delayOffset={0.8} isLoaded={isLoaded} />
                         </div>
                         <div className="text-slate-500 text-sm font-medium uppercase tracking-widest">智能 · 创新 · 未来</div>
                       </div>
