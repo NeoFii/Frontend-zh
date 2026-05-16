@@ -118,35 +118,11 @@ function IconBenchmark() {
     </svg>
   )
 }
-function IconTrophy() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7">
-      <path d="M8 4h8v3c0 4-2 7-4 7s-4-3-4-7V4Z" stroke="currentColor" strokeWidth="2" />
-      <path d="M8 6H4v2c0 3 2 5 5 5m7-7h4v2c0 3-2 5-5 5M12 14v4m-4 2h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  )
-}
 
 /* ------------------------------------------------------------------ */
 /*  Brand mark (TierFlow logo bars)                                    */
 /* ------------------------------------------------------------------ */
 
-function BrandMarkSmall() {
-  return (
-    <span className="grid w-8 grid-cols-2 gap-[3px]" aria-hidden="true">
-      {[20, 10, 20, 10, 20, 10].map((w, i) => (
-        <span
-          key={i}
-          className="h-[5px] rounded-full"
-          style={{
-            width: w,
-            background: i === 1 ? '#1b5cff' : 'linear-gradient(90deg, #0a68ff, #59a4ff)',
-          }}
-        />
-      ))}
-    </span>
-  )
-}
 
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
@@ -180,9 +156,9 @@ const nodeCards = [
 ]
 
 const rankData = [
-  { rank: 1, model: 'TierFlow（OpenClaw）', score: '88.7%', barWidth: '100%', cost: '2.04', winner: true },
-  { rank: 2, model: 'Claude-opus-4.6', score: '82.3%', barWidth: '92.8%', cost: '17.62', winner: false },
-  { rank: 3, model: 'Claude-Sonnet-4.5', score: '80.7%', barWidth: '91%', cost: '15.52', winner: false },
+  { rank: 1, model: 'TierFlow', score: '88.7%', barWidth: '100%', cost: '2.04', winner: true, icon: 'tierflow' as const },
+  { rank: 2, model: 'Claude-opus-4.6', score: '82.3%', barWidth: '92.8%', cost: '17.62', winner: false, icon: '/icons/providers/anthropic.png' },
+  { rank: 3, model: 'Claude-Sonnet-4.5', score: '80.7%', barWidth: '91%', cost: '15.52', winner: false, icon: '/icons/providers/anthropic.png' },
 ]
 
 
@@ -193,29 +169,29 @@ const rankData = [
 function HeroSection({ onCtaClick }: { onCtaClick: () => void }) {
   return (
     <section className="relative z-[1] pb-6 pt-14">
-      <div className="hp-wrap grid min-h-[565px] items-center gap-10 lg:grid-cols-[minmax(600px,1fr)_minmax(500px,0.85fr)]">
+      <div className="hp-wrap grid min-h-[480px] items-center gap-8 lg:grid-cols-[minmax(420px,1fr)_minmax(400px,0.85fr)]">
         {/* Left — message */}
         <Reveal>
-          <div className="max-w-[780px] pb-9">
+          <div className="max-w-[620px] pb-5">
             <h1
-              className="hp-brand-word mb-7 text-[clamp(86px,10.6vw,168px)] font-black leading-[0.82]"
+              className="hp-brand-word mb-5 text-[clamp(52px,6.5vw,88px)] font-black leading-[0.88]"
             >
               TierFlow
             </h1>
 
-            <h2 className="mb-0 text-[clamp(34px,3.2vw,48px)] font-black leading-[1.12] tracking-[-0.045em] text-[#07113b]">
+            <h2 className="mb-0 text-[clamp(22px,2.2vw,32px)] font-black leading-[1.2] tracking-[-0.03em] text-[#07113b]">
               智能体时代的 Token 优化引擎
             </h2>
 
             <div className="my-6 h-1 w-[74px] rounded-full bg-[#0759ff] shadow-[0_8px_18px_rgba(7,89,255,0.24)]" aria-hidden="true" />
 
-            <p className="max-w-[720px] text-[clamp(20px,1.65vw,28px)] font-medium leading-[1.75] text-[#111b42]">
+            <p className="max-w-[620px] text-[clamp(15px,1.1vw,18px)] font-medium leading-[1.7] text-[#4a5172]">
               TierFlow 通过自研BrainNet-8B引擎实现Token调度与上下文管理，
               <br className="hidden sm:block" />
-              在保证效果的同时<strong className="font-medium text-[#0759ff]">显著降低成本</strong>，释放<strong className="font-medium text-[#0759ff]">AI 应用生产力</strong>。
+              在保证效果的同时<strong className="font-semibold text-[#0759ff]">显著降低成本</strong>，释放<strong className="font-semibold text-[#0759ff]">AI 应用生产力</strong>。
             </p>
 
-            <div className="mt-8 flex flex-wrap gap-[18px]">
+            <div className="hp-hero-cta mt-8 flex flex-wrap gap-[18px]">
               <button
                 type="button"
                 onClick={onCtaClick}
@@ -288,14 +264,14 @@ function TechSection() {
               核心技术 / Core Technology
             </div>
 
-            <h2 className="mb-4 text-[clamp(30px,3.1vw,42px)] font-black leading-[1.14] text-[#07113b]">
+            <h2 className="hp-tech-title mb-4 text-[clamp(22px,2.2vw,30px)] font-black leading-[1.2] text-[#07113b]">
               类脑任务感知模型
-              <span className="hp-tech-model-name mt-3 block text-[clamp(48px,5.2vw,78px)] leading-[0.98]">
+              <span className="hp-tech-model-name mt-2 block text-[clamp(36px,3.8vw,56px)] leading-[1.05]">
                 BrainNet-8B
               </span>
             </h2>
 
-            <p className="mb-7 max-w-[560px] text-lg font-medium leading-[1.65] text-[#2e3e76]">
+            <p className="hp-tech-copy mb-6 max-w-[560px] text-base font-medium leading-[1.65] text-[#4a5172]">
               TierFlow 自研并训练的 <strong className="font-extrabold text-[#184dff]">8B</strong> 任务感知模型，基于类脑计算范式，让智能体在每个 step 精准感知任务需求，动态选择最优模型与执行路径，实现 Token 成本的数量级下降。
             </p>
 
@@ -395,10 +371,10 @@ function ProofSection() {
       <div className="hp-wrap">
         {/* Heading */}
         <Reveal>
-          <h2 className="mb-5 text-[clamp(32px,3.4vw,48px)] font-black leading-[1.08] text-[#07113b]">
+          <h2 className="hp-proof-heading mb-4 text-[clamp(22px,2.2vw,30px)] font-black leading-[1.2] text-[#07113b]">
             效果验证
           </h2>
-          <p className="mb-9 max-w-[860px] text-xl font-semibold leading-[1.7] text-[#0f1c49]">
+          <p className="hp-proof-lead mb-7 max-w-[860px] text-base font-medium leading-[1.6] text-[#4a5172]">
             TierFlow 助力 <strong className="text-[#0759ff]">OpenClaw</strong> 在 <strong className="text-[#0759ff]">PinchBench</strong> 基准测试中取得顶尖表现
           </p>
         </Reveal>
@@ -406,11 +382,11 @@ function ProofSection() {
         <div className="grid gap-6">
           {/* Benchmark card */}
           <Reveal delay={100}>
-            <article className="rounded-2xl border border-[#bfd2ff] bg-white/80 p-[30px] shadow-[0_18px_42px_rgba(19,83,205,0.08)] backdrop-blur-[18px]">
+            <article className="hp-benchmark-card rounded-2xl border border-[#bfd2ff] bg-white/80 p-6 shadow-[0_18px_42px_rgba(19,83,205,0.08)] backdrop-blur-[18px]">
               {/* Head */}
               <div className="mb-6 flex flex-wrap items-center justify-between gap-6">
-                <div className="inline-flex items-center gap-3.5 text-[22px] font-black text-[#06133e]">
-                  <span className="grid h-[38px] w-[38px] place-items-center rounded-xl bg-gradient-to-br from-[rgba(240,249,255,0.95)] to-[rgba(219,234,255,0.9)] text-[#0f5fff] shadow-[inset_0_0_0_1px_rgba(166,198,255,0.56)]">
+                <div className="hp-benchmark-name inline-flex items-center gap-3 text-lg font-black text-[#06133e]">
+                  <span className="grid h-[34px] w-[34px] place-items-center rounded-xl bg-gradient-to-br from-[rgba(240,249,255,0.95)] to-[rgba(219,234,255,0.9)] text-[#0f5fff] shadow-[inset_0_0_0_1px_rgba(166,198,255,0.56)]">
                     <IconBenchmark />
                   </span>
                   PinchBench 基准测试 Top 对比
@@ -428,7 +404,7 @@ function ProofSection() {
               </div>
 
               {/* Labels row (desktop) */}
-              <div className="mb-0 hidden min-h-[44px] grid-cols-[72px_minmax(260px,1fr)_minmax(250px,0.55fr)_110px] items-center gap-6 px-5 text-[15px] font-extrabold text-[#233563] md:grid">
+              <div className="mb-0 hidden min-h-[40px] grid-cols-[60px_minmax(180px,1fr)_minmax(180px,0.5fr)_80px] items-center gap-4 px-4 text-[14px] font-extrabold text-[#233563] md:grid">
                 <span>排名</span>
                 <span>模型</span>
                 <span>任务成功率</span>
@@ -440,7 +416,7 @@ function ProofSection() {
                 {rankData.map((row) => (
                   <div
                     key={row.rank}
-                    className={`grid min-h-[72px] items-center gap-3 overflow-hidden rounded-[13px] border px-4 py-4 text-base font-bold text-[#07113b] md:grid-cols-[72px_minmax(260px,1fr)_minmax(250px,0.55fr)_110px] md:gap-6 md:px-[22px] md:py-0 ${
+                    className={`hp-rank-row grid min-h-[56px] items-center gap-3 overflow-hidden rounded-[11px] border px-4 py-3 text-[15px] font-bold text-[#07113b] md:grid-cols-[60px_minmax(180px,1fr)_minmax(180px,0.5fr)_80px] md:gap-4 md:px-4 md:py-0 ${
                       row.winner
                         ? 'border-[#6f98ff] bg-gradient-to-r from-[rgba(234,244,255,0.92)] to-[rgba(255,255,255,0.86)] shadow-[inset_0_0_0_1px_rgba(57,113,255,0.18)]'
                         : 'border-[#e2eaff] bg-white/75'
@@ -458,13 +434,41 @@ function ProofSection() {
                     </span>
 
                     {/* Model name */}
-                    <span className="inline-flex items-center gap-3">
-                      {row.winner && <BrandMarkSmall />}
+                    <span className="inline-flex items-center gap-2.5">
+                      {row.icon === 'tierflow' ? (
+                        <span className="grid h-5 w-5 flex-shrink-0 place-items-center">
+                          <svg viewBox="0 0 100 64" fill="none" className="h-full w-full">
+                            <defs>
+                              <linearGradient id="tf-rank-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#4A3AF8" />
+                                <stop offset="100%" stopColor="#256BFB" />
+                              </linearGradient>
+                            </defs>
+                            <g fill="url(#tf-rank-grad)">
+                              <rect x="0" y="0" width="16" height="16" rx="8" />
+                              <rect x="24" y="0" width="76" height="16" rx="8" />
+                              <rect x="0" y="24" width="100" height="16" rx="8" />
+                              <rect x="0" y="48" width="16" height="16" rx="8" />
+                              <rect x="24" y="48" width="52" height="16" rx="8" />
+                              <rect x="84" y="48" width="16" height="16" rx="8" />
+                            </g>
+                          </svg>
+                        </span>
+                      ) : (
+                        <Image
+                          src={row.icon as string}
+                          alt=""
+                          width={24}
+                          height={24}
+                          className="h-6 w-6 flex-shrink-0 object-contain"
+                          aria-hidden="true"
+                        />
+                      )}
                       {row.model}
                     </span>
 
                     {/* Score bar + value */}
-                    <span className="grid grid-cols-[1fr_64px] items-center gap-4">
+                    <span className="hp-rank-score grid grid-cols-[1fr_64px] items-center gap-4">
                       <span
                         className="hp-bar-track"
                         style={{ '--score': row.barWidth } as React.CSSProperties}
@@ -473,20 +477,11 @@ function ProofSection() {
                     </span>
 
                     {/* Cost */}
-                    <span>{row.cost}</span>
+                    <span className="hp-rank-cost">{row.cost}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Note */}
-              <div className="mt-6 grid grid-cols-[58px_1fr] items-center gap-5 rounded-xl bg-gradient-to-r from-[rgba(231,240,255,0.94)] to-[rgba(255,255,255,0.76)] px-5 py-[18px] text-[17px] font-extrabold text-[#091742]">
-                <span className="grid h-[54px] w-[54px] place-items-center rounded-xl bg-gradient-to-br from-[#2d7cff] to-[#0b4cff] text-white shadow-[0_12px_24px_rgba(17,88,255,0.24)]">
-                  <IconTrophy />
-                </span>
-                <span>
-                  结论：TierFlow <strong className="text-[#0759ff]">成功率最高</strong>、<strong className="text-[#0759ff]">成本更低</strong>，综合表现领先。
-                </span>
-              </div>
             </article>
           </Reveal>
         </div>
@@ -523,13 +518,13 @@ function CTASection({ onCtaClick }: { onCtaClick: () => void }) {
 
             {/* Text + actions */}
             <div>
-              <h3 className="text-[30px] font-bold tracking-[-0.01em] text-[#0f1535] mb-3">
+              <h3 className="hp-cta-title text-[24px] font-bold tracking-[-0.01em] text-[#0f1535] mb-3">
                 让每一次AI调用都更聪明
               </h3>
-              <p className="text-[15.5px] text-[#4a5172] mb-6">
+              <p className="hp-cta-desc text-[15px] text-[#4a5172] mb-6">
                 TierFlow 帮助你降低成本、提升效率、保障稳定，为你的智能体应用提供坚实的推理引擎。
               </p>
-              <div className="flex justify-center gap-[14px]">
+              <div className="hp-cta-actions flex justify-center gap-[14px]">
                 <button
                   type="button"
                   onClick={onCtaClick}

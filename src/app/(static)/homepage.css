@@ -1,24 +1,9 @@
 /* ========== Homepage — TierFlow SaaS Landing ========== */
 
-/* --- Page background & decorative overlays --- */
+/* --- Page background --- */
 .hp-page {
-  background:
-    radial-gradient(circle at 77% 33%, rgba(72, 155, 255, 0.28), transparent 28%),
-    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.95), transparent 34%),
-    linear-gradient(116deg, #ffffff 0%, #f7fbff 47%, #eaf3ff 100%);
+  background: linear-gradient(116deg, #ffffff 0%, #f7fbff 47%, #eaf3ff 100%);
   overflow-x: hidden;
-}
-
-.hp-page::before {
-  content: "";
-  position: fixed;
-  inset: 80px 0 auto 0;
-  height: 680px;
-  background:
-    radial-gradient(circle at 70% 55%, rgba(44, 132, 255, 0.16), transparent 35%);
-  pointer-events: none;
-  mask-image: linear-gradient(90deg, transparent 0%, #000 42%, #000 100%);
-  z-index: 0;
 }
 
 /* --- Wrap container --- */
@@ -33,7 +18,7 @@
   background: linear-gradient(180deg, #0457ff 6%, #1e6cff 48%, #8fcdff 100%);
   -webkit-background-clip: text;
   background-clip: text;
-  filter: drop-shadow(0 16px 28px rgba(23, 100, 255, 0.16));
+  filter: drop-shadow(0 10px 20px rgba(23, 100, 255, 0.12));
 }
 
 /* --- Hero 3D visual --- */
@@ -43,29 +28,7 @@
   isolation: isolate;
   perspective: 1100px;
   perspective-origin: 54% 38%;
-}
-
-.hp-visual::before {
-  content: "";
-  position: absolute;
-  inset: 62px -30px -20px -20px;
-  background: radial-gradient(ellipse at center, rgba(33, 116, 255, 0.24), transparent 64%);
-  filter: blur(12px);
-  z-index: -2;
-}
-
-.hp-visual::after {
-  content: "";
-  position: absolute;
-  right: -64px;
-  top: 70px;
-  width: 610px;
-  height: 430px;
-  background:
-    radial-gradient(ellipse at 46% 54%, rgba(255, 255, 255, 0.42), transparent 56%);
-  transform: skewX(-12deg);
-  opacity: 0.74;
-  z-index: -1;
+  height: 420px;
 }
 
 /* --- Chip glow --- */
@@ -253,18 +216,6 @@
 .hp-node:nth-child(5) { right: 40px; top: 416px; }
 .hp-node:nth-child(6) { left: 272px; bottom: 48px; }
 
-/* --- Tech section background --- */
-.hp-tech-section::before {
-  content: "";
-  position: absolute;
-  inset: 8% -10% auto auto;
-  width: 860px;
-  height: 620px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(74, 124, 255, 0.16), transparent 66%);
-  pointer-events: none;
-}
-
 /* --- Tech model name gradient --- */
 .hp-tech-model-name {
   color: transparent;
@@ -278,18 +229,6 @@
   position: relative;
   min-height: 560px;
   isolation: isolate;
-}
-
-.hp-tech-visual::before {
-  content: "";
-  position: absolute;
-  inset: 0 5% auto 5%;
-  height: 510px;
-  border-radius: 50%;
-  background:
-    repeating-radial-gradient(circle at 50% 46%, rgba(87, 113, 218, 0.16) 0 1px, transparent 1px 52px),
-    radial-gradient(circle at 50% 47%, rgba(99, 142, 255, 0.16), transparent 54%);
-  z-index: -2;
 }
 
 /* --- Brain core panel --- */
@@ -397,34 +336,6 @@
 .hp-node-cost { right: 2px; top: 244px; }
 .hp-node-decision { right: 28px; top: 396px; }
 
-/* --- Proof section background --- */
-.hp-proof-section::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 100%;
-  background:
-    linear-gradient(90deg, transparent 0 72%, rgba(37, 122, 255, 0.08) 72% 100%);
-  pointer-events: none;
-  z-index: -2;
-}
-
-.hp-proof-section::after {
-  content: "";
-  position: absolute;
-  right: -42px;
-  top: 30px;
-  width: 390px;
-  height: 390px;
-  background:
-    linear-gradient(130deg, transparent 0 43%, rgba(19, 93, 255, 0.12) 44% 45%, transparent 46%),
-    linear-gradient(150deg, transparent 0 52%, rgba(255,255,255,0.8) 53% 54%, transparent 55%),
-    radial-gradient(circle at 68% 64%, rgba(78, 153, 255, 0.2), transparent 62%);
-  transform: skewX(-12deg);
-  pointer-events: none;
-  z-index: -1;
-}
-
 /* --- Bar track with CSS variable width --- */
 .hp-bar-track {
   position: relative;
@@ -447,39 +358,29 @@
 
 /* --- CTA wrap container (matches v2 .container) --- */
 .hp-cta-wrap {
-  width: min(calc(100% - 64px), 1200px);
+  width: min(calc(100% - 64px), 900px);
   margin: 0 auto;
 }
 
 @media (max-width: 1024px) {
-  .hp-cta-wrap { width: min(calc(100% - 32px), 1200px); }
+  .hp-cta-wrap { width: min(calc(100% - 32px), 900px); }
 }
 
 /* --- CTA banner --- */
 .hp-cta-banner {
   background:
-    radial-gradient(600px 320px at 18% 50%, rgba(170, 175, 255, 0.55), transparent 70%),
-    radial-gradient(500px 320px at 85% 30%, rgba(220, 195, 255, 0.5), transparent 70%),
-    linear-gradient(135deg, #e4e7ff, #ecebff 50%, #efe9ff);
-  border: 1px solid #dee1f8;
+    radial-gradient(600px 320px at 18% 50%, rgba(72, 155, 255, 0.16), transparent 70%),
+    radial-gradient(500px 320px at 85% 30%, rgba(45, 121, 255, 0.12), transparent 70%),
+    linear-gradient(135deg, #eaf3ff, #f0f6ff 50%, #f7fbff);
+  border: 1px solid #bfd2ff;
   border-radius: 24px;
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
   gap: 70px;
-  padding: 64px 80px;
+  padding: 48px 56px;
   position: relative;
   overflow: hidden;
-}
-
-.hp-cta-banner::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle, rgba(74, 61, 255, 0.08) 1px, transparent 1.5px);
-  background-size: 22px 22px;
-  opacity: 0.6;
-  pointer-events: none;
 }
 
 /* -- decorative browser window -- */
@@ -489,16 +390,16 @@
   position: absolute;
   inset: 0;
   background: #fff;
-  border: 1px solid #d9ddf5;
+  border: 1px solid #bfd2ff;
   border-radius: 14px;
-  box-shadow: 0 14px 30px rgba(74, 61, 200, 0.15);
+  box-shadow: 0 14px 30px rgba(20, 86, 255, 0.12);
   overflow: hidden;
 }
 
 .hp-cta-browser-bar {
   height: 28px;
-  background: #f3f4ff;
-  border-bottom: 1px solid #e7eaf9;
+  background: #f0f5ff;
+  border-bottom: 1px solid #dbe6ff;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -510,23 +411,23 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #d6dbef;
+  background: #c8d6f5;
 }
 
 .hp-cta-browser-body {
   height: calc(100% - 28px);
   display: grid;
   place-items: center;
-  color: #4a3dff;
+  color: #1456ff;
 }
 
 /* -- floating shards -- */
 .hp-cta-shard {
   position: absolute;
   background: #fff;
-  border: 1px solid #dee2f5;
+  border: 1px solid #cddcff;
   border-radius: 10px;
-  box-shadow: 0 10px 24px rgba(74, 61, 200, 0.12);
+  box-shadow: 0 10px 24px rgba(20, 86, 255, 0.08);
 }
 
 .hp-cta-shard-s1 {
@@ -557,16 +458,16 @@
 /* ========== Responsive ========== */
 
 @media (max-width: 1280px) {
-  .hp-visual { height: 570px; }
-  .hp-tech-visual { min-height: 600px; }
+  .hp-visual { height: 480px; }
+  .hp-tech-visual { min-height: 520px; }
 }
 
 @media (max-width: 1024px) {
   .hp-wrap { width: min(calc(100% - 32px), 1548px); }
 
-  .hp-tech-visual { min-height: 740px; }
-  .hp-brain-core { top: 250px; width: 340px; height: 250px; padding: 22px; }
-  .hp-brain-stage { bottom: 160px; width: 390px; }
+  .hp-tech-visual { min-height: 600px; }
+  .hp-brain-core { top: 220px; width: 340px; height: 250px; padding: 22px; }
+  .hp-brain-stage { bottom: 140px; width: 390px; }
   .hp-brain-link { display: none; }
 
   .hp-tech-node-card {
@@ -576,25 +477,23 @@
   .hp-tech-node-card::after { display: none; }
   .hp-node-task { left: 0; top: 0; }
   .hp-node-map { right: 0; top: 0; }
-  .hp-node-complex { left: 0; top: 146px; }
-  .hp-node-cost { right: 0; top: 146px; }
-  .hp-node-context { left: 0; top: 560px; }
-  .hp-node-decision { right: 0; top: 560px; }
+  .hp-node-complex { left: 0; top: 140px; }
+  .hp-node-cost { right: 0; top: 140px; }
+  .hp-node-context { left: 0; top: 500px; }
+  .hp-node-decision { right: 0; top: 500px; }
 }
 
 @media (max-width: 640px) {
-  .hp-page::before { height: 520px; }
-
   .hp-visual {
     left: 50%;
     width: 620px;
-    height: 430px;
+    height: 400px;
     margin: 28px 0 12px;
     transform: translateX(-50%) scale(0.62);
     transform-origin: top center;
   }
 
-  .hp-tech-visual { min-height: 760px; }
+  .hp-tech-visual { min-height: 660px; }
 
   .hp-tech-node-card {
     width: 100%;
@@ -622,4 +521,98 @@
   .hp-brain-label { display: none; }
 
   .hp-bar-track { display: none; }
+
+  /* Proof table mobile */
+  .hp-rank-row {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    min-height: 0 !important;
+    padding: 14px !important;
+    gap: 12px !important;
+  }
+
+  .hp-rank-row .hp-rank-score,
+  .hp-rank-row .hp-rank-cost {
+    grid-column: 2;
+  }
+
+  .hp-rank-row .hp-rank-score {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .hp-rank-row .hp-rank-cost {
+    font-weight: 900;
+    font-size: 14px;
+  }
+
+  /* Hero mobile */
+  .hp-brand-word {
+    font-size: clamp(42px, 13vw, 52px) !important;
+  }
+
+  .hp-hero-cta {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hp-hero-cta button,
+  .hp-hero-cta a {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Tech section mobile */
+  .hp-tech-title {
+    font-size: clamp(24px, 7vw, 30px) !important;
+    letter-spacing: 0 !important;
+    line-height: 1.16 !important;
+  }
+
+  .hp-tech-model-name {
+    font-size: clamp(32px, 10vw, 42px) !important;
+    letter-spacing: 0 !important;
+  }
+
+  .hp-tech-copy {
+    font-size: 14px !important;
+  }
+
+  /* Proof section mobile */
+  .hp-proof-heading {
+    font-size: clamp(22px, 7vw, 28px) !important;
+  }
+
+  .hp-proof-lead {
+    font-size: 15px !important;
+  }
+
+  .hp-benchmark-card {
+    padding: 16px 14px !important;
+  }
+
+  .hp-benchmark-name {
+    font-size: 17px !important;
+  }
+
+  /* CTA mobile */
+  .hp-cta-title {
+    font-size: 22px !important;
+  }
+
+  .hp-cta-desc {
+    font-size: 14px !important;
+  }
+
+  .hp-cta-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .hp-cta-actions button,
+  .hp-cta-actions a {
+    width: 100%;
+    justify-content: center;
+  }
 }

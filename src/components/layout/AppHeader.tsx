@@ -188,7 +188,7 @@ export default function AppHeader() {
           <div className="hidden md:flex items-center gap-4">
             <button
               onClick={handleAuthClick}
-              className="inline-flex items-center justify-center gap-2 rounded-[12px] border border-transparent bg-gradient-to-r from-[#3b56ff] to-[#4a3dff] px-8 py-[14px] text-base font-semibold text-white shadow-[0_10px_24px_rgba(60,80,255,0.28)] transition hover:-translate-y-px hover:shadow-[0_14px_32px_rgba(60,80,255,0.36)]"
+              className="inline-flex items-center justify-center gap-1.5 rounded-[10px] border border-transparent bg-gradient-to-r from-[#3b56ff] to-[#4a3dff] px-5 py-2.5 text-[15px] font-semibold text-white shadow-[0_8px_18px_rgba(60,80,255,0.24)] transition hover:-translate-y-px hover:shadow-[0_12px_24px_rgba(60,80,255,0.32)]"
             >
               {isLoggedIn ? '控制台' : '登录'}
             </button>
@@ -268,7 +268,7 @@ export default function AppHeader() {
             <div className="pt-3 mt-2 border-t border-gray-100/50">
               <button
                 onClick={handleAuthClick}
-                className="block w-full text-center rounded-[12px] bg-gradient-to-r from-[#3b56ff] to-[#4a3dff] px-8 py-[14px] text-base font-semibold text-white shadow-[0_10px_24px_rgba(60,80,255,0.28)] transition hover:-translate-y-px hover:shadow-[0_14px_32px_rgba(60,80,255,0.36)]"
+                className="block w-full text-center rounded-[10px] bg-gradient-to-r from-[#3b56ff] to-[#4a3dff] px-5 py-2.5 text-[15px] font-semibold text-white shadow-[0_8px_18px_rgba(60,80,255,0.24)] transition hover:-translate-y-px hover:shadow-[0_12px_24px_rgba(60,80,255,0.32)]"
               >
                 {isLoggedIn ? '控制台' : '登录'}
               </button>

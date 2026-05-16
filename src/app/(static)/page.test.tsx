@@ -46,10 +46,10 @@ describe('Home (SaaS landing)', () => {
   it('renders hero section with brand word and CTA', () => {
     render(React.createElement(Home))
 
-    expect(screen.getByText('TierFlow')).toBeInTheDocument()
+    expect(screen.getAllByText('TierFlow').length).toBeGreaterThan(0)
     expect(screen.getByText('智能体时代的 Token 优化引擎')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /获取 API/i })).toBeInTheDocument()
-    expect(screen.getByText('查看文档')).toBeInTheDocument()
+    expect(screen.getAllByText('查看文档').length).toBeGreaterThan(0)
   })
 
   it('renders BrainNet-8B tech section', () => {
@@ -65,7 +65,7 @@ describe('Home (SaaS landing)', () => {
     render(React.createElement(Home))
 
     expect(screen.getByText(/PinchBench 基准测试/)).toBeInTheDocument()
-    expect(screen.getByText('TierFlow（OpenClaw）')).toBeInTheDocument()
+    expect(screen.getAllByText('TierFlow').length).toBeGreaterThanOrEqual(2)
     expect(screen.getAllByText('88.7%').length).toBeGreaterThan(0)
     expect(screen.getAllByText('2.04').length).toBeGreaterThan(0)
   })
@@ -73,7 +73,7 @@ describe('Home (SaaS landing)', () => {
   it('renders provider tags in hero visual', () => {
     render(React.createElement(Home))
 
-    expect(screen.getByText('GPT-5')).toBeInTheDocument()
+    expect(screen.getByText('GPT')).toBeInTheDocument()
     expect(screen.getByText('Claude')).toBeInTheDocument()
     expect(screen.getByText('DeepSeek')).toBeInTheDocument()
   })
